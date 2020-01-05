@@ -268,7 +268,7 @@ if [ "${INSTALL}" == "true" ]; then
     MHWD_CHECK_PKGS
 
     if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rs ${PACKAGES}
+        ${PACMAN} -Rsu ${PACKAGES}
         if [ "$?" -ne "0" ]; then
             echo "Error: pacman failed!"
             exit 1

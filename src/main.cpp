@@ -7,7 +7,7 @@
  *  Łukasz Matysiak <december0123@gmail.com>
  *  Filipe Marques <eagle.software3@gmail.com>
  *
- *  Copyright (C) 2012 - 2017 Manjaro (http://manjaro.org)
+ *  Copyright (C) 2012 - 2020 Manjaro (http://manjaro.org)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     try
     {
         Mhwd mhwd;
-        mhwd.setVersionMhwd("0.6.3","2012-2018");
+        mhwd.setVersionMhwd("0.6.4","2012-2020");
         return mhwd.launch(argc, argv);
     }
     catch(...)
