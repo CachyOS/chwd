@@ -268,7 +268,7 @@ if [ "${INSTALL}" == "true" ]; then
     MHWD_CHECK_PKGS
 
     if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rsu ${PACKAGES}
+        ${PACMAN} -Rs ${PACKAGES}
         if [ "$?" -ne "0" ]; then
             echo "Error: pacman failed!"
             exit 1
@@ -276,6 +276,10 @@ if [ "${INSTALL}" == "true" ]; then
     fi
 
     PACKAGES=""
+
+    [ "${OPTREMDEPENDS}" != "" ] && DEPENDS="${DEPENDS} ${OPTREMDEPENDS}"
+    [ "${OPTREMDEPENDS_32}" != "" ] && DEPENDS_32="${DEPENDS_32} ${OPTREMDEPENDS_32}"
+    [ "${OPTREMDEPENDS_64}" != "" ] && DEPENDS_64="${DEPENDS_64} ${OPTREMDEPENDS_64}"
 
     # Install dependencies
     if [ "${DEPENDS}" != "" ]; then
@@ -316,6 +320,7 @@ if [ "${REMOVE}" == "true" ]; then
     fi
 
     PACKAGES=""
+    OPTREMPACKAGES=""
 
     # Check for extramodules
     MHWD_CHECK_KMODS
@@ -337,6 +342,44 @@ if [ "${REMOVE}" == "true" ]; then
     if [ "${DEPKMODS}" != "" ]; then
         PACKAGES="${PACKAGES} ${DEPKMODS}"
     fi
+
+    # Check if packages are installed
+    MHWD_CHECK_PKGS
+
+    if [ "${PACKAGES}" != "" ]; then
+        ${PACMAN} -Rs ${PACKAGES}
+        if [ "$?" -ne "0" ]; then
+            echo "Error: pacman failed!"
+            exit 1
+        fi
+    fi
+
+    PACKAGES=""
+
+    # Remove OPTREM dependencies
+    # Has to be run after normal dependencies were removed, since said dependencies may optionally depend on an OPTREM package
+    if [ "${OPTREMDEPENDS}" != "" ]; then
+        OPTREMPACKAGES="${OPTREMDEPENDS}"
+    fi
+    if [ "${ARCH}" == "i686" ] && [ "${OPTREMDEPENDS_32}" != "" ]; then
+        OPTREMPACKAGES="${OPTREMPACKAGES} ${OPTREMDEPENDS_32}"
+    fi
+    if [ "${ARCH}" == "x86_64" ] && [ "${OPTREMDEPENDS_64}" != "" ]; then
+        if [ "${MHWD64_IS_LIB32}" == "true" ]; then
+            OPTREMPACKAGES="${OPTREMPACKAGES} ${OPTREMDEPENDS_64}"
+        else
+            OPTREMPACKAGES="${OPTREMPACKAGES}"
+        fi
+    fi
+
+    for PKG in "${OPTREMPACKAGES}"
+    do
+        # Check if package is needed anywhere, otherwise remove packages
+        # Usage of -Rsu is not enough, since pacman doesn't consider optional dependencies
+        if [ "$(pacman -Qi ${PKG} | egrep "Required By|Optional For" | awk '{ print $4}' | grep -v 'None')" == "" ]; then
+            PACKAGES="${PACKAGES} ${PKG}"
+        fi
+    done
 
     # Check if packages are installed
     MHWD_CHECK_PKGS

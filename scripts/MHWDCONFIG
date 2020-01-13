@@ -25,6 +25,10 @@ DEPENDS_32="..."
 DEPENDS_64="lib32-..."
 DEPKMOD="..."
 
+# Optional remove dependencies
+OPTREMDEPENDS="..."
+OPTREMDEPENDS_32="..."
+OPTREMDEPENDS_64="lib32-..."
 
 # Conflicts
 MHWDCONFLICTS="..."
