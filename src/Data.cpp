@@ -25,6 +25,7 @@
 #include "Data.hpp"
 
 #include <dirent.h>
+#include <fnmatch.h>
 
 #include <algorithm>
 #include <fstream>
@@ -129,42 +130,42 @@ void Data::getAllDevicesOfConfig(const std::vector<std::shared_ptr<Device>>& dev
         {
             // Check class ids
             bool found = std::find_if(hwdID->classIDs.begin(), hwdID->classIDs.end(), [i_device](const std::string& classID){
-                                return (("*" == classID) || (classID == (*i_device)->classID_));
+                                return !fnmatch(classID.c_str(), (*i_device)->classID_.c_str(), FNM_CASEFOLD);
                             }) != hwdID->classIDs.end();
 
             if (found)
             {
                 // Check blacklisted class ids
                 found = std::find_if(hwdID->blacklistedClassIDs.begin(), hwdID->blacklistedClassIDs.end(), [i_device](const std::string& blacklistedClassID){
-                                return (blacklistedClassID == (*i_device)->classID_);
+                                return !fnmatch(blacklistedClassID.c_str(), (*i_device)->classID_.c_str(), FNM_CASEFOLD);
                             }) != hwdID->blacklistedClassIDs.end();
 
                 if (!found)
                 {
                     // Check vendor ids
                     found = std::find_if(hwdID->vendorIDs.begin(), hwdID->vendorIDs.end(), [i_device](const std::string& vendorID){
-                                    return (("*" == vendorID) || (vendorID == (*i_device)->vendorID_));
+                                    return !fnmatch(vendorID.c_str(), (*i_device)->vendorID_.c_str(), FNM_CASEFOLD);
                                 }) != hwdID->vendorIDs.end();
 
                     if (found)
                     {
                         // Check blacklisted vendor ids
                         found = std::find_if(hwdID->blacklistedVendorIDs.begin(), hwdID->blacklistedVendorIDs.end(), [i_device](const std::string& blacklistedVendorID){
-                                        return (blacklistedVendorID == (*i_device)->vendorID_);
+                                        return !fnmatch(blacklistedVendorID.c_str(), (*i_device)->vendorID_.c_str(), FNM_CASEFOLD);
                                     }) != hwdID->blacklistedVendorIDs.end();
 
                         if (!found)
                         {
                             // Check device ids
                             found = std::find_if(hwdID->deviceIDs.begin(), hwdID->deviceIDs.end(), [i_device](const std::string& deviceID){
-                                            return (("*" == deviceID) || (deviceID == (*i_device)->deviceID_));
+                                            return !fnmatch(deviceID.c_str(), (*i_device)->deviceID_.c_str(), FNM_CASEFOLD);
                                         }) != hwdID->deviceIDs.end();
 
                             if (found)
                             {
                                 // Check blacklisted device ids
                                 found = std::find_if(hwdID->blacklistedDeviceIDs.begin(), hwdID->blacklistedDeviceIDs.end(), [i_device](const std::string& blacklistedDeviceID){
-                                                return (blacklistedDeviceID == (*i_device)->deviceID_);
+                                                return !fnmatch(blacklistedDeviceID.c_str(), (*i_device)->deviceID_.c_str(), FNM_CASEFOLD);
                                             }) != hwdID->blacklistedDeviceIDs.end();
                                 if (!found)
                                 {
@@ -281,22 +282,28 @@ std::vector<std::shared_ptr<Config>> Data::getAllLocalConflicts(std::shared_ptr<
         installedConfigs = installedPCIConfigs;
     }
 
+    // Add self to local dependencies vector
     dependencies.emplace_back(config);
 
+    // Loop thru all MHWD config dependencies (not pacman dependencies)
     for (const auto& dependency : dependencies)
     {
+        // Loop thru all MHWD config conflicts
         for (const auto& dependencyConflict : dependency->conflicts_)
         {
+            // Then loop thru all already installed configs. If there are no configs installed, there can not be a conflict
             for (auto& installedConfig : installedConfigs)
             {
-                if (dependencyConflict == installedConfig->name_)
+                // Does one of the installed configs conflict one of the to-be-installed configs?
+                if (!fnmatch(dependencyConflict.c_str(),installedConfig->name_.c_str(), FNM_CASEFOLD))
                 {
+                    // Check if conflicts is already in the conflicts vector
                     bool found = std::find_if(conflicts.begin(), conflicts.end(),
                             [&dependencyConflict](const std::shared_ptr<Config>& conflict)
                             {
                                 return conflict->name_ == dependencyConflict;
                             }) != conflicts.end();
-
+                    // If not, add it to the conflicts vector. This will now be shown to the user.
                     if (!found)
                     {
                         conflicts.emplace_back(installedConfig);

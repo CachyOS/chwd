@@ -58,4 +58,4 @@ hash_t hash(char const* str)
 
 }; // End namespace
 
-#endif /* CONFIG_HPP_ */
+#endif /* MHWDUTILS_HPP_ */
