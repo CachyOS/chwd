@@ -294,6 +294,9 @@ std::vector<std::shared_ptr<Config>> Data::getAllLocalConflicts(std::shared_ptr<
             // Then loop thru all already installed configs. If there are no configs installed, there can not be a conflict
             for (auto& installedConfig : installedConfigs)
             {
+                // Skip yourself
+                if (installedConfig->name_ == config->name_)
+                    continue;
                 // Does one of the installed configs conflict one of the to-be-installed configs?
                 if (!fnmatch(dependencyConflict.c_str(),installedConfig->name_.c_str(), FNM_CASEFOLD))
                 {

@@ -62,12 +62,8 @@ bool Mhwd::performTransaction(std::shared_ptr<Config> config, MHWD::TRANSACTIONT
         // Print dependencies
         else if (!transaction.dependencyConfigs_.empty())
         {
-            consoleWriter_.printStatus("Dependencies to install:" +
-                    gatherConfigContent(transaction.dependencyConfigs_) +
-                    "\nProceed with installation? [Y/n]");
-            std::string input;
-            std::getline(std::cin, input);
-            return proceedWithInstallation(input);
+            consoleWriter_.printStatus("Dependencies to install: " +
+                    gatherConfigContent(transaction.dependencyConfigs_));
         }
     }
     else if (MHWD::TRANSACTIONTYPE::REMOVE == transactionType)
