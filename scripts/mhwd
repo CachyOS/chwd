@@ -305,6 +305,11 @@ if [ "${INSTALL}" == "true" ]; then
             echo "Error: pacman failed!"
             exit 1
         fi
+        ${PACMAN} -D --asexplicit ${PACKAGES}
+        if [ "$?" -ne "0" ]; then
+            echo "Error: pacman failed!"
+            exit 1
+        fi
     fi
 
     # Run postinstall function
@@ -372,14 +377,13 @@ if [ "${REMOVE}" == "true" ]; then
         fi
     fi
 
-    for PKG in "${OPTREMPACKAGES}"
-    do
-        # Check if package is needed anywhere, otherwise remove packages
-        # Usage of -Rsu is not enough, since pacman doesn't consider optional dependencies
-        if [ "$(pacman -Qi ${PKG} | egrep "Required By|Optional For" | awk '{ print $4}' | grep -v 'None')" == "" ]; then
-            PACKAGES="${PACKAGES} ${PKG}"
+    if [ "${OPTREMPACKAGES}" != "" ]; then
+        ${PACMAN} -D --asdeps ${OPTREMPACKAGES}
+        if [ "$?" -ne "0" ]; then
+            echo "Error: pacman failed!"
+            exit 1
         fi
-    done
+    fi
 
     # Check if packages are installed
     MHWD_CHECK_PKGS
