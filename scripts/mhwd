@@ -310,6 +310,8 @@ if [ "${INSTALL}" == "true" ]; then
             echo "Error: pacman failed!"
             exit 1
         fi
+    elif [ "${SYNC}" != "" ]; then
+        ${PACMAN} -S${SYNC}
     fi
 
     # Run postinstall function
