@@ -3,11 +3,10 @@
  *
  *  mhwd - Manjaro Hardware Detection
  *  Roland Singer <roland@manjaro.org>
- *  Philip Müller <philm@manjaro.org>
  *  Łukasz Matysiak <december0123@gmail.com>
  *  Filipe Marques <eagle.software3@gmail.com>
  *
- *  Copyright (C) 2012 - 2020 Manjaro (http://manjaro.org)
+ *  Copyright (C) 2012 - 2016 Manjaro (http://manjaro.org)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,16 +37,49 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#include "mhwd.hpp"
 
-#include <iostream>
+#ifndef CONSOLE_WRITER_HPP
+#define CONSOLE_WRITER_HPP
 
-int main(int argc, char** argv) {
-    try {
-        mhwd::Mhwd mhwd("0.6.5", "2022");
-        return mhwd.launch(argc, argv);
-    } catch (...) {
-        std::cerr << "Unknown errors occured...";
-        return -1;
-    }
-}
+#include "config.hpp"
+#include "device.hpp"
+#include "enums.hpp"
+
+#include <hd.h>
+
+#include <string>
+#include <string_view>
+#include <vector>
+
+namespace mhwd {
+
+class ConsoleWriter {
+ public:
+    void print_status(const std::string_view& msg) const;
+    void print_error(const std::string_view& msg) const;
+    void print_warning(const std::string_view& msg) const;
+    void print_message(mhwd::message_t type, const std::string_view& msg) const;
+    void print_help() const;
+    void print_version(const std::string_view& version, const std::string_view& year) const;
+    void list_devices(const std::vector<std::shared_ptr<Device>>& devices,
+        std::string typeOfDevice) const;
+    void list_configs(const std::vector<std::shared_ptr<Config>>& configs,
+        std::string header) const;
+    void printAvailableConfigsInDetail(const std::string_view& deviceType,
+        const std::vector<std::shared_ptr<Device>>& devices) const;
+    void printInstalledConfigs(const std::string_view& deviceType,
+        const std::vector<std::shared_ptr<Config>>& installedConfigs) const;
+    void printConfigDetails(const Config& config) const;
+    void printDeviceDetails(hw_item hw, FILE* f = stdout) const;
+
+ private:
+    void printLine() const;
+
+    const char* CONSOLE_COLOR_RESET{"\033[m"};
+    const char* CONSOLE_RED_MESSAGE_COLOR{"\033[1m\033[31m"};
+    const char* CONSOLE_TEXT_OUTPUT_COLOR{"\033[0;32m"};
+};
+
+}  // namespace mhwd
+
+#endif  // CONSOLE_WRITER_HPP

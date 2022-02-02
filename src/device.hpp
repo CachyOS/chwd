@@ -3,11 +3,10 @@
  *
  *  mhwd - Manjaro Hardware Detection
  *  Roland Singer <roland@manjaro.org>
- *  Philip Müller <philm@manjaro.org>
  *  Łukasz Matysiak <december0123@gmail.com>
  *  Filipe Marques <eagle.software3@gmail.com>
  *
- *  Copyright (C) 2012 - 2020 Manjaro (http://manjaro.org)
+ *  Copyright (C) 2012 - 2016 Manjaro (http://manjaro.org)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,16 +37,32 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#include "mhwd.hpp"
 
-#include <iostream>
+#ifndef DEVICE_HPP
+#define DEVICE_HPP
 
-int main(int argc, char** argv) {
-    try {
-        mhwd::Mhwd mhwd("0.6.5", "2022");
-        return mhwd.launch(argc, argv);
-    } catch (...) {
-        std::cerr << "Unknown errors occured...";
-        return -1;
-    }
-}
+#include "config.hpp"
+
+#include <memory>
+#include <string>
+#include <vector>
+
+namespace mhwd {
+
+struct Device {
+    std::string type;
+    std::string class_name;
+    std::string device_name;
+    std::string vendor_name;
+    std::string class_id;
+    std::string device_id;
+    std::string vendor_id;
+    std::string sysfs_busid;
+    std::string sysfs_id;
+    std::vector<std::shared_ptr<Config>> available_configs;
+    std::vector<std::shared_ptr<Config>> installed_configs;
+};
+
+}  // namespace mhwd
+
+#endif  // DEVICE_HPP

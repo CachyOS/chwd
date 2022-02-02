@@ -4,22 +4,20 @@ include_directories(. vita ${mhwd_SOURCE_DIR}/src)
 ### mhwd library
 ###
 
-set( LIB_HEADERS
-    const.h
+set(LIB_HEADERS
+    const.hpp
     vita/string.hpp
 )
 
-set( LIB_SOURCES
+set(LIB_SOURCES
     vita/string.cpp
 )
 
-set( LIB_LIBS hd)
+add_library(mhwd SHARED ${LIB_SOURCES} ${LIB_HEADERS})
+target_link_libraries(mhwd hd::hd)
 
+add_library(mhwd::mhwd ALIAS mhwd)
 
-add_library (mhwd SHARED ${LIB_SOURCES} ${LIB_HEADERS})
-target_link_libraries(mhwd ${LIB_LIBS})
-
-
-INSTALL(TARGETS mhwd
+install(TARGETS mhwd
   LIBRARY DESTINATION lib
 )

@@ -1,37 +1,24 @@
-include_directories(. ${mhwd_SOURCE_DIR}/libmhwd)
+##
+## Target
+##
+add_executable(mhwd-bin
+   enums.hpp
+   config.cpp config.hpp
+   data.cpp data.hpp
+   console_writer.cpp console_writer.hpp
+   transaction.hpp
+   device.hpp
+   mhwd.cpp mhwd.hpp
+   main.cpp
+   )
 
-###
-### mhwd binary
-###
+include_directories(${CMAKE_SOURCE_DIR}/libmhwd)
 
-set( HEADERS
-    Config.hpp
-    ConsoleWriter.hpp
-    Data.hpp
-    Device.hpp
-    Enums.hpp
-    Mhwd.hpp
-    Transaction.hpp
-)
-
-set( SOURCES
-    Config.cpp
-    ConsoleWriter.cpp
-    Data.cpp
-    Device.cpp
-    main.cpp
-    Mhwd.cpp
-    Transaction.cpp
-)
-
-set( LIBS mhwd)
-
-
-add_executable(mhwd-bin ${SOURCES} ${HEADERS})
-target_link_libraries(mhwd-bin ${LIBS})
+target_link_libraries(mhwd-bin PRIVATE project_warnings project_options mhwd::mhwd fmt::fmt hd::hd x86emu uuid)
+target_link_libraries(mhwd-bin PRIVATE hd)
 set_target_properties(mhwd-bin PROPERTIES OUTPUT_NAME mhwd)
 
-
-INSTALL(TARGETS mhwd-bin
-  RUNTIME DESTINATION bin
+install(
+   TARGETS mhwd-bin
+   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )

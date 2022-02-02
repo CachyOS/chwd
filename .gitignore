@@ -1,12 +1,40 @@
-libmhwd/cmake_install.cmake
-libmhwd/libmhwd.so
-src/cmake_install.cmake
-src/mhwd
-cmake_install.cmake
-CMakeCache.txt
-CMakeFiles
-Makefile
+*.DS_Store
+*.dump
+*.ctu-info
+.cache
+.idea
+build.sh
+build
+cmake-build-release
+cmake-build-debug
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
 *.o
-*settings
-*project
-bin/*
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Executables
+*.exe
+*.out
+*.app

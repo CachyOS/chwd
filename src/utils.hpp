@@ -3,11 +3,11 @@
  *
  *  mhwd - Manjaro Hardware Detection
  *  Roland Singer <roland@manjaro.org>
- *  Philip Müller <philm@manjaro.org>
  *  Łukasz Matysiak <december0123@gmail.com>
  *  Filipe Marques <eagle.software3@gmail.com>
+ *  Oscar Forner Martinez <oscar.forner.martinez@gmail.com>
  *
- *  Copyright (C) 2012 - 2020 Manjaro (http://manjaro.org)
+ *  Copyright (C) 2012 - 2016 Manjaro (http://manjaro.org)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 //
 // Copyright (C) 2022 Vladislav Nepogodin
 //
@@ -38,16 +39,38 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#include "mhwd.hpp"
 
-#include <iostream>
+#ifndef UTILS_HPP
+#define UTILS_HPP
 
-int main(int argc, char** argv) {
-    try {
-        mhwd::Mhwd mhwd("0.6.5", "2022");
-        return mhwd.launch(argc, argv);
-    } catch (...) {
-        std::cerr << "Unknown errors occured...";
-        return -1;
+#include <cstdint>
+
+namespace mhwd {
+namespace utils {
+
+    using hash_t = std::uint64_t;
+
+    // Hardcoded values for the prime and the basis to calculate hash values.
+    static constexpr hash_t prime = 0x100000001B3ull;
+    static constexpr hash_t basis = 0xCBF29CE484222325ull;
+
+    consteval hash_t hash_compile_time(const char* str, hash_t last_value = basis) {
+        return (*str) ? hash_compile_time(str + 1, (static_cast<hash_t>(*str) ^ last_value) * prime) : last_value;
     }
-}
+
+    constexpr hash_t hash(const char* str) {
+        hash_t result{basis};
+
+        while (str != nullptr) {
+            result ^= static_cast<hash_t>(*str);
+            result *= prime;
+            ++str;
+        }
+
+        return result;
+    }
+
+}  // namespace utils
+}  // namespace mhwd
+
+#endif  // UTILS_HPP

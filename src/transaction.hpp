@@ -3,11 +3,10 @@
  *
  *  mhwd - Manjaro Hardware Detection
  *  Roland Singer <roland@manjaro.org>
- *  Philip Müller <philm@manjaro.org>
  *  Łukasz Matysiak <december0123@gmail.com>
  *  Filipe Marques <eagle.software3@gmail.com>
  *
- *  Copyright (C) 2012 - 2020 Manjaro (http://manjaro.org)
+ *  Copyright (C) 2012 - 2016 Manjaro (http://manjaro.org)
  *
  *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -38,16 +37,41 @@
 // You should have received a copy of the GNU General Public License along
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-#include "mhwd.hpp"
 
-#include <iostream>
+#ifndef TRANSACTION_HPP
+#define TRANSACTION_HPP
 
-int main(int argc, char** argv) {
-    try {
-        mhwd::Mhwd mhwd("0.6.5", "2022");
-        return mhwd.launch(argc, argv);
-    } catch (...) {
-        std::cerr << "Unknown errors occured...";
-        return -1;
-    }
-}
+#include "config.hpp"
+#include "data.hpp"
+#include "enums.hpp"
+
+#include <memory>
+#include <vector>
+
+namespace mhwd {
+
+struct Transaction final {
+ public:
+    Transaction(Data data, std::shared_ptr<Config> conf, mhwd::transaction_t transaction_type,
+        bool allow_reinstallation)
+      : is_reinstall_allowed(allow_reinstallation),
+        type(transaction_type), config(conf),
+        dependency_configs(data.getAllDependenciesToInstall(config)),
+        conflicted_configs(data.getAllLocalConflicts(config)),
+        configs_requirements(data.getAllLocalRequirements(config)) { }
+
+    bool is_reinstall_allowed{};
+    mhwd::transaction_t type{};
+
+    std::shared_ptr<Config> config;
+    std::vector<std::shared_ptr<Config>> dependency_configs;
+    std::vector<std::shared_ptr<Config>> conflicted_configs;
+    std::vector<std::shared_ptr<Config>> configs_requirements;
+
+    // Deleted constructor
+    Transaction() = delete;
+};
+
+}  // namespace mhwd
+
+#endif  // TRANSACTION_HPP
