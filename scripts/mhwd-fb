@@ -27,7 +27,7 @@ check_system() {
     . "${MKINITCPIOCONF}"
     local found="";
 
-    for arg in ${HOOKS}
+    for arg in ${HOOKS[@]}
     do
         if [ "${arg}" == "mhwd-fb" ]; then
             found="true"

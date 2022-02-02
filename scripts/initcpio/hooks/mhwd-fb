@@ -37,7 +37,7 @@ run_earlyhook()
 
     if [ "${ARG_FB_DRIVER}" != "kms" ]; then
         # Disable KMS modules
-        for module in radeon nouveau i915 via-agp sis-agp intel-agp amd64-agp ati-agp sworks-agp ali-agp amd-k7-agp nvidia-agp efficeon-agp
+        for module in amdgpu radeon nouveau i915 via-agp sis-agp intel-agp amd64-agp ati-agp sworks-agp ali-agp amd-k7-agp nvidia-agp efficeon-agp
         do
             echo "blacklist ${module}" >> "/etc/modprobe.d/mhwd-kms.conf"
         done

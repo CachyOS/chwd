@@ -83,7 +83,7 @@ MHWD_CHECK_KMODS()
         for KERNEL in ${KERNELS} ; do
             if [ "$(pacman -Qq | grep -o ${KERNEL} -m1)" != "" ]; then
                 for KMOD in ${CONKMOD} ; do
-                    CONKMODS="${CONKMODS} ${KERNEL}-${KMOD}"
+                    CONKMODS="${CONKMODS} ${KMOD}"
                 done
             fi
         done
@@ -92,7 +92,7 @@ MHWD_CHECK_KMODS()
         for KERNEL in ${KERNELS} ; do
             if [ "$(pacman -Qq | grep -o ${KERNEL} -m1)" != "" ]; then
                 for KMOD in ${DEPKMOD} ; do
-                    DEPKMODS="${DEPKMODS} ${KERNEL}-${KMOD}"
+                    DEPKMODS="${DEPKMODS} ${KMOD}"
                 done
             fi
         done
@@ -130,7 +130,7 @@ CACHEPATH="/var/cache/pacman/pkg"
 PMCONFIG="/etc/pacman.conf"
 PMROOT="/"
 PACKAGES=""
-KERNELS=$(pacman -Qqs "^linux[0-9][0-9]?([0-9])$")
+KERNELS=$(pacman -Qqs "^linux(.*)$" | awk '/linux/ && !/headers/ && !/doc/ && !/firmware/ && !/tool/ && !/python/ && !/sampler/ && !/steam/ && !/console/')
 # lib32 config true/false
 MHWD64CONF="/etc/mhwd-x86_64.conf"
 
@@ -268,7 +268,7 @@ if [ "${INSTALL}" == "true" ]; then
     MHWD_CHECK_PKGS
 
     if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rs ${PACKAGES}
+        ${PACMAN} -Rsu ${PACKAGES}
         if [ "$?" -ne "0" ]; then
             echo "Error: pacman failed!"
             exit 1

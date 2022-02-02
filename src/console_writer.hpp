@@ -45,7 +45,16 @@
 #include "device.hpp"
 #include "enums.hpp"
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wnested-anon-types"
+#endif
+
 #include <hd.h>
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 #include <string>
 #include <string_view>
@@ -76,7 +85,6 @@ class ConsoleWriter {
     void printLine() const;
 
     const char* CONSOLE_COLOR_RESET{"\033[m"};
-    const char* CONSOLE_RED_MESSAGE_COLOR{"\033[1m\033[31m"};
     const char* CONSOLE_TEXT_OUTPUT_COLOR{"\033[0;32m"};
 };
 

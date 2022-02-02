@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Make commands output independent from language
+LANG=en
+
 root_check() {
     [[ $EUID != 0 ]] && err "Please run as root."
 }
@@ -18,8 +21,10 @@ kernel_usage() {
     -i  --install           Install a new kernel        [kernel(s)] [optional: rmc = remove current kernel]
     -l  --list              List all available kernels
     -li --listinstalled     List installed kernels
+    -lr --listrunning       List running kernel
     -r  --remove            Remove a kernel             [kernel(s)]"
 }
+
 
 kernel_install() {
     pkginstall=()
@@ -27,10 +32,9 @@ kernel_install() {
 
     for kernel in "$@"; do
         [[ $kernel = "rmc" ]] && rmc=1 && continue
-        [[ $kernel != linux[0-9][0-9]?([0-9]) && $kernel != linux[0-9][0-9]?([0-9])-rt && $kernel != "rmc" ]] && err "Invalid argument.\nPlease choose one of the $(kernel_repo)"
         [[ $current = $kernel ]] && err "You can't reinstall your current kernel. Please use 'pacman -Syu' instead to update."
         [[ -z $(pacman -Ssq "^$kernel$") ]] && err "Please make sure if the given kernel(s) exist(s).\n$(kernel_repo)"
-        
+
         for pkg in $(pacman -Qqs "$current"); do
             pkg=${pkg//$current/$kernel}
             [[ -n $(pacman -Ssq "^$pkg$" | grep -E "^$pkg$|^$pkg-\S+$") ]] && pkginstall+=("$pkg")
@@ -46,31 +50,32 @@ kernel_install() {
         [[ $yesno = [Yy]?([Ee][Ss]) ]] || exit 1
     fi
 
-    pacman -S "${pkginstall[@]}"
+    pacman -Syu "${pkginstall[@]}"
 
     [[ $rmc = 1 && $? = 0 ]] && pacman -R $(pacman -Qqs $current)
     [[ $rmc = 1 && $? != 0 ]] && { echo ""; err "'rmc' aborted because the kernel failed to install or canceled on removal."; }
 }
 
+
 kernel_repo() {
-    printf "\e[32mavailable kernels:\e[0m\n"
-    pacman -Ssq "^linux[0-9][0-9]?([0-9])$" | while read -r; do echo "   * $REPLY"; done
-    pacman -Ssq "^linux[0-9][0-9]?([0-9])-rt$" | while read -r; do echo "   * $REPLY"; done
+    printf "\e[32mavailable kernels:\e[0m \n"
+    [[ $EUID == 0 ]] && pacman -Fy > /dev/null
+    pacman -Fx 'usr/lib/modules/(.*)/vmlinuz' | awk '{print $5" "$6}'
 }
+
 
 kernel_list() {
     printf "\e[32mCurrently running:\e[0m $(uname -r) (${current})\n"
     echo "The following kernels are installed in your system:"
-    pacman -Qqs "^linux[0-9][0-9]?([0-9])$" | while read -r; do echo "   * $REPLY"; done
-    pacman -Qqs "^linux[0-9][0-9]?([0-9])-rt$" | while read -r; do echo "   * $REPLY"; done
+    pacman -Qo /usr/lib/modules/*/modules.builtin | awk '{print "local/"$5" "$6}'
 }
+
 
 kernel_remove() {
     pkgremove=()
 
     for kernel in "$@"; do
         [[ -z "$kernel" ]] && err "Invalid argument (use -h for help)."
-        [[ $kernel != linux[0-9][0-9]?([0-9]) && $kernel != linux[0-9][0-9]?([0-9])-rt ]] && err "Please enter a valid kernel name.\n$(kernel_list)"
         [[ $current = $kernel ]] && err "You can't remove your current kernel."
         [[ -z $(pacman -Qqs "^$1$") ]] && err "Kernel not installed.\n$(kernel_list)"
 
@@ -82,8 +87,14 @@ kernel_remove() {
     pacman -R "${pkgremove[@]}"
 }
 
+
+kernel_running() {
+    grep -Po '(?<=initrd\=\\initramfs-)(.+)(?=\.img)|(?<=boot\/vmlinuz-)([^ $]+)' /proc/cmdline
+}
+
+
 IFS=. read -r major minor _ <<< "$(uname -r)"
-current="linux$major$minor"
+current="$(kernel_running)"
 
 case "$1" in
     -h | --help)            args_check $# 1 1
@@ -98,6 +109,9 @@ case "$1" in
                             exit 0 ;;
     -li| --listinstalled)   args_check $# 1 1
                             kernel_list
+                            exit 0 ;;
+    -lr| --listrunning)     args_check $# 1 1
+                            kernel_running
                             exit 0 ;;
     -r | --remove)          shift
                             root_check

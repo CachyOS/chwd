@@ -1,22 +1,22 @@
-INSTALL(PROGRAMS mhwd
+install(PROGRAMS mhwd
   DESTINATION /var/lib/mhwd/scripts)
 
-INSTALL(PROGRAMS mhwd-gpu
+install(PROGRAMS mhwd-gpu
   DESTINATION /usr/bin)
 
-INSTALL(PROGRAMS mhwd-kernel
+install(PROGRAMS mhwd-kernel
   DESTINATION /usr/bin)
 
-INSTALL(PROGRAMS mhwd-fb
+install(PROGRAMS mhwd-fb
   DESTINATION /usr/bin)
 
-FILE(GLOB INCLUDEFILES "include/*")
+file(GLOB INCLUDEFILES "include/*")
 
-INSTALL(PROGRAMS ${INCLUDEFILES}
+install(PROGRAMS ${INCLUDEFILES}
   DESTINATION /var/lib/mhwd/scripts/include)
 
-INSTALL(FILES "initcpio/hooks/mhwd-fb"
+install(FILES "initcpio/hooks/mhwd-fb"
   DESTINATION /usr/lib/initcpio/hooks)
 
-INSTALL(FILES "initcpio/install/mhwd-fb"
+install(FILES "initcpio/install/mhwd-fb"
   DESTINATION /usr/lib/initcpio/install)

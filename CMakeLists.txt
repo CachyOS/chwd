@@ -31,6 +31,13 @@ FetchContent_Declare(hwinfo
   GIT_TAG "master"
 )
 FetchContent_MakeAvailable(fmt hwinfo)
+if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+   FetchContent_Declare(range-v3
+     GIT_REPOSITORY "https://github.com/ericniebler/range-v3.git"
+     GIT_TAG "9aa032ccd0eb4bd77f58e5b181168f1038c222c6"
+   )
+   FetchContent_MakeAvailable(range-v3)
+endif()
 
 ##
 ## CONFIGURATION
