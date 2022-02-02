@@ -54,15 +54,15 @@
 namespace mhwd {
 
 void ConsoleWriter::print_status(const std::string_view& msg) const {
-    fmt::print(fg(fmt::color::red), "> {}\n", msg);
+    fmt::print(fg(fmt::color::red), "> {}{}\n", CONSOLE_COLOR_RESET, msg);
 }
 
 void ConsoleWriter::print_error(const std::string_view& msg) const {
-    fmt::print(stderr, fg(fmt::color::red), "Error: {}\n", msg);
+    fmt::print(stderr, fg(fmt::color::red), "Error: {}{}\n", CONSOLE_COLOR_RESET, msg);
 }
 
 void ConsoleWriter::print_warning(const std::string_view& msg) const {
-    fmt::print(fg(fmt::color::red), "Warning: {}\n", msg);
+    fmt::print(fg(fmt::color::yellow), "Warning: {}{}\n", CONSOLE_COLOR_RESET, msg);
 }
 
 void ConsoleWriter::print_message(mhwd::message_t type, const std::string_view& msg) const {
