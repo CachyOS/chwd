@@ -5,6 +5,7 @@
 .idea
 build.sh
 build
+bin
 cmake-build-release
 cmake-build-debug
 
