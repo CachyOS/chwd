@@ -37,7 +37,7 @@ CPMAddPackage(
 )
 
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
-    CPMAddPackage(
+   CPMAddPackage(
      NAME range-v3
      GITHUB_REPOSITORY ericniebler/range-v3
      GIT_TAG 9aa032ccd0eb4bd77f58e5b181168f1038c222c6
@@ -49,11 +49,6 @@ endif()
 ## CONFIGURATION
 ##
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
-
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fwhole-program")
-endif()
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
