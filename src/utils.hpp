@@ -61,7 +61,7 @@ namespace utils {
     constexpr hash_t hash(const char* str) {
         hash_t result{basis};
 
-        while (str != nullptr) {
+        while (*str) {
             result ^= static_cast<hash_t>(*str);
             result *= prime;
             ++str;
