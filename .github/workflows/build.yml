@@ -21,7 +21,7 @@ jobs:
       - name: install deps
         run: |
           sudo apt update
-          sudo apt install libx86emu-dev
+          sudo apt install libx86emu-dev hwinfo
         shell: bash
 
       - name: Set up JDK 11
