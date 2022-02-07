@@ -36,6 +36,13 @@ CPMAddPackage(
   EXCLUDE_FROM_ALL YES
 )
 
+CPMAddPackage(
+  NAME x86emu
+  GITHUB_REPOSITORY vnepogodin/libx86emu
+  GIT_TAG master
+  EXCLUDE_FROM_ALL YES
+)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
    CPMAddPackage(
      NAME range-v3
