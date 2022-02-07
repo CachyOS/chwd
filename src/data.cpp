@@ -51,6 +51,19 @@
 #include <string>
 #include <vector>
 
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wold-style-cast"
+#pragma clang diagnostic ignored "-Wimplicit-int-conversion"
+
+#include <range/v3/algorithm/find_if.hpp>
+
+#pragma clang diagnostic pop
+#else
+#include <ranges>
+namespace ranges = std::ranges;
+#endif
+
 #include <fmt/core.h>
 
 namespace fs = std::filesystem;
@@ -119,49 +132,47 @@ void Data::getAllDevicesOfConfig(const std::vector<std::shared_ptr<Device>>& dev
     std::vector<std::shared_ptr<Device>>& foundDevices) {
     foundDevices.clear();
 
-    for (auto&& hwdID = config->hwd_ids.begin();
-         hwdID != config->hwd_ids.end(); ++hwdID) {
+    for (auto&& hwdID : config->hwd_ids) {
         bool foundDevice = false;
         // Check all devices
-        for (auto&& i_device = devices.begin(); i_device != devices.end();
-             ++i_device) {
+        for (auto&& i_device : devices) {
             // Check class ids
-            bool found = std::find_if(hwdID->class_ids.begin(), hwdID->class_ids.end(), [i_device](const std::string& classID) {
-                return !fnmatch(classID.c_str(), (*i_device)->class_id.c_str(), FNM_CASEFOLD);
-            }) != hwdID->class_ids.end();
+            bool found = ranges::find_if(hwdID.class_ids, [i_device](const std::string& classID) {
+                return !fnmatch(classID.c_str(), i_device->class_id.c_str(), FNM_CASEFOLD);
+            }) != hwdID.class_ids.end();
 
             if (found) {
                 // Check blacklisted class ids
-                found = std::find_if(hwdID->blacklisted_class_ids.begin(), hwdID->blacklisted_class_ids.end(), [i_device](const std::string& blacklistedClassID) {
-                    return !fnmatch(blacklistedClassID.c_str(), (*i_device)->class_id.c_str(), FNM_CASEFOLD);
-                }) != hwdID->blacklisted_class_ids.end();
+                found = ranges::find_if(hwdID.blacklisted_class_ids, [i_device](const std::string& blacklistedClassID) {
+                    return !fnmatch(blacklistedClassID.c_str(), i_device->class_id.c_str(), FNM_CASEFOLD);
+                }) != hwdID.blacklisted_class_ids.end();
 
                 if (!found) {
                     // Check vendor ids
-                    found = std::find_if(hwdID->vendor_ids.begin(), hwdID->vendor_ids.end(), [i_device](const std::string& vendorID) {
-                        return !fnmatch(vendorID.c_str(), (*i_device)->vendor_id.c_str(), FNM_CASEFOLD);
-                    }) != hwdID->vendor_ids.end();
+                    found = ranges::find_if(hwdID.vendor_ids, [i_device](const std::string& vendorID) {
+                        return !fnmatch(vendorID.c_str(), i_device->vendor_id.c_str(), FNM_CASEFOLD);
+                    }) != hwdID.vendor_ids.end();
 
                     if (found) {
                         // Check blacklisted vendor ids
-                        found = std::find_if(hwdID->blacklisted_vendor_ids.begin(), hwdID->blacklisted_vendor_ids.end(), [i_device](const std::string& blacklistedVendorID) {
-                            return !fnmatch(blacklistedVendorID.c_str(), (*i_device)->vendor_id.c_str(), FNM_CASEFOLD);
-                        }) != hwdID->blacklisted_vendor_ids.end();
+                        found = ranges::find_if(hwdID.blacklisted_vendor_ids, [i_device](const std::string& blacklistedVendorID) {
+                            return !fnmatch(blacklistedVendorID.c_str(), i_device->vendor_id.c_str(), FNM_CASEFOLD);
+                        }) != hwdID.blacklisted_vendor_ids.end();
 
                         if (!found) {
                             // Check device ids
-                            found = std::find_if(hwdID->device_ids.begin(), hwdID->device_ids.end(), [i_device](const std::string& deviceID) {
-                                return !fnmatch(deviceID.c_str(), (*i_device)->device_id.c_str(), FNM_CASEFOLD);
-                            }) != hwdID->device_ids.end();
+                            found = ranges::find_if(hwdID.device_ids, [i_device](const std::string& deviceID) {
+                                return !fnmatch(deviceID.c_str(), i_device->device_id.c_str(), FNM_CASEFOLD);
+                            }) != hwdID.device_ids.end();
 
                             if (found) {
                                 // Check blacklisted device ids
-                                found = std::find_if(hwdID->blacklisted_device_ids.begin(), hwdID->blacklisted_device_ids.end(), [i_device](const std::string& blacklistedDeviceID) {
-                                    return !fnmatch(blacklistedDeviceID.c_str(), (*i_device)->device_id.c_str(), FNM_CASEFOLD);
-                                }) != hwdID->blacklisted_device_ids.end();
+                                found = ranges::find_if(hwdID.blacklisted_device_ids, [i_device](const std::string& blacklistedDeviceID) {
+                                    return !fnmatch(blacklistedDeviceID.c_str(), i_device->device_id.c_str(), FNM_CASEFOLD);
+                                }) != hwdID.blacklisted_device_ids.end();
                                 if (!found) {
                                     foundDevice = true;
-                                    foundDevices.push_back(*i_device);
+                                    foundDevices.push_back(i_device);
                                 }
                             }
                         }
@@ -197,14 +208,14 @@ void Data::getAllDependenciesToInstall(std::shared_ptr<Config> config,
     std::vector<std::shared_ptr<Config>>& installedConfigs,
     std::vector<std::shared_ptr<Config>>* dependencies) {
     for (const auto& configDependency : config->dependencies) {
-        auto found = std::find_if(installedConfigs.begin(), installedConfigs.end(),
+        auto found = ranges::find_if(installedConfigs,
                          [configDependency](const auto& tmp) -> bool {
                              return (tmp->name == configDependency);
                          })
             != installedConfigs.end();
 
         if (!found) {
-            found = std::find_if(dependencies->begin(), dependencies->end(),
+            found = ranges::find_if(*dependencies,
                         [configDependency](const auto& tmp) -> bool {
                             return (tmp->name == configDependency);
                         })
@@ -255,7 +266,7 @@ std::vector<std::shared_ptr<Config>> Data::getAllLocalConflicts(std::shared_ptr<
                 // Does one of the installed configs conflict one of the to-be-installed configs?
                 if (!fnmatch(dependencyConflict.c_str(), installedConfig->name.c_str(), FNM_CASEFOLD)) {
                     // Check if conflicts is already in the conflicts vector
-                    const bool found = std::find_if(conflicts.begin(), conflicts.end(),
+                    const bool found = ranges::find_if(conflicts.begin(), conflicts.end(),
                                            [&dependencyConflict](const auto& tmp) {
                                                return tmp->name == dependencyConflict;
                                            })
@@ -281,7 +292,7 @@ std::vector<std::shared_ptr<Config>> Data::getAllLocalRequirements(std::shared_p
     for (auto& installedConfig : installedConfigs) {
         for (const auto& dependency : installedConfig->dependencies) {
             if (dependency == config->name) {
-                const bool found = std::find_if(requirements.begin(), requirements.end(),
+                const bool found = ranges::find_if(requirements.begin(), requirements.end(),
                                        [&installedConfig](const std::shared_ptr<Config>& req) {
                                            return req->name == installedConfig->name;
                                        })
@@ -433,7 +444,7 @@ void Data::setMatchingConfig(std::shared_ptr<Config> config,
 
 void Data::addConfigSorted(std::vector<std::shared_ptr<Config>>& configs,
     std::shared_ptr<Config> newConfig) {
-    const bool found = std::find_if(configs.begin(), configs.end(),
+    const bool found = ranges::find_if(configs.begin(), configs.end(),
                            [&newConfig](const std::shared_ptr<Config>& config) {
                                return newConfig->name == config->name;
                            })

@@ -13,6 +13,7 @@
 
 #include <sstream>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace Vita {
@@ -31,6 +32,7 @@ class string : public std::string {
      * Directly call <tt>std::string::string(const char*)</tt>.
      */
     string(const char* cstr) : std::string(cstr){};
+    string(const std::string_view& str) : std::string(str.data()){};
 
     /**
      * Directly call <tt>std::string::string(const char*, size_t)</tt>.

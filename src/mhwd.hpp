@@ -110,7 +110,7 @@ class Mhwd {
     bool runScript(std::shared_ptr<Config> config, mhwd::transaction_t operationType);
     void tryToParseCmdLineOptions(int argc, char* argv[], bool& autoConfigureNonFreeDriver,
         std::string& operationType, std::string& autoConfigureClassID);
-    bool optionsDontInterfereWithEachOther() const;
+    void optionsDontInterfereWithEachOther() const;
     std::string gatherConfigContent(const std::vector<std::shared_ptr<Config>>& config) const;
 };
 

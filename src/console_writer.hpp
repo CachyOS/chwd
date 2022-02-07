@@ -60,6 +60,8 @@
 #include <string_view>
 #include <vector>
 
+#include <fmt/core.h>
+
 namespace mhwd {
 
 class ConsoleWriter {
@@ -67,6 +69,21 @@ class ConsoleWriter {
     void print_status(const std::string_view& msg) const;
     void print_error(const std::string_view& msg) const;
     void print_warning(const std::string_view& msg) const;
+
+    // overload to allow pass variadic arguments
+    template <typename... Args>
+    constexpr void print_status(fmt::format_string<Args...> fmt, Args&&... args) const {
+        print_status(fmt::format(fmt, std::forward<Args>(args)...));
+    }
+    template <typename... Args>
+    constexpr void print_error(fmt::format_string<Args...> fmt, Args&&... args) const {
+        print_error(fmt::format(fmt, std::forward<Args>(args)...));
+    }
+    template <typename... Args>
+    constexpr void print_warning(fmt::format_string<Args...> fmt, Args&&... args) const {
+        print_warning(fmt::format(fmt, std::forward<Args>(args)...));
+    }
+
     void print_message(mhwd::message_t type, const std::string_view& msg) const;
     void print_help() const;
     void print_version(const std::string_view& version, const std::string_view& year) const;

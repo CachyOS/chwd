@@ -45,48 +45,50 @@
 #include <iomanip>
 #include <iostream>
 #include <memory>
+#include <numeric>
 #include <string>
 #include <vector>
 
 #include <fmt/color.h>
+#include <fmt/compile.h>
 #include <fmt/core.h>
 
 namespace mhwd {
 
 void ConsoleWriter::print_status(const std::string_view& msg) const {
-    fmt::print(fg(fmt::color::red), "> {}{}\n", CONSOLE_COLOR_RESET, msg);
+    fmt::print(fg(fmt::color::red), fmt::format(FMT_COMPILE("> {}{}\n"), CONSOLE_COLOR_RESET, msg));
 }
 
 void ConsoleWriter::print_error(const std::string_view& msg) const {
-    fmt::print(stderr, fg(fmt::color::red), "Error: {}{}\n", CONSOLE_COLOR_RESET, msg);
+    fmt::print(stderr, fg(fmt::color::red), fmt::format(FMT_COMPILE("Error: {}{}\n"), CONSOLE_COLOR_RESET, msg));
 }
 
 void ConsoleWriter::print_warning(const std::string_view& msg) const {
-    fmt::print(fg(fmt::color::yellow), "Warning: {}{}\n", CONSOLE_COLOR_RESET, msg);
+    fmt::print(fg(fmt::color::yellow), fmt::format(FMT_COMPILE("Warning: {}{}\n"), CONSOLE_COLOR_RESET, msg));
 }
 
 void ConsoleWriter::print_message(mhwd::message_t type, const std::string_view& msg) const {
     switch (type) {
     case mhwd::message_t::CONSOLE_OUTPUT:
-        print_status(fmt::format("{}{}{}", CONSOLE_TEXT_OUTPUT_COLOR, msg, CONSOLE_COLOR_RESET));
+        print_status("{}{}{}", CONSOLE_TEXT_OUTPUT_COLOR, msg, CONSOLE_COLOR_RESET);
         break;
     case mhwd::message_t::INSTALLDEPENDENCY_START:
-        print_status(fmt::format("Installing dependency {} ...", msg));
+        print_status("Installing dependency {} ...", msg);
         break;
     case mhwd::message_t::INSTALLDEPENDENCY_END:
-        print_status(fmt::format("Successfully installed dependency  {}", msg));
+        print_status("Successfully installed dependency  {}", msg);
         break;
     case mhwd::message_t::INSTALL_START:
-        print_status(fmt::format("Installing {} ...", msg));
+        print_status("Installing {} ...", msg);
         break;
     case mhwd::message_t::INSTALL_END:
-        print_status(fmt::format("Successfully installed {}", msg));
+        print_status("Successfully installed {}", msg);
         break;
     case mhwd::message_t::REMOVE_START:
-        print_status(fmt::format("Removing {} ...", msg));
+        print_status("Removing {} ...", msg);
         break;
     case mhwd::message_t::REMOVE_END:
-        print_status(fmt::format("Successfully removed {}", msg));
+        print_status("Successfully removed {}", msg);
         break;
     default:
         print_error("You shouldn't see this?! Unknown message type!");
@@ -126,25 +128,15 @@ void ConsoleWriter::print_version(const std::string_view& version_mhwd, const st
 
 void ConsoleWriter::list_devices(const std::vector<std::shared_ptr<Device>>& devices, std::string type) const {
     if (devices.empty()) {
-        print_warning(fmt::format("No {} devices found!", type));
+        print_warning("No {} devices found!", type);
         return;
     }
-    print_status(fmt::format("{} devices:", type));
+    print_status("{} devices:", type);
     printLine();
-    std::cout << std::setw(30) << "TYPE"
-              << std::setw(15) << "BUS"
-              << std::setw(8) << "CLASS"
-              << std::setw(8) << "VENDOR"
-              << std::setw(8) << "DEVICE"
-              << std::setw(10) << "CONFIGS" << '\n';
+    fmt::print(FMT_COMPILE("{:>30}{:>15}{:>8}{:>8}{:>8}{:>10}\n"), "TYPE", "BUS", "CLASS", "VENDOR", "DEVICE", "CONFIGS");
     printLine();
     for (const auto& device : devices) {
-        std::cout << std::setw(30) << device->class_name
-                  << std::setw(15) << device->sysfs_busid
-                  << std::setw(8) << device->class_id
-                  << std::setw(8) << device->vendor_id
-                  << std::setw(8) << device->device_id
-                  << std::setw(10) << device->available_configs.size() << '\n';
+        fmt::print(FMT_COMPILE("{:>30}{:>15}{:>8}{:>8}{:>8}{:>10}\n"), device->class_name, device->sysfs_busid, device->class_id, device->vendor_id, device->device_id, device->available_configs.size());
     }
     fmt::print("\n\n");
 }
@@ -152,16 +144,10 @@ void ConsoleWriter::list_devices(const std::vector<std::shared_ptr<Device>>& dev
 void ConsoleWriter::list_configs(const std::vector<std::shared_ptr<Config>>& configs, std::string header) const {
     print_status(header);
     printLine();
-    std::cout << std::setw(22) << "NAME"
-              << std::setw(22) << "VERSION"
-              << std::setw(20) << "FREEDRIVER"
-              << std::setw(15) << "TYPE" << '\n';
+    fmt::print(FMT_COMPILE("{:>24}{:>22}{:>18}{:>15}\n"), "NAME", "VERSION", "FREEDRIVER", "TYPE");
     printLine();
     for (const auto& config : configs) {
-        std::cout << std::setw(22) << config->name
-                  << std::setw(22) << config->version
-                  << std::setw(20) << std::boolalpha << config->is_freedriver
-                  << std::setw(15) << config->type << '\n';
+        fmt::print(FMT_COMPILE("{:>24}{:>22}{:>18}{:>15}\n"), config->name, config->version, config->is_freedriver, config->type);
     }
     fmt::print("\n\n");
 }
@@ -175,8 +161,8 @@ void ConsoleWriter::printAvailableConfigsInDetail(const std::string_view& device
         config_found = true;
 
         printLine();
-        print_status(fmt::format("{} Device: {} ({}:{}:{})", device_type, device->sysfs_id, device->class_id, device->vendor_id, device->device_id));
-        fmt::print("  {} {} {}\n", device->class_name, device->vendor_name, device->device_name);
+        print_status("{} Device: {} ({}:{}:{})", device_type, device->sysfs_id, device->class_id, device->vendor_id, device->device_id);
+        fmt::print(FMT_COMPILE("  {} {} {}\n"), device->class_name, device->vendor_name, device->device_name);
         printLine();
         if (!device->installed_configs.empty()) {
             fmt::print("  > INSTALLED:\n\n");
@@ -195,14 +181,14 @@ void ConsoleWriter::printAvailableConfigsInDetail(const std::string_view& device
     }
 
     if (!config_found) {
-        print_warning(fmt::format("no configs for {} devices found!", device_type));
+        print_warning("no configs for {} devices found!", device_type);
     }
 }
 
 void ConsoleWriter::printInstalledConfigs(const std::string_view& device_type,
     const std::vector<std::shared_ptr<Config>>& installed_configs) const {
     if (installed_configs.empty()) {
-        print_warning(fmt::format("no installed configs for {} devices found!", device_type));
+        print_warning("no installed configs for {} devices found!", device_type);
         return;
     }
     for (const auto& config : installed_configs) {
@@ -212,40 +198,36 @@ void ConsoleWriter::printInstalledConfigs(const std::string_view& device_type,
 }
 
 void ConsoleWriter::printConfigDetails(const Config& config) const {
-    std::string classids;
-    std::string vendorids;
+    const auto& split_by_space = [](const auto& vec) {
+        const auto& space_fold = [](auto&& a, const auto& in) {
+            return in + ' ' + std::move(a);
+        };
+
+        return vec.empty() ? "-" : std::accumulate(std::next(vec.begin()), vec.end(),
+                   vec[0],  // start with first element
+                   space_fold);
+    };
+
+    std::string class_ids;
+    std::string vendor_ids;
     for (const auto& hwd : config.hwd_ids) {
-        for (const auto& m_vendor_id : hwd.vendor_ids) {
-            vendorids += m_vendor_id + " ";
-        }
+        vendor_ids += split_by_space(hwd.vendor_ids);
+        class_ids += split_by_space(hwd.class_ids);
+    }
+    const auto& dependencies = split_by_space(config.dependencies);
+    const auto& conflicts    = split_by_space(config.conflicts);
 
-        for (const auto& classID : hwd.class_ids) {
-            classids += classID + " ";
-        }
-    }
-    std::string dependencies;
-    for (const auto& dependency : config.dependencies) {
-        dependencies += dependency + " ";
-    }
-    std::string conflicts;
-    for (const auto& conflict : config.conflicts) {
-        conflicts += conflict + " ";
-    }
-
-    std::cout << "   NAME:\t" << config.name
-              << "\n   ATTACHED:\t" << config.type
-              << "\n   VERSION:\t" << config.version
-              << "\n   INFO:\t" << (config.info.empty() ? "-" : config.info)
-              << "\n   PRIORITY:\t" << config.priority
-              << "\n   FREEDRIVER:\t" << std::boolalpha << config.is_freedriver
-              << "\n   DEPENDS:\t" << (dependencies.empty() ? "-" : dependencies)
-              << "\n   CONFLICTS:\t" << (conflicts.empty() ? "-" : conflicts)
-              << "\n   CLASSIDS:\t" << classids
-              << "\n   VENDORIDS:\t" << vendorids << "\n\n";
+    fmt::print(FMT_COMPILE("   NAME:\t{}\n   ATTACHED:\t{}\n   VERSION:\t{}\n   INFO:\t{}\n   PRIORITY:\t{}\n   FREEDRIVER:\t{}\n   DEPENDS:\t{}\n   CONFLICTS:\t{}\n   CLASSIDS:\t{}\n   VENDORIDS:\t{}\n\n"),
+        config.name, config.type, config.version,
+        (config.info.empty() ? "-" : config.info),
+        config.priority, config.is_freedriver,
+        dependencies,
+        conflicts,
+        class_ids, vendor_ids);
 }
 
 void ConsoleWriter::printLine() const {
-    std::cout << std::string(80, '-') << '\n';
+    fmt::print("{:->80}", "\n");  // use '-' as a fill char
 }
 
 void ConsoleWriter::printDeviceDetails(hw_item hw, FILE* f) const {
