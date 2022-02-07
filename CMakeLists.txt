@@ -7,7 +7,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 ## name and version
 ##
 project(mhwd
-        VERSION 0.6.6
+        VERSION 0.6.7
         LANGUAGES C CXX)
 
 ##
