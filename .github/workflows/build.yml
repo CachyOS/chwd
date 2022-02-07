@@ -21,7 +21,7 @@ jobs:
       - name: install deps
         run: |
           sudo apt update
-          sudo apt install libx86emu-dev hwinfo
+          sudo apt install gcc-11 g++-11 libx86emu-dev hwinfo
         shell: bash
 
       - name: Set up JDK 11
@@ -47,6 +47,10 @@ jobs:
         run: |
           ./configure.sh -t=Release
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} ./build.sh
+        env:
+          CC:   gcc-11
+          CXX:  g++-11
+
       - name: Run sonar-scanner
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
