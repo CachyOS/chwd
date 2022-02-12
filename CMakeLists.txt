@@ -25,7 +25,7 @@ include(CPM)
 CPMAddPackage(
   NAME fmt
   GITHUB_REPOSITORY fmtlib/fmt
-  GIT_TAG ae1aaaee5f5f36ce5303bb140d51b6db21e1af4e
+  GIT_TAG a44716f58e943905d1357160b98cae2618d053cf
   EXCLUDE_FROM_ALL YES
 )
 
