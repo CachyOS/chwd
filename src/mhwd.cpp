@@ -697,7 +697,7 @@ int Mhwd::launch(int argc, char* argv[]) {
 
     // Transaction
     /* clang-format off */
-    if (!m_arguments.INSTALL || !m_arguments.REMOVE) { return 0; }
+    if (!(m_arguments.INSTALL || m_arguments.REMOVE)) { return 0; }
     /* clang-format on */
     if (!is_user_root()) {
         m_console_writer.print_error("You cannot perform this operation unless you are root!");

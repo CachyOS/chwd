@@ -70,7 +70,7 @@ void ConsoleWriter::print_warning(const std::string_view& msg) const {
 void ConsoleWriter::print_message(mhwd::message_t type, const std::string_view& msg) const {
     switch (type) {
     case mhwd::message_t::CONSOLE_OUTPUT:
-        print_status("{}{}{}", CONSOLE_TEXT_OUTPUT_COLOR, msg, CONSOLE_COLOR_RESET);
+        fmt::print("{}{}{}", CONSOLE_TEXT_OUTPUT_COLOR, msg, CONSOLE_COLOR_RESET);
         break;
     case mhwd::message_t::INSTALLDEPENDENCY_START:
         print_status("Installing dependency {} ...", msg);
