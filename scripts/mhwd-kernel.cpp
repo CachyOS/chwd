@@ -158,10 +158,10 @@ void kernel_install(const std::vector<std::string>& kernels) noexcept {
         if (yesno != 'Y' && yesno != 'y') { std::exit(1); }
     }
 
-    auto cmd              = fmt::format("pacman -Syu \"{}\"", pkginstall);
+    auto cmd              = fmt::format("pacman -Syu {}", pkginstall);
     const int status_code = std::system(cmd.c_str());
 
-    cmd = fmt::format("pacman -R \"{}\"", current);
+    cmd = fmt::format("pacman -R {}", current);
     if (rmc && (status_code == 0)) {
         code = std::system(cmd.c_str());
     } else if (rmc && (status_code != 0)) {
@@ -186,7 +186,7 @@ void kernel_remove(const std::vector<std::string>& kernels) noexcept {
         pkgremove += fmt::format("{} ", kernel);
     }
 
-    const auto& cmd = fmt::format("pacman -R \"{}\"", pkgremove);
+    const auto& cmd = fmt::format("pacman -R {}", pkgremove);
     [[maybe_unused]] const auto& code = std::system(cmd.c_str());
 }
 
