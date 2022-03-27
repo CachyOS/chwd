@@ -146,7 +146,7 @@ void kernel_install(const std::vector<std::string>& kernels) noexcept {
 
         pkginstall += fmt::format("{} ", kernel);
     }
-    [[maybe_unused]] const auto& code = std::system("pacman -Syy");
+    [[maybe_unused]] auto code = std::system("pacman -Syy");
 
     const auto& outofdate = exec("pacman -Qqu | tr '\n' ' '");
     if (!outofdate.empty()) {
@@ -163,7 +163,7 @@ void kernel_install(const std::vector<std::string>& kernels) noexcept {
 
     cmd = fmt::format("pacman -R \"{}\"", current);
     if (rmc && (status_code == 0)) {
-        [[maybe_unused]] const auto& code = std::system(cmd.c_str());
+        code = std::system(cmd.c_str());
     } else if (rmc && (status_code != 0)) {
         err("\n'rmc' aborted because the kernel failed to install or canceled on removal.");
     }
