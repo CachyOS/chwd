@@ -164,13 +164,17 @@ std::vector<Kernel> Kernel::get_kernels(alpm_handle_t* handle) noexcept {
         for (alpm_list_t* j = ret_list; j != nullptr; j = j->next) {
             auto* pkg            = reinterpret_cast<alpm_pkg_t*>(j->data);
             std::string pkg_name = alpm_pkg_get_name(pkg);
-
-            const auto& found = ranges::search(pkg_name, ignored_pkg);
+            const auto& found    = ranges::search(pkg_name, ignored_pkg);
             if (!found.empty()) {
                 continue;
             }
             utils::remove_all(pkg_name, replace_part);
             pkg = alpm_db_get_pkg(db, pkg_name.c_str());
+
+            // Skip if the actual kernel package is not found
+            if (!pkg) {
+                continue;
+            }
 
             kernels.emplace_back(Kernel{handle, pkg, db_name, fmt::format(FMT_COMPILE("{}/{}"), db_name, pkg_name)});
         }
