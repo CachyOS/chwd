@@ -25,7 +25,7 @@ include(CPM)
 CPMAddPackage(
   NAME fmt
   GITHUB_REPOSITORY fmtlib/fmt
-  GIT_TAG e2408f37c8f7301a1e5d32364675d0077ad09559
+  GIT_TAG 7e4ad40171aa552d38cb99a5c181a0d7b150facc
   EXCLUDE_FROM_ALL YES
 )
 
@@ -47,7 +47,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
    CPMAddPackage(
      NAME range-v3
      GITHUB_REPOSITORY ericniebler/range-v3
-     GIT_TAG d800a032132512a54c291ce55a2a43e0460591c7
+     GIT_TAG c7ad677c7fe7a3e94d2a44e2ebe89047c96eeb94
      EXCLUDE_FROM_ALL YES
    )
 endif()
