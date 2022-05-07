@@ -83,9 +83,41 @@ namespace fs = std::filesystem;
 
 namespace mhwd {
 
-bool Mhwd::performTransaction(std::shared_ptr<Config> config, mhwd::transaction_t transactionType) {
-    Transaction transaction(m_data, config, transactionType,
-        m_arguments.FORCE);
+namespace {
+    std::string gatherConfigContent(const list_of_configs_t& configuration) {
+        std::string config;
+        for (auto&& c : configuration) {
+            config += fmt::format(FMT_COMPILE(" {}"), c->name);
+        }
+        return config;
+    }
+
+    bool is_user_root() noexcept {
+        static constexpr auto ROOT_UID = 0;
+        return ROOT_UID == getuid();
+    }
+
+    std::vector<std::string> checkEnvironment() {
+        std::vector<std::string> missingDirs;
+        if (!fs::exists(consts::MHWD_USB_CONFIG_DIR)) {
+            missingDirs.emplace_back(consts::MHWD_USB_CONFIG_DIR);
+        }
+        if (!fs::exists(consts::MHWD_PCI_CONFIG_DIR)) {
+            missingDirs.emplace_back(consts::MHWD_PCI_CONFIG_DIR);
+        }
+        if (!fs::exists(consts::MHWD_USB_DATABASE_DIR)) {
+            missingDirs.emplace_back(consts::MHWD_USB_DATABASE_DIR);
+        }
+        if (!fs::exists(consts::MHWD_PCI_DATABASE_DIR)) {
+            missingDirs.emplace_back(consts::MHWD_PCI_DATABASE_DIR);
+        }
+
+        return missingDirs;
+    }
+}  // namespace
+
+bool Mhwd::performTransaction(const config_t& config, mhwd::transaction_t transactionType) {
+    Transaction transaction(m_data, config, transactionType, m_arguments.FORCE);
 
     // Print things to do
     if (mhwd::transaction_t::install == transactionType) {
@@ -140,40 +172,9 @@ bool Mhwd::performTransaction(std::shared_ptr<Config> config, mhwd::transaction_
     return (mhwd::status_t::SUCCESS == status);
 }
 
-bool Mhwd::proceedWithInstallation(const std::string& input) const {
-    const auto& len = input.length();
-    if ((len == 0) || ((len == 1) && (('y' == input[0]) || ('Y' == input[0])))) {
-        return true;
-    }
-    return false;
-}
-
-bool Mhwd::is_user_root() const noexcept {
-    static constexpr auto ROOT_UID = 0;
-    return ROOT_UID == getuid();
-}
-
-std::vector<std::string> Mhwd::checkEnvironment() const noexcept {
-    std::vector<std::string> missingDirs;
-    if (!fs::exists(consts::MHWD_USB_CONFIG_DIR)) {
-        missingDirs.emplace_back(consts::MHWD_USB_CONFIG_DIR);
-    }
-    if (!fs::exists(consts::MHWD_PCI_CONFIG_DIR)) {
-        missingDirs.emplace_back(consts::MHWD_PCI_CONFIG_DIR);
-    }
-    if (!fs::exists(consts::MHWD_USB_DATABASE_DIR)) {
-        missingDirs.emplace_back(consts::MHWD_USB_DATABASE_DIR);
-    }
-    if (!fs::exists(consts::MHWD_PCI_DATABASE_DIR)) {
-        missingDirs.emplace_back(consts::MHWD_PCI_DATABASE_DIR);
-    }
-
-    return missingDirs;
-}
-
-std::shared_ptr<Config> Mhwd::getInstalledConfig(const std::string& config_name, const std::string& configType) {
+config_t Mhwd::getInstalledConfig(const std::string_view& config_name, const std::string_view& configType) const noexcept {
     // Get the right configs
-    auto* installed_configs = ("USB" == configType) ? &m_data.installedUSBConfigs : &m_data.installedPCIConfigs;
+    const auto& installed_configs = ("USB" == configType) ? &m_data.installedUSBConfigs : &m_data.installedPCIConfigs;
 
     auto installed_config = ranges::find_if(*installed_configs,
         [config_name](const auto& temp) {
@@ -186,9 +187,9 @@ std::shared_ptr<Config> Mhwd::getInstalledConfig(const std::string& config_name,
     return nullptr;
 }
 
-std::shared_ptr<Config> Mhwd::getDatabaseConfig(const std::string& config_name, const std::string& configType) {
+config_t Mhwd::getDatabaseConfig(const std::string_view& config_name, const std::string_view& configType) const noexcept {
     // Get the right configs
-    auto* allConfigs = ("USB" == configType) ? &m_data.allUSBConfigs : &m_data.allPCIConfigs;
+    const auto& allConfigs = ("USB" == configType) ? &m_data.allUSBConfigs : &m_data.allPCIConfigs;
 
     auto config = ranges::find_if(*allConfigs,
         [config_name](const auto& temp) {
@@ -200,11 +201,11 @@ std::shared_ptr<Config> Mhwd::getDatabaseConfig(const std::string& config_name, 
     return nullptr;
 }
 
-std::shared_ptr<Config> Mhwd::getAvailableConfig(const std::string& config_name, const std::string& configType) {
+config_t Mhwd::getAvailableConfig(const std::string_view& config_name, const std::string_view& configType) const noexcept {
     // Get the right devices
-    auto* devices = ("USB" == configType) ? &m_data.USBDevices : &m_data.PCIDevices;
+    const auto& devices = ("USB" == configType) ? m_data.USBDevices : m_data.PCIDevices;
 
-    for (auto&& device : *devices) {
+    for (auto&& device : devices) {
         if (device->available_configs.empty()) {
             continue;
         }
@@ -275,7 +276,7 @@ mhwd::status_t Mhwd::performTransaction(const Transaction& transaction) {
     return status;
 }
 
-mhwd::status_t Mhwd::installConfig(std::shared_ptr<Config> config) {
+mhwd::status_t Mhwd::installConfig(const config_t& config) {
     const auto& databaseDir = ("USB" == config->type) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
     if (!runScript(config, mhwd::transaction_t::install)) {
         return mhwd::status_t::ERROR_SCRIPT_FAILED;
@@ -291,7 +292,7 @@ mhwd::status_t Mhwd::installConfig(std::shared_ptr<Config> config) {
     return mhwd::status_t::SUCCESS;
 }
 
-mhwd::status_t Mhwd::uninstallConfig(Config* config) {
+mhwd::status_t Mhwd::uninstallConfig(Config* config) noexcept {
     auto installed_config{getInstalledConfig(config->name, config->type)};
 
     // Check if installed
@@ -317,7 +318,7 @@ mhwd::status_t Mhwd::uninstallConfig(Config* config) {
     return mhwd::status_t::SUCCESS;
 }
 
-bool Mhwd::runScript(std::shared_ptr<Config> config, mhwd::transaction_t operation) {
+bool Mhwd::runScript(const config_t& config, mhwd::transaction_t operation) noexcept {
     auto cmd = fmt::format(FMT_COMPILE("exec {}"), consts::MHWD_SCRIPT_PATH);
 
     if (mhwd::transaction_t::remove == operation) {
@@ -336,8 +337,8 @@ bool Mhwd::runScript(std::shared_ptr<Config> config, mhwd::transaction_t operati
     cmd += fmt::format(FMT_COMPILE(" --config \"{}\""), config->config_path);
 
     // Set all config devices as argument
-    std::vector<std::shared_ptr<Device>> found_devices;
-    std::vector<std::shared_ptr<Device>> devices;
+    list_of_devices_t found_devices;
+    list_of_devices_t devices;
     m_data.getAllDevicesOfConfig(config, found_devices);
 
     for (auto&& found_device : found_devices) {
@@ -376,7 +377,7 @@ bool Mhwd::runScript(std::shared_ptr<Config> config, mhwd::transaction_t operati
     if (!in) {
         return false;
     }
-    std::array<char, 512> buf;
+    std::array<char, 512> buf{};
     while (fgets(buf.data(), buf.size(), in) != nullptr) {
         m_console_writer.print_message(mhwd::message_t::CONSOLE_OUTPUT, buf.data());
     }
@@ -392,8 +393,7 @@ bool Mhwd::runScript(std::shared_ptr<Config> config, mhwd::transaction_t operati
     return true;
 }
 
-void Mhwd::tryToParseCmdLineOptions(int argc, char** argv, bool& autoconf_nonfree_driver,
-    std::string& operation, std::string& autoconf_class_id) noexcept(false) {
+void Mhwd::tryToParseCmdLineOptions(int argc, char** argv, bool& autoconf_nonfree_driver, std::string& operation, std::string& autoconf_class_id) noexcept(false) {
     if (argc <= 1) {
         m_arguments.LIST_AVAILABLE = true;
     }
@@ -407,9 +407,9 @@ void Mhwd::tryToParseCmdLineOptions(int argc, char** argv, bool& autoconf_nonfre
     for (int nArg = 1; nArg < argc; ++nArg) {
         const std::string_view option{argv[nArg]};
         if (("-h" == option) || ("--help" == option)) {
-            m_console_writer.print_help();
+            mhwd::ConsoleWriter::print_help();
         } else if (("-v" == option) || ("--version" == option)) {
-            m_console_writer.print_version(m_version, m_year);
+            mhwd::ConsoleWriter::print_version(m_version, m_year);
         } else if (("-f" == option) || ("--force" == option)) {
             m_arguments.FORCE = true;
         } else if (("-d" == option) || ("--detail" == option)) {
@@ -506,7 +506,7 @@ void Mhwd::optionsDontInterfereWithEachOther() const noexcept(false) {
     }
 }
 
-int Mhwd::launch(int argc, char* argv[]) {
+int Mhwd::launch(int argc, char** argv) {
     std::string operation;
     bool autoconf_nonfree_driver = false;
     std::string autoconf_class_id;
@@ -611,14 +611,14 @@ int Mhwd::launch(int argc, char* argv[]) {
     // List hardware information
     if (m_arguments.LIST_HARDWARE && m_arguments.SHOW_PCI) {
         if (m_arguments.DETAIL) {
-            m_console_writer.printDeviceDetails(hw_pci);
+            mhwd::ConsoleWriter::printDeviceDetails(hw_pci);
         } else {
             m_console_writer.list_devices(m_data.PCIDevices, "PCI");
         }
     }
     if (m_arguments.LIST_HARDWARE && m_arguments.SHOW_USB) {
         if (m_arguments.DETAIL) {
-            m_console_writer.printDeviceDetails(hw_usb);
+            mhwd::ConsoleWriter::printDeviceDetails(hw_usb);
         } else {
             m_console_writer.list_devices(m_data.USBDevices, "USB");
         }
@@ -626,26 +626,19 @@ int Mhwd::launch(int argc, char* argv[]) {
 
     // Auto configuration
     if (m_arguments.AUTOCONFIGURE) {
-        std::vector<std::shared_ptr<Device>>* devices;
-        std::vector<std::shared_ptr<Config>>* installed_configs;
+        const auto& devices           = ("USB" == operation) ? m_data.USBDevices : m_data.PCIDevices;
+        const auto& installed_configs = ("USB" == operation) ? m_data.installedUSBConfigs : m_data.installedPCIConfigs;
 
-        if ("USB" == operation) {
-            devices           = &m_data.USBDevices;
-            installed_configs = &m_data.installedUSBConfigs;
-        } else {
-            devices           = &m_data.PCIDevices;
-            installed_configs = &m_data.installedPCIConfigs;
-        }
         bool found_device = false;
-        for (auto&& device : *devices) {
+        for (auto&& device : devices) {
             if (device->class_id != autoconf_class_id) {
                 continue;
             }
             found_device = true;
-            std::shared_ptr<Config> config;
+            config_t config;
 
             for (auto&& available_config : device->available_configs) {
-                // Never autoinstall drivers with priority 0 (vesa)
+                // Never auto-install drivers with priority 0 (vesa)
                 if (available_config->priority == 0) {
                     continue;
                 }
@@ -655,8 +648,7 @@ int Mhwd::launch(int argc, char* argv[]) {
                 }
             }
 
-            const auto& device_info = fmt::format(FMT_COMPILE(
-                                                      "{} ({}:{}:{}) {} {} {}"),
+            const auto& device_info = fmt::format(FMT_COMPILE("{} ({}:{}:{}) {} {} {}"),
                 device->sysfs_busid,
                 device->class_id, device->vendor_id,
                 device->device_id, device->class_name,
@@ -669,11 +661,11 @@ int Mhwd::launch(int argc, char* argv[]) {
             // If force is not set then skip found config
             bool skip = false;
             if (!m_arguments.FORCE) {
-                skip = ranges::find_if(*installed_configs,
+                skip = ranges::find_if(installed_configs,
                            [&config](const auto& temp) -> bool {
                                return temp->name == config->name;
                            })
-                    != installed_configs->end();
+                    != installed_configs.end();
             }
             // Print found config
             if (skip) {
@@ -748,14 +740,6 @@ int Mhwd::launch(int argc, char* argv[]) {
         }
     }
     return 0;
-}
-
-std::string Mhwd::gatherConfigContent(const std::vector<std::shared_ptr<Config>>& configuration) const {
-    std::string config;
-    for (auto&& c : configuration) {
-        config += fmt::format(FMT_COMPILE(" {}"), c->name);
-    }
-    return config;
 }
 
 }  // namespace mhwd

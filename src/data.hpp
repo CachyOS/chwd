@@ -66,57 +66,48 @@
 
 namespace mhwd {
 
+using config_t          = std::shared_ptr<Config>;
+using device_t          = std::shared_ptr<Device>;
+using list_of_configs_t = std::vector<config_t>;
+using list_of_devices_t = std::vector<device_t>;
+
 class Data final {
  public:
     Data();
     ~Data() = default;
 
     struct Environment {
+        bool syncPackageManagerDatabase = true;
         std::string PMCachePath{consts::MHWD_PM_CACHE_DIR};
         std::string PMConfigPath{consts::MHWD_PM_CONFIG};
         std::string PMRootPath{consts::MHWD_PM_ROOT};
-        bool syncPackageManagerDatabase = true;
     };
 
     Environment environment;
-    std::vector<std::shared_ptr<Device>> USBDevices;
-    std::vector<std::shared_ptr<Device>> PCIDevices;
-    std::vector<std::shared_ptr<Config>> installedUSBConfigs;
-    std::vector<std::shared_ptr<Config>> installedPCIConfigs;
-    std::vector<std::shared_ptr<Config>> allUSBConfigs;
-    std::vector<std::shared_ptr<Config>> allPCIConfigs;
-    std::vector<std::shared_ptr<Config>> invalidConfigs;
+    list_of_devices_t USBDevices;
+    list_of_devices_t PCIDevices;
+    list_of_configs_t installedUSBConfigs;
+    list_of_configs_t installedPCIConfigs;
+    list_of_configs_t allUSBConfigs;
+    list_of_configs_t allPCIConfigs;
+    list_of_configs_t invalidConfigs;
 
     void updateInstalledConfigData();
-    void getAllDevicesOfConfig(std::shared_ptr<Config> config, std::vector<std::shared_ptr<Device>>& foundDevices);
+    void getAllDevicesOfConfig(const config_t& config, list_of_devices_t& foundDevices) const noexcept;
 
-    std::vector<std::shared_ptr<Config>> getAllDependenciesToInstall(std::shared_ptr<Config> config);
-    void getAllDependenciesToInstall(std::shared_ptr<Config> config,
-        std::vector<std::shared_ptr<Config>>& installedConfigs,
-        std::vector<std::shared_ptr<Config>>* depends);
-    std::shared_ptr<Config> getDatabaseConfig(const std::string configName,
-        const std::string configType);
-    std::vector<std::shared_ptr<Config>> getAllLocalConflicts(std::shared_ptr<Config> config);
-    std::vector<std::shared_ptr<Config>> getAllLocalRequirements(std::shared_ptr<Config> config);
+    list_of_configs_t getAllDependenciesToInstall(const config_t& config);
+    void getAllDependenciesToInstall(const config_t& config, list_of_configs_t& installedConfigs, list_of_configs_t* depends);
+    [[nodiscard]] config_t getDatabaseConfig(const std::string_view& configName, const std::string_view& configType) const noexcept;
+    list_of_configs_t getAllLocalConflicts(const config_t& config) noexcept;
+    list_of_configs_t getAllLocalRequirements(const config_t& config) noexcept;
 
  private:
-    void getAllDevicesOfConfig(const std::vector<std::shared_ptr<Device>>& devices,
-        std::shared_ptr<Config> config, std::vector<std::shared_ptr<Device>>& foundDevices);
-    void fillInstalledConfigs(std::string type);
-    void fillDevices(hw_item hw, std::vector<std::shared_ptr<Device>>& devices);
-    void fillAllConfigs(std::string type);
-    void setMatchingConfigs(const std::vector<std::shared_ptr<Device>>& devices,
-        std::vector<std::shared_ptr<Config>>& configs, bool setAsInstalled);
-    void setMatchingConfig(std::shared_ptr<Config> config, const std::vector<std::shared_ptr<Device>>& devices,
-        bool setAsInstalled);
-    void addConfigSorted(std::vector<std::shared_ptr<Config>>& configs, std::shared_ptr<Config> newConfig);
-    std::vector<std::string> getRecursiveDirectoryFileList(const std::string_view& directoryPath, const std::string_view& onlyFilename = "");
+    void fillInstalledConfigs(const std::string_view& type) noexcept;
+    void fillAllConfigs(const std::string_view& type) noexcept;
+    [[nodiscard]] std::vector<std::string> getRecursiveDirectoryFileList(const std::string_view& directoryPath, const std::string_view& onlyFilename = "") const noexcept;
 
-    Vita::string get_proper_config_path(const Vita::string& str, const std::string_view& baseConfigPath);
+    static Vita::string get_proper_config_path(const Vita::string& str, const std::string_view& baseConfigPath);
     void updateConfigData();
-
-    Vita::string from_hex(uint16_t hexnum, int fill);
-    std::string from_CharArray(char* c);
 };
 
 }  // namespace mhwd

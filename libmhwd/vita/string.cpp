@@ -71,39 +71,43 @@ string string::operator+(float operand) const {
     return (*this) + string::toStr<float>(operand);
 }
 
-string string::replace(const string& search, const string& replace, size_t limit) const {
+string string::replace(const std::string_view& search, const std::string_view& replace, size_t limit) const {
+    const std::string_view tmp = *this;
     string result;
-    size_t previous = 0, current;
+    size_t previous = 0;
 
-    current = this->find(search);
+    size_t current = tmp.find(search);
 
-    while (current != npos && limit) {
-        result += this->substr(previous, current - previous);
+    while ((current != std::string_view::npos) && limit) {
+        result += tmp.substr(previous, current - previous);
         result += replace;
-        previous = current + search.length();
-        current  = this->find(search, previous);
+        previous = current + search.size();
+        current  = tmp.find(search, previous);
         --limit;
     }
-    result += this->substr(previous);
+    result += tmp.substr(previous);
     return result;
 }
 
-std::vector<string> string::explode(const string& delimiter) const {
+std::vector<string> string::explode(const std::string_view& delimiter) const {
+    if (empty())
+        return {};
+
     std::vector<string> result;
-    size_t previous = 0, current;
+    size_t previous = 0;
 
-    current = this->find(delimiter);
+    size_t current = find(delimiter);
 
-    while (current != npos) {
-        result.push_back(this->substr(previous, current - previous));
-        previous = current + delimiter.length();
-        current  = this->find(delimiter, previous);
+    while (current != std::string::npos) {
+        result.emplace_back(substr(previous, current - previous));
+        previous = current + delimiter.size();
+        current  = find(delimiter, previous);
     }
-    result.push_back(this->substr(previous));
+    result.emplace_back(substr(previous));
     return result;
 }
 
-string string::trim(const string& what) const {
+string string::trim(const std::string_view& what) const {
     string result = *this;
     size_t pos    = result.find_first_not_of(what);
     result.erase(0, pos);

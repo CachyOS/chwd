@@ -46,16 +46,16 @@
 #include "enums.hpp"
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace mhwd {
 
 struct Transaction final {
  public:
-    Transaction(Data data, std::shared_ptr<Config> conf, mhwd::transaction_t transaction_type,
-        bool allow_reinstallation)
+    Transaction(Data data, std::shared_ptr<Config> conf, mhwd::transaction_t transaction_type, bool allow_reinstallation)
       : is_reinstall_allowed(allow_reinstallation),
-        type(transaction_type), config(conf),
+        type(transaction_type), config(std::move(conf)),
         dependency_configs(data.getAllDependenciesToInstall(config)),
         conflicted_configs(data.getAllLocalConflicts(config)),
         configs_requirements(data.getAllLocalRequirements(config)) { }

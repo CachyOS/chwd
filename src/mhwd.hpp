@@ -94,24 +94,20 @@ class Mhwd {
     ConsoleWriter m_console_writer{};
     std::vector<std::string> m_configs{};
 
-    bool performTransaction(std::shared_ptr<Config> config, mhwd::transaction_t type);
-    bool is_user_root() const noexcept;
-    std::vector<std::string> checkEnvironment() const noexcept;
+    bool performTransaction(const std::shared_ptr<Config>& config, mhwd::transaction_t type);
 
-    std::shared_ptr<Config> getInstalledConfig(const std::string& configName, const std::string& configType);
-    std::shared_ptr<Config> getDatabaseConfig(const std::string& configName, const std::string& configType);
-    std::shared_ptr<Config> getAvailableConfig(const std::string& configName, const std::string& configType);
+    [[nodiscard]] std::shared_ptr<Config> getInstalledConfig(const std::string_view& configName, const std::string_view& configType) const noexcept;
+    [[nodiscard]] std::shared_ptr<Config> getDatabaseConfig(const std::string_view& configName, const std::string_view& configType) const noexcept;
+    [[nodiscard]] std::shared_ptr<Config> getAvailableConfig(const std::string_view& configName, const std::string_view& configType) const noexcept;
 
     mhwd::status_t performTransaction(const Transaction& transaction);
-    [[gnu::pure]] bool proceedWithInstallation(const std::string& input) const;
 
-    mhwd::status_t installConfig(std::shared_ptr<Config> config);
-    mhwd::status_t uninstallConfig(Config* config);
-    bool runScript(std::shared_ptr<Config> config, mhwd::transaction_t operationType);
+    mhwd::status_t installConfig(const std::shared_ptr<Config>& config);
+    mhwd::status_t uninstallConfig(Config* config) noexcept;
+    bool runScript(const std::shared_ptr<Config>& config, mhwd::transaction_t operationType) noexcept;
     void tryToParseCmdLineOptions(int argc, char* argv[], bool& autoConfigureNonFreeDriver,
         std::string& operationType, std::string& autoConfigureClassID);
     void optionsDontInterfereWithEachOther() const;
-    std::string gatherConfigContent(const std::vector<std::shared_ptr<Config>>& config) const;
 };
 
 }  // namespace mhwd

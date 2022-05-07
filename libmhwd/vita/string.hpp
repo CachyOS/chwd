@@ -122,7 +122,7 @@ class string : public std::string {
      * @param limit How many replacements should be done. Set to Vita::string::npos to disable the limit.
      * @return String with the replacement(s) in place.
      */
-    string replace(const string& search, const string& replace, size_t limit = npos) const;
+    string replace(const std::string_view& search, const std::string_view& replace, size_t limit = npos) const;
 
     /**
      * Split the string by another string.
@@ -132,7 +132,7 @@ class string : public std::string {
      * @param delimiter The boundary string.
      * @return A vector of strings, each of which is a substring of the original.
      */
-    std::vector<string> explode(const string& delimiter) const;
+    std::vector<string> explode(const std::string_view& delimiter) const;
 
     /**
      * Trim unwanted characters from the beginning and the end of the string.
@@ -140,7 +140,7 @@ class string : public std::string {
      * @param what The characters to trim. Defaults to whitespace (ASCII #9, #10, #13, #32).
      * @return The trimmed string.
      */
-    string trim(const string& what = "\x9\xa\xd\x20") const;
+    string trim(const std::string_view& what = "\x9\xa\xd\x20") const;
 
     /**
      * Convert a generic data type to string.

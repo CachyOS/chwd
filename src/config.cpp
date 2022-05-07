@@ -52,6 +52,36 @@ namespace fs = std::filesystem;
 
 namespace mhwd {
 
+namespace {
+std::vector<std::string> splitValue(const Vita::string& str, const Vita::string& onlyEnding = "") {
+    auto work = str.toLower().explode(" ");
+    std::vector<std::string> result;
+
+    for (auto&& iter : work) {
+        if ((!iter.empty()) && onlyEnding.empty()) {
+            result.push_back(iter);
+        } else if ((!iter.empty()) && (Vita::string{iter}.explode(".").back() == onlyEnding)
+            && (iter.size() > 5)) {
+            result.push_back(std::string{iter}.substr(0, iter.size() - 5));
+        }
+    }
+
+    return result;
+}
+
+Vita::string get_proper_config_path(const Vita::string& str, const std::string_view& base_config_path) {
+    const auto& temp = str.trim();
+    if ((temp.empty()) || ("/" == temp.substr(0, 1))) {
+        return temp;
+    }
+
+    fs::path p{base_config_path};
+    p /= temp.data();
+
+    return p.c_str();
+}
+}  // namespace
+
 bool Config::read_file(const std::string_view& configPath) {
     std::ifstream file(configPath.data());
 
@@ -112,7 +142,7 @@ bool Config::read_file(const std::string_view& configPath) {
             }
         }
 
-        switch (mhwd::utils::hash(std::string(key).c_str())) {
+        switch (mhwd::utils::hash(key.c_str())) {
         case mhwd::utils::hash_compile_time("include"):
             read_file(get_proper_config_path(value, base_path));
             break;
@@ -130,7 +160,7 @@ bool Config::read_file(const std::string_view& configPath) {
             break;
         case mhwd::utils::hash_compile_time("freedriver"):
             value         = value.toLower();
-            is_freedriver = (value == "false") ? false : true;
+            is_freedriver = !(value == "false");
             break;
         case mhwd::utils::hash_compile_time("classids"):
             // Add new HardwareIDs group to vector if vector is not empty
@@ -175,50 +205,21 @@ bool Config::read_file(const std::string_view& configPath) {
     }
 
     // Append * to all empty vectors
-    for (size_t i = 0; i < hwd_ids.size(); ++i) {
-        auto&& hwdid = hwd_ids[i];
+    for (auto& hwdid : hwd_ids) {
         if (hwdid.class_ids.empty()) {
-            hwdid.class_ids.push_back("*");
+            hwdid.class_ids.emplace_back("*");
         }
 
         if (hwdid.vendor_ids.empty()) {
-            hwdid.vendor_ids.push_back("*");
+            hwdid.vendor_ids.emplace_back("*");
         }
 
         if (hwdid.device_ids.empty()) {
-            hwdid.device_ids.push_back("*");
+            hwdid.device_ids.emplace_back("*");
         }
     }
 
     return !name.empty();
-}
-
-std::vector<std::string> Config::splitValue(Vita::string str, Vita::string onlyEnding) {
-    auto work = str.toLower().explode(" ");
-    std::vector<std::string> result;
-
-    for (auto&& iter : work) {
-        if (("" != iter) && onlyEnding.empty()) {
-            result.push_back(iter);
-        } else if (("" != iter) && (Vita::string{iter}.explode(".").back() == onlyEnding)
-            && (iter.size() > 5)) {
-            result.push_back(std::string{iter}.substr(0, iter.size() - 5));
-        }
-    }
-
-    return result;
-}
-
-Vita::string Config::get_proper_config_path(const Vita::string& str, const std::string_view& base_config_path) {
-    const auto& temp = str.trim();
-    if ((temp.size() <= 0) || ("/" == temp.substr(0, 1))) {
-        return temp;
-    }
-
-    fs::path p{base_config_path};
-    p /= temp.data();
-
-    return p.c_str();
 }
 
 }  // namespace mhwd

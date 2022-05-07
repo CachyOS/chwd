@@ -186,7 +186,7 @@ void kernel_remove(const std::vector<std::string>& kernels) noexcept {
         pkgremove += fmt::format("{} ", kernel);
     }
 
-    const auto& cmd = fmt::format("pacman -R {}", pkgremove);
+    const auto& cmd                   = fmt::format("pacman -R {}", pkgremove);
     [[maybe_unused]] const auto& code = std::system(cmd.c_str());
 }
 

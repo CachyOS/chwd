@@ -55,19 +55,25 @@
 
 namespace mhwd {
 
-void ConsoleWriter::print_status(const std::string_view& msg) const {
+namespace {
+inline void printLine() noexcept {
+    fmt::print("{:->80}", "\n");  // use '-' as a fill char
+}
+}  // namespace
+
+void ConsoleWriter::print_status(const std::string_view& msg) const noexcept {
     fmt::print(fg(fmt::color::red), fmt::format(FMT_COMPILE("> {}{}\n"), CONSOLE_COLOR_RESET, msg));
 }
 
-void ConsoleWriter::print_error(const std::string_view& msg) const {
+void ConsoleWriter::print_error(const std::string_view& msg) const noexcept {
     fmt::print(stderr, fg(fmt::color::red), fmt::format(FMT_COMPILE("Error: {}{}\n"), CONSOLE_COLOR_RESET, msg));
 }
 
-void ConsoleWriter::print_warning(const std::string_view& msg) const {
+void ConsoleWriter::print_warning(const std::string_view& msg) const noexcept {
     fmt::print(fg(fmt::color::yellow), fmt::format(FMT_COMPILE("Warning: {}{}\n"), CONSOLE_COLOR_RESET, msg));
 }
 
-void ConsoleWriter::print_message(mhwd::message_t type, const std::string_view& msg) const {
+void ConsoleWriter::print_message(mhwd::message_t type, const std::string_view& msg) const noexcept {
     switch (type) {
     case mhwd::message_t::CONSOLE_OUTPUT:
         fmt::print("{}{}{}", CONSOLE_TEXT_OUTPUT_COLOR, msg, CONSOLE_COLOR_RESET);
@@ -96,7 +102,7 @@ void ConsoleWriter::print_message(mhwd::message_t type, const std::string_view& 
     }
 }
 
-void ConsoleWriter::print_help() const {
+void ConsoleWriter::print_help() noexcept {
     std::cout << "Usage: mhwd [OPTIONS] <config(s)>\n\n"
               << "  --pci\t\t\t\t\tlist only pci devices and driver configs\n"
               << "  --usb\t\t\t\t\tlist only usb devices and driver configs\n"
@@ -118,15 +124,16 @@ void ConsoleWriter::print_help() const {
               << '\n';
 }
 
-void ConsoleWriter::print_version(const std::string_view& version_mhwd, const std::string_view& year_copy) const {
+void ConsoleWriter::print_version(const std::string_view& version_mhwd, const std::string_view& year_copy) noexcept {
     std::cout << "Manjaro Hardware Detection v" << version_mhwd << "\n\n"
-              << "Copyright (C) " << year_copy << " Manjaro Linux Developers\n"
+              << "Copyright (C) " << year_copy << " CachyOS Developers\n"
+              << "Copyright (C) 2021 Manjaro Linux Developers\n"
               << "This is free software licensed under GNU GPL v3.0\n"
               << "FITNESS FOR A PARTICULAR PURPOSE.\n"
               << '\n';
 }
 
-void ConsoleWriter::list_devices(const std::vector<std::shared_ptr<Device>>& devices, std::string type) const {
+void ConsoleWriter::list_devices(const list_of_devices_t& devices, const std::string_view& type) const noexcept {
     if (devices.empty()) {
         print_warning("No {} devices found!", type);
         return;
@@ -141,7 +148,7 @@ void ConsoleWriter::list_devices(const std::vector<std::shared_ptr<Device>>& dev
     fmt::print("\n\n");
 }
 
-void ConsoleWriter::list_configs(const std::vector<std::shared_ptr<Config>>& configs, std::string header) const {
+void ConsoleWriter::list_configs(const list_of_configs_t& configs, const std::string_view& header) const noexcept {
     print_status(header);
     printLine();
     fmt::print(FMT_COMPILE("{:>24}{:>22}{:>18}{:>15}\n"), "NAME", "VERSION", "FREEDRIVER", "TYPE");
@@ -152,7 +159,7 @@ void ConsoleWriter::list_configs(const std::vector<std::shared_ptr<Config>>& con
     fmt::print("\n\n");
 }
 
-void ConsoleWriter::printAvailableConfigsInDetail(const std::string_view& device_type, const std::vector<std::shared_ptr<Device>>& devices) const {
+void ConsoleWriter::printAvailableConfigsInDetail(const std::string_view& device_type, const list_of_devices_t& devices) const noexcept {
     bool config_found = false;
     for (const auto& device : devices) {
         if (device->available_configs.empty() && device->installed_configs.empty()) {
@@ -185,8 +192,7 @@ void ConsoleWriter::printAvailableConfigsInDetail(const std::string_view& device
     }
 }
 
-void ConsoleWriter::printInstalledConfigs(const std::string_view& device_type,
-    const std::vector<std::shared_ptr<Config>>& installed_configs) const {
+void ConsoleWriter::printInstalledConfigs(const std::string_view& device_type, const list_of_configs_t& installed_configs) const noexcept {
     if (installed_configs.empty()) {
         print_warning("no installed configs for {} devices found!", device_type);
         return;
@@ -197,10 +203,10 @@ void ConsoleWriter::printInstalledConfigs(const std::string_view& device_type,
     fmt::print("\n");
 }
 
-void ConsoleWriter::printConfigDetails(const Config& config) const {
+void ConsoleWriter::printConfigDetails(const Config& config) noexcept {
     const auto& split_by_space = [](const auto& vec) {
         const auto& space_fold = [](auto&& a, const auto& in) {
-            return in + ' ' + std::move(a);
+            return in + ' ' + std::forward<decltype(a)>(a);
         };
 
         return vec.empty() ? "-" : std::accumulate(std::next(vec.begin()), vec.end(),
@@ -226,13 +232,9 @@ void ConsoleWriter::printConfigDetails(const Config& config) const {
         class_ids, vendor_ids);
 }
 
-void ConsoleWriter::printLine() const {
-    fmt::print("{:->80}", "\n");  // use '-' as a fill char
-}
-
-void ConsoleWriter::printDeviceDetails(hw_item hw, FILE* f) const {
-    std::unique_ptr<hd_data_t> hd_data{new hd_data_t()};
-    auto* hd = hd_list(hd_data.get(), hw, 1, nullptr);
+void ConsoleWriter::printDeviceDetails(hw_item hw, FILE* f) noexcept {
+    auto hd_data = std::make_unique<hd_data_t>();
+    auto* hd     = hd_list(hd_data.get(), hw, 1, nullptr);
 
     for (hd_t* iter = hd; iter; iter = iter->next) {
         hd_dump_entry(hd_data.get(), iter, f);

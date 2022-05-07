@@ -44,7 +44,7 @@
 
 int main(int argc, char** argv) {
     try {
-        mhwd::Mhwd mhwd("0.6.9", "2022");
+        mhwd::Mhwd mhwd("0.6.11", "2022");
         return mhwd.launch(argc, argv);
     } catch (...) {
         std::cerr << "Unknown errors occured...";

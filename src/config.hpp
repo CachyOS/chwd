@@ -45,6 +45,7 @@
 #include "vita/string.hpp"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace mhwd {
@@ -59,8 +60,8 @@ struct HardwareID {
 };
 
 struct Config final {
-    Config(std::string configPath, std::string conf_type)
-      : type(conf_type), base_path(configPath.substr(0, configPath.find_last_of('/'))),
+    Config(const std::string& configPath, std::string conf_type)
+      : type(std::move(conf_type)), base_path(configPath.substr(0, configPath.find_last_of('/'))),
         config_path(configPath) { }
 
     bool read_file(const std::string_view& configPath);
@@ -79,10 +80,6 @@ struct Config final {
     std::vector<std::string> dependencies;
 
     std::vector<HardwareID> hwd_ids{1};
-
- private:
-    std::vector<std::string> splitValue(Vita::string str, Vita::string onlyEnding = "");
-    Vita::string get_proper_config_path(const Vita::string& str, const std::string_view& baseConfigPath);
 };
 
 }  // namespace mhwd

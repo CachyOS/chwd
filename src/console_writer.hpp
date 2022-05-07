@@ -42,6 +42,7 @@
 #define CONSOLE_WRITER_HPP
 
 #include "config.hpp"
+#include "data.hpp"
 #include "device.hpp"
 #include "enums.hpp"
 
@@ -66,41 +67,36 @@ namespace mhwd {
 
 class ConsoleWriter {
  public:
-    void print_status(const std::string_view& msg) const;
-    void print_error(const std::string_view& msg) const;
-    void print_warning(const std::string_view& msg) const;
+    void print_status(const std::string_view& msg) const noexcept;
+    void print_error(const std::string_view& msg) const noexcept;
+    void print_warning(const std::string_view& msg) const noexcept;
 
     // overload to allow pass variadic arguments
     template <typename... Args>
-    constexpr void print_status(fmt::format_string<Args...> fmt, Args&&... args) const {
+    constexpr void print_status(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
         print_status(fmt::format(fmt, std::forward<Args>(args)...));
     }
     template <typename... Args>
-    constexpr void print_error(fmt::format_string<Args...> fmt, Args&&... args) const {
+    constexpr void print_error(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
         print_error(fmt::format(fmt, std::forward<Args>(args)...));
     }
     template <typename... Args>
-    constexpr void print_warning(fmt::format_string<Args...> fmt, Args&&... args) const {
+    constexpr void print_warning(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
         print_warning(fmt::format(fmt, std::forward<Args>(args)...));
     }
 
-    void print_message(mhwd::message_t type, const std::string_view& msg) const;
-    void print_help() const;
-    void print_version(const std::string_view& version, const std::string_view& year) const;
-    void list_devices(const std::vector<std::shared_ptr<Device>>& devices,
-        std::string typeOfDevice) const;
-    void list_configs(const std::vector<std::shared_ptr<Config>>& configs,
-        std::string header) const;
-    void printAvailableConfigsInDetail(const std::string_view& deviceType,
-        const std::vector<std::shared_ptr<Device>>& devices) const;
-    void printInstalledConfigs(const std::string_view& deviceType,
-        const std::vector<std::shared_ptr<Config>>& installedConfigs) const;
-    void printConfigDetails(const Config& config) const;
-    void printDeviceDetails(hw_item hw, FILE* f = stdout) const;
+    void print_message(mhwd::message_t type, const std::string_view& msg) const noexcept;
+    void list_devices(const list_of_devices_t& devices, const std::string_view& typeOfDevice) const noexcept;
+    void list_configs(const list_of_configs_t& configs, const std::string_view& header) const noexcept;
+    void printAvailableConfigsInDetail(const std::string_view& deviceType, const list_of_devices_t& devices) const noexcept;
+    void printInstalledConfigs(const std::string_view& deviceType, const list_of_configs_t& installedConfigs) const noexcept;
+    static void printConfigDetails(const Config& config) noexcept;
+    static void printDeviceDetails(hw_item hw, FILE* f = stdout) noexcept;
+
+    static void print_help() noexcept;
+    static void print_version(const std::string_view& version_mhwd, const std::string_view& year_copy) noexcept;
 
  private:
-    void printLine() const;
-
     const char* CONSOLE_COLOR_RESET{"\033[m"};
     const char* CONSOLE_TEXT_OUTPUT_COLOR{"\033[0;32m"};
 };
