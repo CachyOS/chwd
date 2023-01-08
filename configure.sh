@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2022 Vladislav Nepogodin
+# Copyright (C) 2022-2023 Vladislav Nepogodin
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@ cmake -S . -B ${_buildpath}/${_buildtype} \
 
 cat > build.sh <<EOF
 #!/bin/bash
-# Copyright (C) 2022 Vladislav Nepogodin
+# Copyright (C) 2022-2023 Vladislav Nepogodin
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
