@@ -1,26 +1,3 @@
-/*
- *  This file is part of the mhwd - Manjaro Hardware Detection project
- *
- *  mhwd - Manjaro Hardware Detection
- *  Roland Singer <roland@manjaro.org>
- *  Łukasz Matysiak <december0123@gmail.com>
- *  Filipe Marques <eagle.software3@gmail.com>
- *
- *  Copyright (C) 2012 - 2016 Manjaro (http://manjaro.org)
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 //
 // Copyright (C) 2022-2023 Vladislav Nepogodin
 //
@@ -84,36 +61,38 @@ namespace fs = std::filesystem;
 namespace mhwd {
 
 namespace {
-    std::string gatherConfigContent(const list_of_configs_t& configuration) {
-        std::string config;
-        for (auto&& c : configuration) {
-            config += fmt::format(FMT_COMPILE(" {}"), c->name);
-        }
-        return config;
+
+std::string gatherConfigContent(const list_of_configs_t& configuration) {
+    std::string config{};
+    for (auto&& c : configuration) {
+        config += fmt::format(FMT_COMPILE(" {}"), c->name);
+    }
+    return config;
+}
+
+inline bool is_user_root() noexcept {
+    static constexpr auto ROOT_UID = 0;
+    return ROOT_UID == getuid();
+}
+
+std::vector<std::string> checkEnvironment() {
+    std::vector<std::string> missingDirs;
+    if (!fs::exists(consts::MHWD_USB_CONFIG_DIR)) {
+        missingDirs.emplace_back(consts::MHWD_USB_CONFIG_DIR);
+    }
+    if (!fs::exists(consts::MHWD_PCI_CONFIG_DIR)) {
+        missingDirs.emplace_back(consts::MHWD_PCI_CONFIG_DIR);
+    }
+    if (!fs::exists(consts::MHWD_USB_DATABASE_DIR)) {
+        missingDirs.emplace_back(consts::MHWD_USB_DATABASE_DIR);
+    }
+    if (!fs::exists(consts::MHWD_PCI_DATABASE_DIR)) {
+        missingDirs.emplace_back(consts::MHWD_PCI_DATABASE_DIR);
     }
 
-    bool is_user_root() noexcept {
-        static constexpr auto ROOT_UID = 0;
-        return ROOT_UID == getuid();
-    }
+    return missingDirs;
+}
 
-    std::vector<std::string> checkEnvironment() {
-        std::vector<std::string> missingDirs;
-        if (!fs::exists(consts::MHWD_USB_CONFIG_DIR)) {
-            missingDirs.emplace_back(consts::MHWD_USB_CONFIG_DIR);
-        }
-        if (!fs::exists(consts::MHWD_PCI_CONFIG_DIR)) {
-            missingDirs.emplace_back(consts::MHWD_PCI_CONFIG_DIR);
-        }
-        if (!fs::exists(consts::MHWD_USB_DATABASE_DIR)) {
-            missingDirs.emplace_back(consts::MHWD_USB_DATABASE_DIR);
-        }
-        if (!fs::exists(consts::MHWD_PCI_DATABASE_DIR)) {
-            missingDirs.emplace_back(consts::MHWD_PCI_DATABASE_DIR);
-        }
-
-        return missingDirs;
-    }
 }  // namespace
 
 bool Mhwd::performTransaction(const config_t& config, mhwd::transaction_t transactionType) {
@@ -213,7 +192,7 @@ config_t Mhwd::getAvailableConfig(const std::string_view& config_name, const std
         auto available_config   = ranges::find_if(available_configs,
               [config_name](const auto& temp) {
                 return temp->name == config_name;
-              });
+            });
         if (available_config != available_configs.end()) {
             return *available_config;
         }
@@ -393,7 +372,7 @@ bool Mhwd::runScript(const config_t& config, mhwd::transaction_t operation) noex
     return true;
 }
 
-void Mhwd::tryToParseCmdLineOptions(int argc, char** argv, bool& autoconf_nonfree_driver, std::string& operation, std::string& autoconf_class_id) noexcept(false) {
+std::int32_t Mhwd::tryToParseCmdLineOptions(int argc, char** argv, bool& autoconf_nonfree_driver, std::string& operation, std::string& autoconf_class_id) noexcept(false) {
     if (argc <= 1) {
         m_arguments.LIST_AVAILABLE = true;
     }
@@ -408,8 +387,13 @@ void Mhwd::tryToParseCmdLineOptions(int argc, char** argv, bool& autoconf_nonfre
         const std::string_view option{argv[nArg]};
         if (("-h" == option) || ("--help" == option)) {
             mhwd::ConsoleWriter::print_help();
+            return 1;
         } else if (("-v" == option) || ("--version" == option)) {
             mhwd::ConsoleWriter::print_version(m_version, m_year);
+            return 1;
+        } else if ("--is_nvidia_card" == option) {
+            checkNvidiaCard();
+            return 1;
         } else if (("-f" == option) || ("--force" == option)) {
             m_arguments.FORCE = true;
         } else if (("-d" == option) || ("--detail" == option)) {
@@ -494,6 +478,8 @@ void Mhwd::tryToParseCmdLineOptions(int argc, char** argv, bool& autoconf_nonfre
         m_arguments.SHOW_USB = true;
         m_arguments.SHOW_PCI = true;
     }
+
+    return 0;
 }
 
 void Mhwd::optionsDontInterfereWithEachOther() const noexcept(false) {
@@ -507,19 +493,23 @@ void Mhwd::optionsDontInterfereWithEachOther() const noexcept(false) {
 }
 
 int Mhwd::launch(int argc, char** argv) {
-    std::string operation;
-    bool autoconf_nonfree_driver = false;
-    std::string autoconf_class_id;
+    std::string operation{};
+    bool autoconf_nonfree_driver{false};
+    std::string autoconf_class_id{};
 
     try {
-        tryToParseCmdLineOptions(argc, argv, autoconf_nonfree_driver, operation,
+        const std::int32_t cmdline_code = tryToParseCmdLineOptions(argc, argv,
+            autoconf_nonfree_driver, operation,
             autoconf_class_id);
+        if (cmdline_code == 1) { return 0; }
         optionsDontInterfereWithEachOther();
     } catch (const std::runtime_error& e) {
         m_console_writer.print_error(e.what());
         m_console_writer.print_help();
         return 1;
     }
+
+    m_data = mhwd::Data::initialize_data();
 
     std::vector<std::string> missingDirs{checkEnvironment()};
     if (!missingDirs.empty()) {
@@ -531,7 +521,7 @@ int Mhwd::launch(int argc, char** argv) {
     }
 
     // Check for invalid configs
-    for (auto&& invalidConfig : m_data.invalidConfigs) {
+    for (const auto& invalidConfig : m_data.invalidConfigs) {
         m_console_writer.print_warning("config '{}' is invalid!", invalidConfig->config_path);
     }
 
@@ -741,5 +731,24 @@ int Mhwd::launch(int argc, char** argv) {
     }
     return 0;
 }
+
+
+void Mhwd::checkNvidiaCard() noexcept {
+    if (!fs::exists("/var/lib/mhwd/ids/pci/nvidia.ids")) {
+        fmt::print("No nvidia ids found!\n");
+        return;
+    }
+
+    m_data = mhwd::Data::initialize_data();
+    for (auto&& PCIdevice : m_data.PCIDevices) {
+        if (PCIdevice->available_configs.empty()) { continue; }
+
+        if (PCIdevice->vendor_id == "10de") {
+            fmt::print("NVIDIA card found!\n");
+            return;
+        }
+    }
+}
+
 
 }  // namespace mhwd

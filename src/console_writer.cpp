@@ -108,6 +108,7 @@ void ConsoleWriter::print_help() noexcept {
               << "  --usb\t\t\t\t\tlist only usb devices and driver configs\n"
               << "  -h/--help\t\t\t\tshow help\n"
               << "  -v/--version\t\t\t\tshow version of mhwd\n"
+              << "  --is_nvidia_card\t\t\tcheck if the nvidia card found\n"
               << "  -f/--force\t\t\t\tforce reinstallation\n"
               << "  -d/--detail\t\t\t\tshow detailed info for -l/-li/-lh\n"
               << "  -l/--list\t\t\t\tlist available configs for devices\n"
@@ -125,7 +126,7 @@ void ConsoleWriter::print_help() noexcept {
 }
 
 void ConsoleWriter::print_version(const std::string_view& version_mhwd, const std::string_view& year_copy) noexcept {
-    std::cout << "Manjaro Hardware Detection v" << version_mhwd << "\n\n"
+    std::cout << "CachyOS Hardware Detection v" << version_mhwd << "\n\n"
               << "Copyright (C) " << year_copy << " CachyOS Developers\n"
               << "Copyright (C) 2021 Manjaro Linux Developers\n"
               << "This is free software licensed under GNU GPL v3.0\n"

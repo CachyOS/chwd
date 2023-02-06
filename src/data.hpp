@@ -73,7 +73,7 @@ using list_of_devices_t = std::vector<device_t>;
 
 class Data final {
  public:
-    Data();
+    Data() = default;
     ~Data() = default;
 
     struct Environment {
@@ -82,6 +82,8 @@ class Data final {
         std::string PMConfigPath{consts::MHWD_PM_CONFIG};
         std::string PMRootPath{consts::MHWD_PM_ROOT};
     };
+
+    static Data initialize_data() noexcept;
 
     Environment environment;
     list_of_devices_t USBDevices;
@@ -92,11 +94,11 @@ class Data final {
     list_of_configs_t allPCIConfigs;
     list_of_configs_t invalidConfigs;
 
-    void updateInstalledConfigData();
+    void updateInstalledConfigData() noexcept;
     void getAllDevicesOfConfig(const config_t& config, list_of_devices_t& foundDevices) const noexcept;
 
-    list_of_configs_t getAllDependenciesToInstall(const config_t& config);
-    void getAllDependenciesToInstall(const config_t& config, list_of_configs_t& installedConfigs, list_of_configs_t* depends);
+    list_of_configs_t getAllDependenciesToInstall(const config_t& config) noexcept;
+    void getAllDependenciesToInstall(const config_t& config, list_of_configs_t& installedConfigs, list_of_configs_t* depends) noexcept;
     [[nodiscard]] config_t getDatabaseConfig(const std::string_view& configName, const std::string_view& configType) const noexcept;
     list_of_configs_t getAllLocalConflicts(const config_t& config) noexcept;
     list_of_configs_t getAllLocalRequirements(const config_t& config) noexcept;
@@ -107,7 +109,7 @@ class Data final {
     [[nodiscard]] std::vector<std::string> getRecursiveDirectoryFileList(const std::string_view& directoryPath, const std::string_view& onlyFilename = "") const noexcept;
 
     static Vita::string get_proper_config_path(const Vita::string& str, const std::string_view& baseConfigPath);
-    void updateConfigData();
+    void updateConfigData() noexcept;
 };
 
 }  // namespace mhwd

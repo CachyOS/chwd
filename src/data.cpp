@@ -208,21 +208,25 @@ void fillDevices(hw_item hw, list_of_devices_t& devices) noexcept {
 }
 }  // namespace
 
-Data::Data() {
-    fillDevices(hw_pci, PCIDevices);
-    fillDevices(hw_usb, USBDevices);
+auto Data::initialize_data() noexcept -> Data {
+    Data res;
 
-    updateConfigData();
+    fillDevices(hw_pci, res.PCIDevices);
+    fillDevices(hw_usb, res.USBDevices);
+
+    res.updateConfigData();
+
+    return res;
 }
 
-void Data::updateInstalledConfigData() {
+void Data::updateInstalledConfigData() noexcept {
     // Clear config vectors in each device element
 
-    for (auto& PCIDevice : PCIDevices) {
+    for (const auto& PCIDevice : PCIDevices) {
         PCIDevice->installed_configs.clear();
     }
 
-    for (auto& USBDevice : USBDevices) {
+    for (const auto& USBDevice : USBDevices) {
         USBDevice->installed_configs.clear();
     }
 
@@ -258,7 +262,7 @@ void Data::getAllDevicesOfConfig(const config_t& config, list_of_devices_t& foun
     ::mhwd::getAllDevicesOfConfig(devices, config, foundDevices);
 }
 
-list_of_configs_t Data::getAllDependenciesToInstall(const config_t& config) {
+list_of_configs_t Data::getAllDependenciesToInstall(const config_t& config) noexcept {
     auto installedConfigs = ("USB" == config->type) ? installedUSBConfigs : installedPCIConfigs;
     list_of_configs_t depends;
     getAllDependenciesToInstall(config, installedConfigs, &depends);
@@ -266,7 +270,7 @@ list_of_configs_t Data::getAllDependenciesToInstall(const config_t& config) {
     return depends;
 }
 
-void Data::getAllDependenciesToInstall(const config_t& config, list_of_configs_t& installedConfigs, list_of_configs_t* dependencies) {
+void Data::getAllDependenciesToInstall(const config_t& config, list_of_configs_t& installedConfigs, list_of_configs_t* dependencies) noexcept {
     for (const auto& configDependency : config->dependencies) {
         auto found = ranges::find_if(installedConfigs,
                          [configDependency](const auto& tmp) -> bool {
@@ -294,15 +298,9 @@ void Data::getAllDependenciesToInstall(const config_t& config, list_of_configs_t
 }
 
 config_t Data::getDatabaseConfig(const std::string_view& configName, const std::string_view& configType) const noexcept {
-    auto allConfigs = ("USB" == configType) ? allUSBConfigs : allPCIConfigs;
-
-    for (auto& config : allConfigs) {
-        if (configName == config->name) {
-            return config;
-        }
-    }
-
-    return nullptr;
+    const auto allConfigs = ("USB" == configType) ? allUSBConfigs : allPCIConfigs;
+    const auto result     = ranges::find_if(allConfigs.begin(), allConfigs.end(), [&configName](const auto& config) { return config->name == configName; });
+    return (result != allConfigs.end()) ? *result : nullptr;
 }
 
 list_of_configs_t Data::getAllLocalConflicts(const config_t& config) noexcept {
@@ -399,10 +397,10 @@ std::vector<std::string> Data::getRecursiveDirectoryFileList(const std::string_v
                 if (S_ISREG(filestatus.st_mode) && (onlyFilename.empty() || (onlyFilename == filename))) {
                     list.push_back(filepath);
                 } else if (S_ISDIR(filestatus.st_mode)) {
-                    auto templist = getRecursiveDirectoryFileList(filepath.data(), onlyFilename);
+                    auto&& templist = getRecursiveDirectoryFileList(filepath.data(), onlyFilename);
 
                     for (auto&& iter : templist) {
-                        list.emplace_back(iter);
+                        list.emplace_back(std::move(iter));
                     }
                 }
             }
@@ -426,12 +424,12 @@ Vita::string Data::get_proper_config_path(const Vita::string& str, const std::st
     return p.c_str();
 }
 
-void Data::updateConfigData() {
-    for (auto& PCIDevice : PCIDevices) {
+void Data::updateConfigData() noexcept {
+    for (const auto& PCIDevice : PCIDevices) {
         PCIDevice->available_configs.clear();
     }
 
-    for (auto& USBDevice : USBDevices) {
+    for (const auto& USBDevice : USBDevices) {
         USBDevice->available_configs.clear();
     }
 
