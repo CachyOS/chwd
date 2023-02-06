@@ -39,7 +39,7 @@ namespace ranges = std::ranges;
 
 namespace utils {
 
-auto make_multiline(const std::string_view& str, bool reverse, const std::string_view&& delim) noexcept -> std::vector<std::string> {
+auto make_multiline(const std::string_view& str, char delim) noexcept -> std::vector<std::string> {
     static constexpr auto functor = [](auto&& rng) {
         return std::string_view(&*rng.begin(), static_cast<size_t>(ranges::distance(rng)));
     };
@@ -58,9 +58,6 @@ auto make_multiline(const std::string_view& str, bool reverse, const std::string
 
     std::vector<std::string> lines{};
     ranges::for_each(view_res | ranges::views::filter(second), [&](auto&& rng) { lines.emplace_back(rng); });
-    if (reverse) {
-        ranges::reverse(lines);
-    }
     return lines;
 }
 

@@ -27,7 +27,7 @@
 
 class Kernel {
  public:
-    consteval Kernel() = default;
+    constexpr Kernel() = default;
     explicit Kernel(alpm_handle_t* handle, alpm_pkg_t* pkg) : m_name(alpm_pkg_get_name(pkg)), m_pkg(pkg), m_handle(handle) { }
     explicit Kernel(alpm_handle_t* handle, alpm_pkg_t* pkg, const std::string_view& repo) : m_name(alpm_pkg_get_name(pkg)), m_repo(repo), m_pkg(pkg), m_handle(handle) { }
     explicit Kernel(alpm_handle_t* handle, alpm_pkg_t* pkg, const std::string_view& repo, const std::string_view& raw) : m_name(alpm_pkg_get_name(pkg)), m_repo(repo), m_raw(raw), m_pkg(pkg), m_handle(handle) { }

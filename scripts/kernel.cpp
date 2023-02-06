@@ -89,7 +89,7 @@ void parse_repos(alpm_handle_t* handle) noexcept {
                     continue;
                 }
                 // add CacheDir
-                const auto& archs = utils::make_multiline(it_nested.second, false, " ");
+                const auto& archs = utils::make_multiline(it_nested.second, ' ');
                 for (const auto& arch : archs) {
                     alpm_option_add_architecture(handle, arch.c_str());
                 }
@@ -125,7 +125,7 @@ bool Kernel::is_installed() const noexcept {
     auto* db  = alpm_get_localdb(m_handle);
     auto* pkg = alpm_db_get_pkg(db, m_name.c_str());
 
-    return pkg != NULL;
+    return pkg != nullptr;
 }
 
 // Find kernel packages by finding packages which have words 'linux' and 'headers'.

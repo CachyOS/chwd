@@ -20,6 +20,12 @@ if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
 endif()
 set_target_properties(mhwd-bin PROPERTIES OUTPUT_NAME mhwd)
 
+option(ENABLE_UNITY "Enable Unity builds of projects" OFF)
+if(ENABLE_UNITY)
+   # Add for any project you want to apply unity builds for
+   set_target_properties(mhwd-bin PROPERTIES UNITY_BUILD ON)
+endif()
+
 install(
    TARGETS mhwd-bin
    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

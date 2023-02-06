@@ -25,7 +25,7 @@ include(CPM)
 CPMAddPackage(
   NAME fmt
   GITHUB_REPOSITORY fmtlib/fmt
-  GIT_TAG 7e4ad40171aa552d38cb99a5c181a0d7b150facc
+  GIT_TAG 9.1.0
   EXCLUDE_FROM_ALL YES
 )
 
@@ -47,7 +47,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
    CPMAddPackage(
      NAME range-v3
      GITHUB_REPOSITORY ericniebler/range-v3
-     GIT_TAG c7ad677c7fe7a3e94d2a44e2ebe89047c96eeb94
+     GIT_TAG 4624c63972c6f2c2871c7b87813c42048ddb80ad
      EXCLUDE_FROM_ALL YES
    )
 endif()
@@ -56,6 +56,11 @@ endif()
 ## CONFIGURATION
 ##
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto")
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fwhole-program -fuse-linker-plugin")
+endif()
 
 # Link this 'library' to set the c++ standard / compile-time options requested
 add_library(project_options INTERFACE)
