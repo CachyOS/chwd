@@ -50,7 +50,7 @@
 
 namespace mhwd {
 
-struct HardwareID {
+struct [[gnu::packed]] HardwareID {
     std::vector<std::string> class_ids;
     std::vector<std::string> vendor_ids;
     std::vector<std::string> device_ids;
@@ -59,12 +59,12 @@ struct HardwareID {
     std::vector<std::string> blacklisted_device_ids;
 };
 
-struct Config final {
-    Config(const std::string& configPath, std::string conf_type)
+struct [[gnu::packed]] Config final {
+    Config(const std::string_view& configPath, std::string conf_type)
       : type(std::move(conf_type)), base_path(configPath.substr(0, configPath.find_last_of('/'))),
         config_path(configPath) { }
 
-    bool read_file(const std::string_view& configPath);
+    bool read_file(const std::string_view& file_path) noexcept;
 
     bool is_freedriver{true};
     std::int32_t priority{};

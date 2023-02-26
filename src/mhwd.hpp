@@ -26,27 +26,19 @@
 #include "enums.hpp"
 #include "transaction.hpp"
 
-#include <dirent.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <cstdio>
-#include <cstdlib>
-#include <memory>
-#include <string>
-#include <string_view>
-#include <vector>
-
-#include "vita/string.hpp"
+#include <memory>       // for shared_ptr
+#include <span>         // for span
+#include <string>       // for string
+#include <string_view>  // for string_view
+#include <vector>       // for vector
 
 namespace mhwd {
 
 class Mhwd {
  public:
-    Mhwd(const std::string_view& ver, const std::string_view& year) : m_version(ver), m_year(year) { }
+    Mhwd(const std::string_view& version, const std::string_view& year) : m_version(version), m_year(year) { }
     ~Mhwd() = default;
-    int launch(int argc, char** argv);
+    int launch(std::span<char*> args);
 
  private:
     struct Arguments {
@@ -64,27 +56,26 @@ class Mhwd {
         bool AUTOCONFIGURE  = false;
     } m_arguments;
 
-    const std::string_view m_version{};
-    const std::string_view m_year{};
+    std::string_view m_version{};
+    std::string_view m_year{};
     std::shared_ptr<Config> m_config;
     Data m_data;
-    ConsoleWriter m_console_writer{};
     std::vector<std::string> m_configs{};
 
-    bool performTransaction(const std::shared_ptr<Config>& config, mhwd::transaction_t type);
+    bool performTransaction(const config_t& config, mhwd::transaction_t type);
 
-    [[nodiscard]] std::shared_ptr<Config> getInstalledConfig(const std::string_view& configName, const std::string_view& configType) const noexcept;
-    [[nodiscard]] std::shared_ptr<Config> getDatabaseConfig(const std::string_view& configName, const std::string_view& configType) const noexcept;
-    [[nodiscard]] std::shared_ptr<Config> getAvailableConfig(const std::string_view& configName, const std::string_view& configType) const noexcept;
+    [[nodiscard]] auto getInstalledConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> config_t;
+    [[nodiscard]] auto getDatabaseConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> config_t;
+    [[nodiscard]] auto getAvailableConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> config_t;
 
-    mhwd::status_t performTransaction(const Transaction& transaction);
+    auto performTransaction(const Transaction& transaction) -> mhwd::status_t;
 
-    mhwd::status_t installConfig(const std::shared_ptr<Config>& config);
-    mhwd::status_t uninstallConfig(Config* config) noexcept;
-    bool runScript(const std::shared_ptr<Config>& config, mhwd::transaction_t operationType) noexcept;
-    std::int32_t tryToParseCmdLineOptions(int argc, char* argv[], bool& autoConfigureNonFreeDriver,
-        std::string& operationType, std::string& autoConfigureClassID);
-    void optionsDontInterfereWithEachOther() const;
+    auto installConfig(const config_t& config) -> mhwd::status_t;
+    auto uninstallConfig(Config* config) noexcept -> mhwd::status_t;
+    bool runScript(const config_t& config, mhwd::transaction_t operation) noexcept;
+    auto tryToParseCmdLineOptions(std::span<char*> args, bool& autoconf_nonfree_driver,
+        std::string& operation, std::string& autoconf_class_id) noexcept(false) -> std::int32_t;
+    void optionsDontInterfereWithEachOther() const noexcept(false);
     void checkNvidiaCard() noexcept;
 };
 

@@ -50,17 +50,16 @@ namespace mhwd::utils {
 using hash_t = std::uint64_t;
 
 // Hardcoded values for the prime and the basis to calculate hash values.
-static constexpr hash_t prime = 0x100000001B3ull;
-static constexpr hash_t basis = 0xCBF29CE484222325ull;
+static constexpr hash_t prime = 0x100000001B3ULL;
+static constexpr hash_t basis = 0xCBF29CE484222325ULL;
 
-consteval hash_t hash_compile_time(const char* str, hash_t last_value = basis) {
-    return (*str) ? hash_compile_time(str + 1, (static_cast<hash_t>(*str) ^ last_value) * prime) : last_value;
+consteval auto hash_compile_time(const char* str, hash_t last_value = basis) noexcept -> hash_t {
+    return (*str != 0) ? hash_compile_time(str + 1, (static_cast<hash_t>(*str) ^ last_value) * prime) : last_value;
 }
 
-constexpr hash_t hash(const char* str) {
+constexpr auto hash(const char* str) noexcept -> hash_t {
     hash_t result{basis};
-
-    while (*str) {
+    while (*str != '\0') {
         result ^= static_cast<hash_t>(*str);
         result *= prime;
         ++str;

@@ -25,50 +25,52 @@
 namespace ranges = std::ranges;
 #endif
 
+#include <fmt/format.h>
+
 namespace Vita {
 
-string string::toLower() const {
+string string::to_lower() const {
     string result;
     ranges::transform(
         *this, std::back_inserter(result),
-        [](auto c) -> auto { return std::tolower(c); });
+        [](auto data) { return std::tolower(data); });
     return result;
 }
 
-string string::toUpper() const {
+string string::to_upper() const {
     string result;
     ranges::transform(
         *this, std::back_inserter(result),
-        [](auto c) -> auto { return std::toupper(c); });
+        [](auto data) { return std::toupper(data); });
     return result;
 }
 
-string string::ucfirst() const {
+string string::to_upper_first() const {
     string result = *this;
     result[0]     = static_cast<int8_t>(std::toupper(result[0]));
     return result;
 }
 
-string string::lcfirst() const {
+string string::to_lower_first() const {
     string result = *this;
     result[0]     = static_cast<int8_t>(std::tolower(result[0]));
     return result;
 }
 
-string string::operator+(int operand) const {
-    return (*this) + string::toStr<int>(operand);
+string string::operator+(std::int32_t operand) const {
+    return Vita::string{(*this) + Vita::string{fmt::format("{}", operand)}};
 }
 
-string string::operator+(long int operand) const {
-    return (*this) + string::toStr<long int>(operand);
+string string::operator+(std::int64_t operand) const {
+    return Vita::string{(*this) + Vita::string{fmt::format("{}", operand)}};
 }
 
 string string::operator+(double operand) const {
-    return (*this) + string::toStr<double>(operand);
+    return Vita::string{(*this) + Vita::string{fmt::format("{}", operand)}};
 }
 
 string string::operator+(float operand) const {
-    return (*this) + string::toStr<float>(operand);
+    return Vita::string{(*this) + Vita::string{fmt::format("{}", operand)}};
 }
 
 string string::replace(const std::string_view& search, const std::string_view& replace, size_t limit) const {
@@ -78,7 +80,7 @@ string string::replace(const std::string_view& search, const std::string_view& r
 
     size_t current = tmp.find(search);
 
-    while ((current != std::string_view::npos) && limit) {
+    while ((current != std::string_view::npos) && (limit != 0U)) {
         result += tmp.substr(previous, current - previous);
         result += replace;
         previous = current + search.size();
@@ -90,14 +92,14 @@ string string::replace(const std::string_view& search, const std::string_view& r
 }
 
 std::vector<string> string::explode(const std::string_view& delimiter) const {
-    if (empty())
-        return {};
+    /* clang-format off */
+    if (empty()) { return {}; }
+    /* clang-format on */
 
-    std::vector<string> result;
-    size_t previous = 0;
+    std::vector<string> result{};
 
+    size_t previous{};
     size_t current = find(delimiter);
-
     while (current != std::string::npos) {
         result.emplace_back(substr(previous, current - previous));
         previous = current + delimiter.size();
@@ -107,7 +109,7 @@ std::vector<string> string::explode(const std::string_view& delimiter) const {
     return result;
 }
 
-string string::trim(const std::string_view& what) const {
+string string::trim(const std::string_view& what) const noexcept {
     string result = *this;
     size_t pos    = result.find_first_not_of(what);
     result.erase(0, pos);

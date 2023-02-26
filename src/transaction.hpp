@@ -52,8 +52,7 @@
 namespace mhwd {
 
 struct Transaction final {
- public:
-    Transaction(Data data, std::shared_ptr<Config> conf, mhwd::transaction_t transaction_type, bool allow_reinstallation)
+    Transaction(const Data& data, std::shared_ptr<Config> conf, mhwd::transaction_t transaction_type, bool allow_reinstallation)
       : is_reinstall_allowed(allow_reinstallation),
         type(transaction_type), config(std::move(conf)),
         dependency_configs(data.getAllDependenciesToInstall(config)),
@@ -63,10 +62,10 @@ struct Transaction final {
     bool is_reinstall_allowed{};
     mhwd::transaction_t type{};
 
-    std::shared_ptr<Config> config;
-    std::vector<std::shared_ptr<Config>> dependency_configs;
-    std::vector<std::shared_ptr<Config>> conflicted_configs;
-    std::vector<std::shared_ptr<Config>> configs_requirements;
+    std::shared_ptr<Config> config{};
+    std::vector<std::shared_ptr<Config>> dependency_configs{};
+    std::vector<std::shared_ptr<Config>> conflicted_configs{};
+    std::vector<std::shared_ptr<Config>> configs_requirements{};
 
     // Deleted constructor
     Transaction() = delete;

@@ -216,7 +216,7 @@ namespace INIParser {
         parseData.first.clear();
         parseData.second.clear();
         INIStringUtil::trim(line);
-        if (line.empty()) {
+        if (line.empty() || line.starts_with('#')) {
             return PDataType::PDATA_NONE;
         }
         const char firstCharacter = line[0];

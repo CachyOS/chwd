@@ -42,38 +42,38 @@
 
 #include <hd.h>
 
-#include <iomanip>
-#include <iostream>
-#include <memory>
-#include <numeric>
-#include <string>
-#include <vector>
+#include <iostream>  // for cout
+#include <numeric>   // for accumulate
+#include <string>    // for string
 
 #include <fmt/color.h>
 #include <fmt/compile.h>
 #include <fmt/core.h>
 
-namespace mhwd {
+namespace mhwd::console_writer {
 
 namespace {
-inline void printLine() noexcept {
-    fmt::print("{:->80}", "\n");  // use '-' as a fill char
+inline constexpr void print_line() noexcept {
+    fmt::print(FMT_COMPILE("{:->80}"), "\n");  // use '-' as a fill char
 }
+
+static constexpr auto CONSOLE_COLOR_RESET{"\033[m"};
+static constexpr auto CONSOLE_TEXT_OUTPUT_COLOR{"\033[0;32m"};
 }  // namespace
 
-void ConsoleWriter::print_status(const std::string_view& msg) const noexcept {
+void print_status(const std::string_view& msg) {
     fmt::print(fg(fmt::color::red), fmt::format(FMT_COMPILE("> {}{}\n"), CONSOLE_COLOR_RESET, msg));
 }
 
-void ConsoleWriter::print_error(const std::string_view& msg) const noexcept {
+void print_error(const std::string_view& msg) {
     fmt::print(stderr, fg(fmt::color::red), fmt::format(FMT_COMPILE("Error: {}{}\n"), CONSOLE_COLOR_RESET, msg));
 }
 
-void ConsoleWriter::print_warning(const std::string_view& msg) const noexcept {
+void print_warning(const std::string_view& msg) {
     fmt::print(fg(fmt::color::yellow), fmt::format(FMT_COMPILE("Warning: {}{}\n"), CONSOLE_COLOR_RESET, msg));
 }
 
-void ConsoleWriter::print_message(mhwd::message_t type, const std::string_view& msg) const noexcept {
+void print_message(mhwd::message_t type, const std::string_view& msg) {
     switch (type) {
     case mhwd::message_t::CONSOLE_OUTPUT:
         fmt::print("{}{}{}", CONSOLE_TEXT_OUTPUT_COLOR, msg, CONSOLE_COLOR_RESET);
@@ -102,7 +102,7 @@ void ConsoleWriter::print_message(mhwd::message_t type, const std::string_view& 
     }
 }
 
-void ConsoleWriter::print_help() noexcept {
+void print_help() noexcept {
     std::cout << "Usage: mhwd [OPTIONS] <config(s)>\n\n"
               << "  --pci\t\t\t\t\tlist only pci devices and driver configs\n"
               << "  --usb\t\t\t\t\tlist only usb devices and driver configs\n"
@@ -125,7 +125,7 @@ void ConsoleWriter::print_help() noexcept {
               << '\n';
 }
 
-void ConsoleWriter::print_version(const std::string_view& version_mhwd, const std::string_view& year_copy) noexcept {
+void print_version(const std::string_view& version_mhwd, const std::string_view& year_copy) noexcept {
     std::cout << "CachyOS Hardware Detection v" << version_mhwd << "\n\n"
               << "Copyright (C) " << year_copy << " CachyOS Developers\n"
               << "Copyright (C) 2021 Manjaro Linux Developers\n"
@@ -134,33 +134,33 @@ void ConsoleWriter::print_version(const std::string_view& version_mhwd, const st
               << '\n';
 }
 
-void ConsoleWriter::list_devices(const list_of_devices_t& devices, const std::string_view& type) const noexcept {
+void list_devices(const list_of_devices_t& devices, const std::string_view& type) {
     if (devices.empty()) {
         print_warning("No {} devices found!", type);
         return;
     }
     print_status("{} devices:", type);
-    printLine();
+    print_line();
     fmt::print(FMT_COMPILE("{:>30}{:>15}{:>8}{:>8}{:>8}{:>10}\n"), "TYPE", "BUS", "CLASS", "VENDOR", "DEVICE", "CONFIGS");
-    printLine();
+    print_line();
     for (const auto& device : devices) {
         fmt::print(FMT_COMPILE("{:>30}{:>15}{:>8}{:>8}{:>8}{:>10}\n"), device->class_name, device->sysfs_busid, device->class_id, device->vendor_id, device->device_id, device->available_configs.size());
     }
     fmt::print("\n\n");
 }
 
-void ConsoleWriter::list_configs(const list_of_configs_t& configs, const std::string_view& header) const noexcept {
+void list_configs(const list_of_configs_t& configs, const std::string_view& header) {
     print_status(header);
-    printLine();
+    print_line();
     fmt::print(FMT_COMPILE("{:>24}{:>22}{:>18}{:>15}\n"), "NAME", "VERSION", "FREEDRIVER", "TYPE");
-    printLine();
+    print_line();
     for (const auto& config : configs) {
         fmt::print(FMT_COMPILE("{:>24}{:>22}{:>18}{:>15}\n"), config->name, config->version, config->is_freedriver, config->type);
     }
     fmt::print("\n\n");
 }
 
-void ConsoleWriter::printAvailableConfigsInDetail(const std::string_view& device_type, const list_of_devices_t& devices) const noexcept {
+void printAvailableConfigsInDetail(const std::string_view& device_type, const list_of_devices_t& devices) {
     bool config_found = false;
     for (const auto& device : devices) {
         if (device->available_configs.empty() && device->installed_configs.empty()) {
@@ -168,10 +168,10 @@ void ConsoleWriter::printAvailableConfigsInDetail(const std::string_view& device
         }
         config_found = true;
 
-        printLine();
+        print_line();
         print_status("{} Device: {} ({}:{}:{})", device_type, device->sysfs_id, device->class_id, device->vendor_id, device->device_id);
         fmt::print(FMT_COMPILE("  {} {} {}\n"), device->class_name, device->vendor_name, device->device_name);
-        printLine();
+        print_line();
         if (!device->installed_configs.empty()) {
             fmt::print("  > INSTALLED:\n\n");
             for (auto&& installed_config : device->installed_configs) {
@@ -193,7 +193,7 @@ void ConsoleWriter::printAvailableConfigsInDetail(const std::string_view& device
     }
 }
 
-void ConsoleWriter::printInstalledConfigs(const std::string_view& device_type, const list_of_configs_t& installed_configs) const noexcept {
+void printInstalledConfigs(const std::string_view& device_type, const list_of_configs_t& installed_configs) {
     if (installed_configs.empty()) {
         print_warning("no installed configs for {} devices found!", device_type);
         return;
@@ -204,10 +204,10 @@ void ConsoleWriter::printInstalledConfigs(const std::string_view& device_type, c
     fmt::print("\n");
 }
 
-void ConsoleWriter::printConfigDetails(const Config& config) noexcept {
+void printConfigDetails(const Config& config) noexcept {
     const auto& split_by_space = [](const auto& vec) {
-        const auto& space_fold = [](auto&& a, const auto& in) {
-            return in + ' ' + std::forward<decltype(a)>(a);
+        const auto& space_fold = [](auto&& lhs, const auto& rhs) {
+            return rhs + ' ' + std::forward<decltype(lhs)>(lhs);
         };
 
         return vec.empty() ? "-" : std::accumulate(std::next(vec.begin()), vec.end(),
@@ -215,8 +215,8 @@ void ConsoleWriter::printConfigDetails(const Config& config) noexcept {
                    space_fold);
     };
 
-    std::string class_ids;
-    std::string vendor_ids;
+    std::string class_ids{};
+    std::string vendor_ids{};
     for (const auto& hwd : config.hwd_ids) {
         vendor_ids += split_by_space(hwd.vendor_ids);
         class_ids += split_by_space(hwd.class_ids);
@@ -233,16 +233,16 @@ void ConsoleWriter::printConfigDetails(const Config& config) noexcept {
         class_ids, vendor_ids);
 }
 
-void ConsoleWriter::printDeviceDetails(hw_item hw, FILE* f) noexcept {
-    auto hd_data = std::make_unique<hd_data_t>();
-    auto* hd     = hd_list(hd_data.get(), hw, 1, nullptr);
+void printDeviceDetails(hw_item item, FILE* file_obj) noexcept {
+    auto hd_data      = std::make_unique<hd_data_t>();
+    auto* hd_list_obj = hd_list(hd_data.get(), item, 1, nullptr);
 
-    for (hd_t* iter = hd; iter; iter = iter->next) {
-        hd_dump_entry(hd_data.get(), iter, f);
+    for (hd_t* iter = hd_list_obj; iter != nullptr; iter = iter->next) {
+        hd_dump_entry(hd_data.get(), iter, file_obj);
     }
 
-    hd_free_hd_list(hd);
+    hd_free_hd_list(hd_list_obj);
     hd_free_hd_data(hd_data.get());
 }
 
-}  // namespace mhwd
+}  // namespace mhwd::console_writer

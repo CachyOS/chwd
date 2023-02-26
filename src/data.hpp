@@ -73,17 +73,17 @@ using list_of_devices_t = std::vector<device_t>;
 
 class Data final {
  public:
-    Data() = default;
+    Data()  = default;
     ~Data() = default;
 
-    struct Environment {
+    struct [[gnu::packed]] Environment {
         bool syncPackageManagerDatabase = true;
         std::string PMCachePath{consts::MHWD_PM_CACHE_DIR};
         std::string PMConfigPath{consts::MHWD_PM_CONFIG};
         std::string PMRootPath{consts::MHWD_PM_ROOT};
     };
 
-    static Data initialize_data() noexcept;
+    static auto initialize_data() noexcept -> Data;
 
     Environment environment;
     list_of_devices_t USBDevices;
@@ -95,20 +95,17 @@ class Data final {
     list_of_configs_t invalidConfigs;
 
     void updateInstalledConfigData() noexcept;
-    void getAllDevicesOfConfig(const config_t& config, list_of_devices_t& foundDevices) const noexcept;
+    void getAllDevicesOfConfig(const config_t& config, list_of_devices_t& found_devices) const noexcept;
 
-    list_of_configs_t getAllDependenciesToInstall(const config_t& config) noexcept;
-    void getAllDependenciesToInstall(const config_t& config, list_of_configs_t& installedConfigs, list_of_configs_t* depends) noexcept;
-    [[nodiscard]] config_t getDatabaseConfig(const std::string_view& configName, const std::string_view& configType) const noexcept;
-    list_of_configs_t getAllLocalConflicts(const config_t& config) noexcept;
-    list_of_configs_t getAllLocalRequirements(const config_t& config) noexcept;
+    [[nodiscard]] auto getAllDependenciesToInstall(const config_t& config) const noexcept -> list_of_configs_t;
+    void getAllDependenciesToInstall(const config_t& config, const list_of_configs_t& installed_configs, list_of_configs_t* dependencies) const noexcept;
+    [[nodiscard]] auto getDatabaseConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> config_t;
+    [[nodiscard]] auto getAllLocalConflicts(const config_t& config) const noexcept -> list_of_configs_t;
+    [[nodiscard]] auto getAllLocalRequirements(const config_t& config) const noexcept -> list_of_configs_t;
 
  private:
     void fillInstalledConfigs(const std::string_view& type) noexcept;
     void fillAllConfigs(const std::string_view& type) noexcept;
-    [[nodiscard]] std::vector<std::string> getRecursiveDirectoryFileList(const std::string_view& directoryPath, const std::string_view& onlyFilename = "") const noexcept;
-
-    static Vita::string get_proper_config_path(const Vita::string& str, const std::string_view& baseConfigPath);
     void updateConfigData() noexcept;
 };
 

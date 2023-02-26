@@ -26,23 +26,23 @@ class string : public std::string {
     /**
      * Directly call <tt>std::string::string()</tt>.
      */
-    explicit string() : std::string(){};
+    explicit string() = default;
 
     /**
      * Directly call <tt>std::string::string(const char*)</tt>.
      */
-    string(const char* cstr) : std::string(cstr){};
-    string(const std::string_view& str) : std::string(str.data()){};
+    explicit string(const char* c_string) : std::string(c_string){};
+    explicit string(const std::string_view& str) : std::string(str.data()){};
 
     /**
      * Directly call <tt>std::string::string(const char*, size_t)</tt>.
      */
-    string(const char* cstr, size_t n) : std::string(cstr, n){};
+    string(const char* c_string, size_t n) : std::string(c_string, n){};
 
     /**
      * Directly call <tt>std::string::string(const std::string&)</tt>.
      */
-    string(const std::string& str) : std::string(str){};
+    explicit string(const std::string& str) : std::string(str){};
 
     /**
      * Directly call <tt>std::string::string(const std::string&, size_t, size_t)</tt>.
@@ -52,27 +52,27 @@ class string : public std::string {
     /**
      * Directly call <tt>std::string::string(size_t, char)</tt>.
      */
-    string(size_t n, char c) : std::string(n, c){};
+    string(size_t n, char data) : std::string(n, data){};
 
     /**
      * Convert all characters to lower case.
      */
-    string toLower() const;
+    [[nodiscard]] string to_lower() const;
 
     /**
      * Convert all characters to upper case.
      */
-    string toUpper() const;
+    [[nodiscard]] string to_upper() const;
 
     /**
      * Make the first character uppercase.
      */
-    string ucfirst() const;
+    [[nodiscard]] string to_upper_first() const;
 
     /**
      * Make the first character lowercase.
      */
-    string lcfirst() const;
+    [[nodiscard]] string to_lower_first() const;
 
     /**
      * Convert the operand to string and append it.
@@ -82,7 +82,7 @@ class string : public std::string {
      * @param operand The number to be appended.
      * @return The string with @a operand appended.
      */
-    string operator+(int operand) const;
+    string operator+(std::int32_t operand) const;
 
     /**
      * Convert the operand to string and append it.
@@ -92,7 +92,7 @@ class string : public std::string {
      * @param operand The number to be appended.
      * @return The string with @a operand appended.
      */
-    string operator+(long int operand) const;
+    string operator+(std::int64_t operand) const;
 
     /**
      * Convert the operand to string and append it.
@@ -115,14 +115,14 @@ class string : public std::string {
     string operator+(float operand) const;
 
     /**
-     * Replace all occurences of a certain substring in the string.
+     * Replace all occurrences of a certain substring in the string.
      *
      * @param search The substring that will be replaced.
      * @param replace The replacement.
      * @param limit How many replacements should be done. Set to Vita::string::npos to disable the limit.
      * @return String with the replacement(s) in place.
      */
-    string replace(const std::string_view& search, const std::string_view& replace, size_t limit = npos) const;
+    [[nodiscard]] string replace(const std::string_view& search, const std::string_view& replace, size_t limit = npos) const;
 
     /**
      * Split the string by another string.
@@ -132,7 +132,7 @@ class string : public std::string {
      * @param delimiter The boundary string.
      * @return A vector of strings, each of which is a substring of the original.
      */
-    std::vector<string> explode(const std::string_view& delimiter) const;
+    [[nodiscard]] std::vector<string> explode(const std::string_view& delimiter) const;
 
     /**
      * Trim unwanted characters from the beginning and the end of the string.
@@ -140,22 +140,7 @@ class string : public std::string {
      * @param what The characters to trim. Defaults to whitespace (ASCII #9, #10, #13, #32).
      * @return The trimmed string.
      */
-    string trim(const std::string_view& what = "\x9\xa\xd\x20") const;
-
-    /**
-     * Convert a generic data type to string.
-     *
-     * The conversion is done via std::ostringstream.
-     *
-     * @param source The value to convert.
-     * @return string
-     */
-    template <class T>
-    static string toStr(const T& source) {
-        std::ostringstream stream;
-        stream << source;
-        return string(stream.str());
-    }
+    [[nodiscard]] string trim(const std::string_view& what = "\x9\xa\xd\x20") const noexcept;
 
     /**
      * Convert the string to a generic data type.
@@ -165,7 +150,7 @@ class string : public std::string {
      * @return The converted string.
      */
     template <class T>
-    T convert() const {
+    [[nodiscard]] T convert() const {
         std::istringstream stream(*this);
         T result;
         stream >> result;

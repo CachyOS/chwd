@@ -37,21 +37,19 @@
 #ifndef CONST_HPP
 #define CONST_HPP
 
-namespace mhwd {
-namespace consts {
+namespace mhwd::consts {
 
-    static constexpr auto MHWD_CONFIG_NAME      = "MHWDCONFIG";
-    static constexpr auto MHWD_USB_CONFIG_DIR   = "/var/lib/mhwd/db/usb";
-    static constexpr auto MHWD_PCI_CONFIG_DIR   = "/var/lib/mhwd/db/pci";
-    static constexpr auto MHWD_USB_DATABASE_DIR = "/var/lib/mhwd/local/usb";
-    static constexpr auto MHWD_PCI_DATABASE_DIR = "/var/lib/mhwd/local/pci";
-    static constexpr auto MHWD_SCRIPT_PATH      = "/var/lib/mhwd/scripts/mhwd";
+static constexpr auto MHWD_CONFIG_NAME      = "MHWDCONFIG";
+static constexpr auto MHWD_USB_CONFIG_DIR   = "/var/lib/mhwd/db/usb";
+static constexpr auto MHWD_PCI_CONFIG_DIR   = "/var/lib/mhwd/db/pci";
+static constexpr auto MHWD_USB_DATABASE_DIR = "/var/lib/mhwd/local/usb";
+static constexpr auto MHWD_PCI_DATABASE_DIR = "/var/lib/mhwd/local/pci";
+static constexpr auto MHWD_SCRIPT_PATH      = "/var/lib/mhwd/scripts/mhwd";
 
-    static constexpr auto MHWD_PM_CACHE_DIR = "/var/cache/pacman/pkg";
-    static constexpr auto MHWD_PM_CONFIG    = "/etc/pacman.conf";
-    static constexpr auto MHWD_PM_ROOT      = "/";
+static constexpr auto MHWD_PM_CACHE_DIR = "/var/cache/pacman/pkg";
+static constexpr auto MHWD_PM_CONFIG    = "/etc/pacman.conf";
+static constexpr auto MHWD_PM_ROOT      = "/";
 
-}  // namespace consts
-}  // namespace mhwd
+}  // namespace mhwd::consts
 
 #endif  // CONST_HPP

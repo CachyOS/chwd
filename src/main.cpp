@@ -41,13 +41,14 @@
 #include "mhwd.hpp"
 
 #include <iostream>
+#include <span>  // for span
 
 int main(int argc, char** argv) {
     try {
         mhwd::Mhwd mhwd("0.6.12", "2022-2023");
-        return mhwd.launch(argc, argv);
+        return mhwd.launch(std::span{argv, static_cast<std::size_t>(argc)});
     } catch (...) {
-        std::cerr << "Unknown errors occured...";
+        std::cerr << "Unknown errors occurred...";
         return -1;
     }
 }

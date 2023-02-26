@@ -40,14 +40,12 @@
 
 #include "data.hpp"
 
-#include <dirent.h>
 #include <fnmatch.h>
 
-#include <algorithm>
-#include <filesystem>
-#include <iomanip>
-#include <string>
-#include <vector>
+#include <filesystem>  // for recursive_directory_iterator
+#include <iomanip>     // for setw, setfill
+#include <string>      // for string
+#include <vector>      // for vector
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -62,71 +60,70 @@
 namespace ranges = std::ranges;
 #endif
 
-#include <fmt/core.h>
-
 namespace fs = std::filesystem;
 
 namespace mhwd {
 
 namespace {
-inline Vita::string from_hex(std::uint16_t hexnum, int fill) noexcept {
-    std::stringstream stream;
-    stream << std::hex << std::setfill('0') << std::setw(fill) << hexnum;
-    return stream.str();
-}
+[[nodiscard]] auto get_recursive_directory_listing(const std::string_view& directory_path, const std::string_view& only_filename) noexcept -> std::vector<std::string> {
+    std::vector<std::string> file_list{};
+    for (const auto& dir_entry : fs::recursive_directory_iterator(directory_path)) {
+        const auto& entry_path     = dir_entry.path();
+        const auto& entry_filename = entry_path.filename().c_str();
 
-inline std::string from_CharArray(char* c) noexcept {
-    if (nullptr == c) {
-        return "";
+        const auto& filestatus = fs::status(entry_path);
+        if (fs::is_regular_file(filestatus) && (only_filename.empty() || (only_filename == entry_filename))) {
+            file_list.push_back(entry_path);
+        }
     }
 
-    return {c};
+    return file_list;
 }
 
-void getAllDevicesOfConfig(const list_of_devices_t& devices, const config_t& config, list_of_devices_t& foundDevices) noexcept {
-    foundDevices.clear();
+void getAllDevicesOfConfig(const list_of_devices_t& devices, const config_t& config, list_of_devices_t& found_devices) noexcept {
+    found_devices.clear();
 
     for (auto&& hwdID : config->hwd_ids) {
-        bool foundDevice = false;
+        bool found_device{};
         // Check all devices
         for (auto&& i_device : devices) {
             // Check class ids
             bool found = ranges::find_if(hwdID.class_ids, [i_device](const std::string& classID) {
-                return !fnmatch(classID.c_str(), i_device->class_id.c_str(), FNM_CASEFOLD);
+                return fnmatch(classID.c_str(), i_device->class_id.c_str(), FNM_CASEFOLD) == 0;
             }) != hwdID.class_ids.end();
 
             if (found) {
                 // Check blacklisted class ids
                 found = ranges::find_if(hwdID.blacklisted_class_ids, [i_device](const std::string& blacklistedClassID) {
-                    return !fnmatch(blacklistedClassID.c_str(), i_device->class_id.c_str(), FNM_CASEFOLD);
+                    return fnmatch(blacklistedClassID.c_str(), i_device->class_id.c_str(), FNM_CASEFOLD) == 0;
                 }) != hwdID.blacklisted_class_ids.end();
 
                 if (!found) {
                     // Check vendor ids
                     found = ranges::find_if(hwdID.vendor_ids, [i_device](const std::string& vendorID) {
-                        return !fnmatch(vendorID.c_str(), i_device->vendor_id.c_str(), FNM_CASEFOLD);
+                        return fnmatch(vendorID.c_str(), i_device->vendor_id.c_str(), FNM_CASEFOLD) == 0;
                     }) != hwdID.vendor_ids.end();
 
                     if (found) {
                         // Check blacklisted vendor ids
                         found = ranges::find_if(hwdID.blacklisted_vendor_ids, [i_device](const std::string& blacklistedVendorID) {
-                            return !fnmatch(blacklistedVendorID.c_str(), i_device->vendor_id.c_str(), FNM_CASEFOLD);
+                            return fnmatch(blacklistedVendorID.c_str(), i_device->vendor_id.c_str(), FNM_CASEFOLD) == 0;
                         }) != hwdID.blacklisted_vendor_ids.end();
 
                         if (!found) {
                             // Check device ids
                             found = ranges::find_if(hwdID.device_ids, [i_device](const std::string& deviceID) {
-                                return !fnmatch(deviceID.c_str(), i_device->device_id.c_str(), FNM_CASEFOLD);
+                                return fnmatch(deviceID.c_str(), i_device->device_id.c_str(), FNM_CASEFOLD) == 0;
                             }) != hwdID.device_ids.end();
 
                             if (found) {
                                 // Check blacklisted device ids
                                 found = ranges::find_if(hwdID.blacklisted_device_ids, [i_device](const std::string& blacklistedDeviceID) {
-                                    return !fnmatch(blacklistedDeviceID.c_str(), i_device->device_id.c_str(), FNM_CASEFOLD);
+                                    return fnmatch(blacklistedDeviceID.c_str(), i_device->device_id.c_str(), FNM_CASEFOLD) == 0;
                                 }) != hwdID.blacklisted_device_ids.end();
                                 if (!found) {
-                                    foundDevice = true;
-                                    foundDevices.push_back(i_device);
+                                    found_device = true;
+                                    found_devices.push_back(i_device);
                                 }
                             }
                         }
@@ -135,15 +132,15 @@ void getAllDevicesOfConfig(const list_of_devices_t& devices, const config_t& con
             }
         }
 
-        if (!foundDevice) {
-            foundDevices.clear();
+        if (!found_device) {
+            found_devices.clear();
             return;
         }
     }
 }
 
 void addConfigSorted(list_of_configs_t& configs,
-    config_t newConfig) noexcept {
+    const config_t& newConfig) noexcept {
     const bool found = ranges::find_if(configs.begin(), configs.end(),
                            [&newConfig](const config_t& config) {
                                return newConfig->name == config->name;
@@ -154,56 +151,63 @@ void addConfigSorted(list_of_configs_t& configs,
         for (size_t i = 0; i < configs.size(); ++i) {
             auto&& config = configs[i];
             if (newConfig->priority > config->priority) {
-                configs.insert(configs.begin() + static_cast<long>(i), newConfig);
+                configs.insert(configs.begin() + static_cast<std::int64_t>(i), newConfig);
                 return;
             }
         }
-        configs.emplace_back(newConfig);
+        configs.push_back(newConfig);
     }
 }
 
 void setMatchingConfig(const config_t& config,
-    const list_of_devices_t& devices, bool setAsInstalled) noexcept {
-    list_of_devices_t foundDevices;
-    ::mhwd::getAllDevicesOfConfig(devices, config, foundDevices);
+    const list_of_devices_t& devices, bool set_as_installed) noexcept {
+    list_of_devices_t found_devices;
+    ::mhwd::getAllDevicesOfConfig(devices, config, found_devices);
 
     // Set config to all matching devices
-    for (auto& foundDevice : foundDevices) {
-        if (setAsInstalled) {
-            addConfigSorted(foundDevice->installed_configs, config);
-        } else {
-            addConfigSorted(foundDevice->available_configs, config);
-        }
+    for (auto& found_device : found_devices) {
+        auto& to_be_added = (set_as_installed) ? found_device->installed_configs : found_device->available_configs;
+        addConfigSorted(to_be_added, config);
     }
 }
 
 void setMatchingConfigs(const list_of_devices_t& devices,
-    list_of_configs_t& configs, bool setAsInstalled) noexcept {
-    for (auto& config : configs) {
-        setMatchingConfig(config, devices, setAsInstalled);
+    const list_of_configs_t& configs, bool set_as_installed) noexcept {
+    for (const auto& config : configs) {
+        setMatchingConfig(config, devices, set_as_installed);
     }
 }
 
-void fillDevices(hw_item hw, list_of_devices_t& devices) noexcept {
-    // Get the hardware devices
-    auto hd_data = std::make_unique<hd_data_t>();
-    hd_t* hd     = hd_list(hd_data.get(), hw, 1, nullptr);
+void fillDevices(hw_item item, list_of_devices_t& devices) noexcept {
+    const auto& from_hex = [](std::uint16_t hex_number, int fill) noexcept -> Vita::string {
+        std::stringstream stream;
+        stream << std::hex << std::setfill('0') << std::setw(fill) << hex_number;
+        return Vita::string{stream.str()};
+    };
 
-    for (hd_t* hdIter = hd; hdIter; hdIter = hdIter->next) {
-        auto device         = std::make_shared<Device>();
-        device->type        = (hw == hw_usb) ? "USB" : "PCI";
-        device->class_id    = from_hex(static_cast<uint16_t>(hdIter->base_class.id), 2) + from_hex(static_cast<uint16_t>(hdIter->sub_class.id), 2).toLower();
-        device->vendor_id   = from_hex(static_cast<uint16_t>(hdIter->vendor.id), 4).toLower();
-        device->device_id   = from_hex(static_cast<uint16_t>(hdIter->device.id), 4).toLower();
-        device->class_name  = from_CharArray(hdIter->base_class.name);
-        device->vendor_name = from_CharArray(hdIter->vendor.name);
-        device->device_name = from_CharArray(hdIter->device.name);
-        device->sysfs_busid = from_CharArray(hdIter->sysfs_bus_id);
-        device->sysfs_id    = from_CharArray(hdIter->sysfs_id);
-        devices.emplace_back(device);
+    const auto& safe_str = [](auto&& data) noexcept -> std::string_view {
+        return (data == nullptr) ? "" : data;
+    };
+
+    // Get the hardware devices
+    auto hd_data      = std::make_unique<hd_data_t>();
+    hd_t* hd_list_obj = hd_list(hd_data.get(), item, 1, nullptr);
+
+    for (hd_t* iter = hd_list_obj; iter != nullptr; iter = iter->next) {
+        auto device         = std::make_unique<Device>();
+        device->type        = (item == hw_usb) ? "USB" : "PCI";
+        device->class_id    = from_hex(static_cast<uint16_t>(iter->base_class.id), 2) + from_hex(static_cast<uint16_t>(iter->sub_class.id), 2).to_lower();
+        device->vendor_id   = from_hex(static_cast<uint16_t>(iter->vendor.id), 4).to_lower();
+        device->device_id   = from_hex(static_cast<uint16_t>(iter->device.id), 4).to_lower();
+        device->class_name  = safe_str(iter->base_class.name);
+        device->vendor_name = safe_str(iter->vendor.name);
+        device->device_name = safe_str(iter->device.name);
+        device->sysfs_busid = safe_str(iter->sysfs_bus_id);
+        device->sysfs_id    = safe_str(iter->sysfs_id);
+        devices.emplace_back(std::move(device));
     }
 
-    hd_free_hd_list(hd);
+    hd_free_hd_list(hd_list_obj);
     hd_free_hd_data(hd_data.get());
 }
 }  // namespace
@@ -221,7 +225,6 @@ auto Data::initialize_data() noexcept -> Data {
 
 void Data::updateInstalledConfigData() noexcept {
     // Clear config vectors in each device element
-
     for (const auto& PCIDevice : PCIDevices) {
         PCIDevice->installed_configs.clear();
     }
@@ -242,41 +245,40 @@ void Data::updateInstalledConfigData() noexcept {
 }
 
 void Data::fillInstalledConfigs(const std::string_view& type) noexcept {
-    const auto& db_path     = ("USB" == type) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
-    const auto& configPaths = getRecursiveDirectoryFileList(db_path, consts::MHWD_CONFIG_NAME);
-    auto* configs           = ("USB" == type) ? &installedUSBConfigs : &installedPCIConfigs;
+    const auto& db_path = ("USB" == type) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
+    auto* configs       = ("USB" == type) ? &installedUSBConfigs : &installedPCIConfigs;
 
-    for (const auto& configPath : configPaths) {
-        auto config = std::make_shared<Config>(configPath, type.data());
+    const auto& config_paths = get_recursive_directory_listing(db_path, consts::MHWD_CONFIG_NAME);
+    for (const auto& config_path : config_paths) {
+        auto config = std::make_unique<Config>(config_path, type.data());
 
-        if (config->read_file(configPath)) {
+        if (config->read_file(config_path)) {
             configs->push_back(std::move(config));
         } else {
-            invalidConfigs.push_back(config);
+            invalidConfigs.emplace_back(std::move(config));
         }
     }
 }
 
-void Data::getAllDevicesOfConfig(const config_t& config, list_of_devices_t& foundDevices) const noexcept {
+void Data::getAllDevicesOfConfig(const config_t& config, list_of_devices_t& found_devices) const noexcept {
     const auto& devices = ("USB" == config->type) ? USBDevices : PCIDevices;
-    ::mhwd::getAllDevicesOfConfig(devices, config, foundDevices);
+    ::mhwd::getAllDevicesOfConfig(devices, config, found_devices);
 }
 
-list_of_configs_t Data::getAllDependenciesToInstall(const config_t& config) noexcept {
-    auto installedConfigs = ("USB" == config->type) ? installedUSBConfigs : installedPCIConfigs;
+auto Data::getAllDependenciesToInstall(const config_t& config) const noexcept -> list_of_configs_t {
+    const auto& installed_configs = ("USB" == config->type) ? installedUSBConfigs : installedPCIConfigs;
     list_of_configs_t depends;
-    getAllDependenciesToInstall(config, installedConfigs, &depends);
-
+    getAllDependenciesToInstall(config, installed_configs, &depends);
     return depends;
 }
 
-void Data::getAllDependenciesToInstall(const config_t& config, list_of_configs_t& installedConfigs, list_of_configs_t* dependencies) noexcept {
+void Data::getAllDependenciesToInstall(const config_t& config, const list_of_configs_t& installed_configs, list_of_configs_t* dependencies) const noexcept {
     for (const auto& configDependency : config->dependencies) {
-        auto found = ranges::find_if(installedConfigs,
+        auto found = ranges::find_if(installed_configs,
                          [configDependency](const auto& tmp) -> bool {
                              return (tmp->name == configDependency);
                          })
-            != installedConfigs.end();
+            != installed_configs.end();
 
         if (!found) {
             found = ranges::find_if(*dependencies,
@@ -286,27 +288,27 @@ void Data::getAllDependenciesToInstall(const config_t& config, list_of_configs_t
                 != dependencies->end();
 
             if (!found) {
-                // Add to vector and check for further subdepends...
-                const auto dependconfig{getDatabaseConfig(configDependency, config->type)};
-                if (nullptr != dependconfig) {
-                    dependencies->emplace_back(dependconfig);
-                    getAllDependenciesToInstall(dependconfig, installedConfigs, dependencies);
+                // Add to vector and check for further sub depends...
+                const auto dependency_db_config{getDatabaseConfig(configDependency, config->type)};
+                if (nullptr != dependency_db_config) {
+                    dependencies->emplace_back(dependency_db_config);
+                    getAllDependenciesToInstall(dependency_db_config, installed_configs, dependencies);
                 }
             }
         }
     }
 }
 
-config_t Data::getDatabaseConfig(const std::string_view& configName, const std::string_view& configType) const noexcept {
-    const auto allConfigs = ("USB" == configType) ? allUSBConfigs : allPCIConfigs;
-    const auto result     = ranges::find_if(allConfigs.begin(), allConfigs.end(), [&configName](const auto& config) { return config->name == configName; });
+auto Data::getDatabaseConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> config_t {
+    const auto& allConfigs = ("USB" == config_type) ? allUSBConfigs : allPCIConfigs;
+    const auto& result     = ranges::find_if(allConfigs.begin(), allConfigs.end(), [&config_name](const auto& config) { return config->name == config_name; });
     return (result != allConfigs.end()) ? *result : nullptr;
 }
 
-list_of_configs_t Data::getAllLocalConflicts(const config_t& config) noexcept {
+auto Data::getAllLocalConflicts(const config_t& config) const noexcept -> list_of_configs_t {
     list_of_configs_t conflicts;
-    auto dependencies     = getAllDependenciesToInstall(config);
-    auto installedConfigs = ("USB" == config->type) ? installedUSBConfigs : installedPCIConfigs;
+    auto dependencies            = getAllDependenciesToInstall(config);
+    const auto& installedConfigs = ("USB" == config->type) ? installedUSBConfigs : installedPCIConfigs;
 
     // Add self to local dependencies vector
     dependencies.emplace_back(config);
@@ -316,12 +318,14 @@ list_of_configs_t Data::getAllLocalConflicts(const config_t& config) noexcept {
         // Loop through all MHWD config conflicts
         for (const auto& dependencyConflict : dependency->conflicts) {
             // Then loop through all already installed configs. If there are no configs installed, there can not be a conflict
-            for (auto& installedConfig : installedConfigs) {
+            for (const auto& installedConfig : installedConfigs) {
                 // Skip yourself
-                if (installedConfig->name == config->name)
-                    continue;
+                /* clang-format off */
+                if (installedConfig->name == config->name) { continue; }
+                /* clang-format on */
+
                 // Does one of the installed configs conflict one of the to-be-installed configs?
-                if (!fnmatch(dependencyConflict.c_str(), installedConfig->name.c_str(), FNM_CASEFOLD)) {
+                if (fnmatch(dependencyConflict.c_str(), installedConfig->name.c_str(), FNM_CASEFOLD) == 0) {
                     // Check if conflicts is already in the conflicts vector
                     const bool found = ranges::find_if(conflicts.begin(), conflicts.end(),
                                            [&dependencyConflict](const auto& tmp) {
@@ -330,7 +334,7 @@ list_of_configs_t Data::getAllLocalConflicts(const config_t& config) noexcept {
                         != conflicts.end();
                     // If not, add it to the conflicts vector. This will now be shown to the user.
                     if (!found) {
-                        conflicts.emplace_back(installedConfig);
+                        conflicts.push_back(installedConfig);
                         break;
                     }
                 }
@@ -341,12 +345,12 @@ list_of_configs_t Data::getAllLocalConflicts(const config_t& config) noexcept {
     return conflicts;
 }
 
-list_of_configs_t Data::getAllLocalRequirements(const config_t& config) noexcept {
+auto Data::getAllLocalRequirements(const config_t& config) const noexcept -> list_of_configs_t {
     list_of_configs_t requirements;
-    auto installedConfigs = ("USB" == config->type) ? &installedUSBConfigs : &installedPCIConfigs;
+    const auto* installedConfigs = ("USB" == config->type) ? &installedUSBConfigs : &installedPCIConfigs;
 
     // Check if this config is required by another installed config
-    for (auto& installedConfig : *installedConfigs) {
+    for (const auto& installedConfig : *installedConfigs) {
         for (const auto& dependency : installedConfig->dependencies) {
             if (dependency == config->name) {
                 const bool found = ranges::find_if(requirements.begin(), requirements.end(),
@@ -368,60 +372,18 @@ list_of_configs_t Data::getAllLocalRequirements(const config_t& config) noexcept
 
 void Data::fillAllConfigs(const std::string_view& type) noexcept {
     const auto& conf_path   = ("USB" == type) ? consts::MHWD_USB_CONFIG_DIR : consts::MHWD_PCI_CONFIG_DIR;
-    const auto& configPaths = getRecursiveDirectoryFileList(conf_path, consts::MHWD_CONFIG_NAME);
-    auto configs            = ("USB" == type) ? &allUSBConfigs : &allPCIConfigs;
+    const auto& configPaths = get_recursive_directory_listing(conf_path, consts::MHWD_CONFIG_NAME);
+    auto* configs           = ("USB" == type) ? &allUSBConfigs : &allPCIConfigs;
 
     for (auto&& configPath : configPaths) {
         auto config = std::make_unique<Config>(configPath, type.data());
 
         if (config->read_file(configPath)) {
-            configs->emplace_back(config.release());
+            configs->emplace_back(std::move(config));
         } else {
-            invalidConfigs.emplace_back(config.release());
+            invalidConfigs.emplace_back(std::move(config));
         }
     }
-}
-
-std::vector<std::string> Data::getRecursiveDirectoryFileList(const std::string_view& directoryPath, const std::string_view& onlyFilename) const noexcept {
-    std::vector<std::string> list;
-    struct dirent* dir = nullptr;
-    DIR* d             = opendir(directoryPath.data());
-    if (d) {
-        while (nullptr != (dir = readdir(d))) {
-            const std::string_view filename{dir->d_name};
-            if (("." != filename) && (".." != filename) && (!filename.empty())) {
-                const auto& filepath{fmt::format("{}/{}", directoryPath, filename)};
-                struct stat filestatus { };
-                lstat(filepath.data(), &filestatus);
-
-                if (S_ISREG(filestatus.st_mode) && (onlyFilename.empty() || (onlyFilename == filename))) {
-                    list.push_back(filepath);
-                } else if (S_ISDIR(filestatus.st_mode)) {
-                    auto&& templist = getRecursiveDirectoryFileList(filepath.data(), onlyFilename);
-
-                    for (auto&& iter : templist) {
-                        list.emplace_back(std::move(iter));
-                    }
-                }
-            }
-        }
-
-        closedir(d);
-    }
-    delete dir;
-    return list;
-}
-
-Vita::string Data::get_proper_config_path(const Vita::string& str, const std::string_view& base_config_path) {
-    const auto& temp = str.trim();
-    if (temp.empty() || ("/" == temp.substr(0, 1))) {
-        return temp;
-    }
-
-    fs::path p{base_config_path};
-    p /= temp.data();
-
-    return p.c_str();
 }
 
 void Data::updateConfigData() noexcept {

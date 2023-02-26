@@ -49,7 +49,7 @@
 
 namespace mhwd {
 
-struct Device {
+struct [[gnu::packed]] Device {
     std::string type;
     std::string class_name;
     std::string device_name;

@@ -57,50 +57,41 @@
 #pragma clang diagnostic pop
 #endif
 
-#include <string>
 #include <string_view>
-#include <vector>
 
 #include <fmt/core.h>
 
-namespace mhwd {
+namespace mhwd::console_writer {
 
-class ConsoleWriter {
- public:
-    void print_status(const std::string_view& msg) const noexcept;
-    void print_error(const std::string_view& msg) const noexcept;
-    void print_warning(const std::string_view& msg) const noexcept;
+void print_status(const std::string_view& msg);
+void print_error(const std::string_view& msg);
+void print_warning(const std::string_view& msg);
 
-    // overload to allow pass variadic arguments
-    template <typename... Args>
-    constexpr void print_status(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        print_status(fmt::format(fmt, std::forward<Args>(args)...));
-    }
-    template <typename... Args>
-    constexpr void print_error(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        print_error(fmt::format(fmt, std::forward<Args>(args)...));
-    }
-    template <typename... Args>
-    constexpr void print_warning(fmt::format_string<Args...> fmt, Args&&... args) const noexcept {
-        print_warning(fmt::format(fmt, std::forward<Args>(args)...));
-    }
+// overload to allow pass variadic arguments
+template <typename... Args>
+constexpr void print_status(fmt::format_string<Args...> fmt, Args&&... args) {
+    print_status(fmt::format(fmt, std::forward<Args>(args)...));
+}
+template <typename... Args>
+constexpr void print_error(fmt::format_string<Args...> fmt, Args&&... args) {
+    print_error(fmt::format(fmt, std::forward<Args>(args)...));
+}
+template <typename... Args>
+constexpr void print_warning(fmt::format_string<Args...> fmt, Args&&... args) {
+    print_warning(fmt::format(fmt, std::forward<Args>(args)...));
+}
 
-    void print_message(mhwd::message_t type, const std::string_view& msg) const noexcept;
-    void list_devices(const list_of_devices_t& devices, const std::string_view& typeOfDevice) const noexcept;
-    void list_configs(const list_of_configs_t& configs, const std::string_view& header) const noexcept;
-    void printAvailableConfigsInDetail(const std::string_view& deviceType, const list_of_devices_t& devices) const noexcept;
-    void printInstalledConfigs(const std::string_view& deviceType, const list_of_configs_t& installedConfigs) const noexcept;
-    static void printConfigDetails(const Config& config) noexcept;
-    static void printDeviceDetails(hw_item hw, FILE* f = stdout) noexcept;
+void print_message(mhwd::message_t type, const std::string_view& msg);
+void list_devices(const list_of_devices_t& devices, const std::string_view& type_of_device);
+void list_configs(const list_of_configs_t& configs, const std::string_view& header);
+void printAvailableConfigsInDetail(const std::string_view& device_type, const list_of_devices_t& devices);
+void printInstalledConfigs(const std::string_view& device_type, const list_of_configs_t& installed_configs);
+void printConfigDetails(const Config& config) noexcept;
+void printDeviceDetails(hw_item item, FILE* file_obj = stdout) noexcept;
 
-    static void print_help() noexcept;
-    static void print_version(const std::string_view& version_mhwd, const std::string_view& year_copy) noexcept;
+void print_help() noexcept;
+void print_version(const std::string_view& version_mhwd, const std::string_view& year_copy) noexcept;
 
- private:
-    const char* CONSOLE_COLOR_RESET{"\033[m"};
-    const char* CONSOLE_TEXT_OUTPUT_COLOR{"\033[0;32m"};
-};
-
-}  // namespace mhwd
+}  // namespace mhwd::console_writer
 
 #endif  // CONSOLE_WRITER_HPP

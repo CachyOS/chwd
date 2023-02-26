@@ -41,11 +41,12 @@
 #include "config.hpp"
 #include "utils.hpp"
 
-#include <filesystem>
-#include <fstream>
-#include <string>
-#include <vector>
+#include <filesystem>  // for path
+#include <fstream>     // for ifstream
+#include <string>      // for string
+#include <vector>      // for vector
 
+#include <fmt/compile.h>
 #include <fmt/core.h>
 
 namespace fs = std::filesystem;
@@ -53,85 +54,75 @@ namespace fs = std::filesystem;
 namespace mhwd {
 
 namespace {
-std::vector<std::string> splitValue(const Vita::string& str, const Vita::string& onlyEnding = "") {
-    auto work = str.toLower().explode(" ");
-    std::vector<std::string> result;
+auto split_value(const Vita::string& str, const Vita::string& onlyEnding = Vita::string{""}) noexcept -> std::vector<std::string> {
+    static constexpr auto SPLIT_OFFSET = 5;
 
+    std::vector<std::string> result{};
+    auto work = str.to_lower().explode(" ");
     for (auto&& iter : work) {
         if ((!iter.empty()) && onlyEnding.empty()) {
             result.push_back(iter);
         } else if ((!iter.empty()) && (Vita::string{iter}.explode(".").back() == onlyEnding)
-            && (iter.size() > 5)) {
-            result.push_back(std::string{iter}.substr(0, iter.size() - 5));
+            && (iter.size() > SPLIT_OFFSET)) {
+            result.push_back(std::string{iter.substr(0, iter.size() - SPLIT_OFFSET)});
         }
     }
 
     return result;
 }
 
-Vita::string get_proper_config_path(const Vita::string& str, const std::string_view& base_config_path) {
+auto get_proper_config_path(const Vita::string& str, const std::string_view& base_config_path) noexcept -> Vita::string {
     const auto& temp = str.trim();
     if ((temp.empty()) || ("/" == temp.substr(0, 1))) {
         return temp;
     }
 
-    fs::path p{base_config_path};
-    p /= temp.data();
-
-    return p.c_str();
+    fs::path final_config_path{base_config_path};
+    final_config_path /= temp.data();
+    return Vita::string{final_config_path.c_str()};
 }
 }  // namespace
 
-bool Config::read_file(const std::string_view& configPath) {
-    std::ifstream file(configPath.data());
-
-    if (!file) {
-        return false;
-    }
-
-    Vita::string line;
-    Vita::string key;
-    Vita::string value;
-    std::vector<Vita::string> parts;
+bool Config::read_file(const std::string_view& file_path) noexcept {
+    std::ifstream file(file_path.data());
+    /* clang-format off */
+    if (!file) { return false; }
+    /* clang-format on */
 
     while (!file.eof()) {
+        Vita::string line{};
         std::getline(file, line);
 
         auto pos = line.find_first_of('#');
         if (pos != std::string::npos) {
             line.erase(pos);
         }
+        /* clang-format off */
+        if (line.trim().empty()) { continue; }
+        /* clang-format on */
 
-        if (line.trim().empty()) {
-            continue;
-        }
-
-        parts = line.explode("=");
-        key   = parts.front().trim().toLower();
-        value = parts.back().trim("\"").trim();
+        const auto parts = line.explode("=");
+        const auto key   = parts.front().trim().to_lower();
+        auto value       = parts.back().trim("\"").trim();
 
         // Read in extern file
         if ((value.size() > 1) && (">" == value.substr(0, 1))) {
-            std::ifstream extern_file(get_proper_config_path(value.substr(1), base_path).c_str());
-            if (!extern_file.is_open()) {
-                return false;
-            }
+            std::ifstream extern_file(get_proper_config_path(Vita::string{value.substr(1)}, base_path).c_str());
+            /* clang-format off */
+            if (!extern_file.is_open()) { return false; }
+            /* clang-format on */
 
             value.clear();
-
             while (!extern_file.eof()) {
                 std::getline(extern_file, line);
 
                 pos = line.find_first_of('#');
-                if (std::string::npos != pos) {
-                    line.erase(pos);
-                }
+                /* clang-format off */
+                if (std::string::npos != pos) { line.erase(pos); }
+                if (line.trim().empty()) { continue; }
+                /* clang-format on */
 
-                if (line.trim().empty()) {
-                    continue;
-                }
-
-                value += fmt::format(" {}", line.trim());
+                value += fmt::format(FMT_COMPILE(" {}"), line.trim());
             }
 
             value = value.trim();
@@ -147,7 +138,7 @@ bool Config::read_file(const std::string_view& configPath) {
             read_file(get_proper_config_path(value, base_path));
             break;
         case mhwd::utils::hash_compile_time("name"):
-            name = value.toLower();
+            name = value.to_lower();
             break;
         case mhwd::utils::hash_compile_time("version"):
             version = value;
@@ -156,66 +147,66 @@ bool Config::read_file(const std::string_view& configPath) {
             info = value;
             break;
         case mhwd::utils::hash_compile_time("priority"):
-            priority = value.convert<int>();
+            priority = value.convert<std::int32_t>();
             break;
         case mhwd::utils::hash_compile_time("freedriver"):
-            value         = value.toLower();
+            value         = value.to_lower();
             is_freedriver = !(value == "false");
             break;
         case mhwd::utils::hash_compile_time("classids"):
             // Add new HardwareIDs group to vector if vector is not empty
             if (!hwd_ids.back().class_ids.empty()) {
-                hwd_ids.emplace_back(HardwareID{});
+                hwd_ids.emplace_back();
             }
 
-            hwd_ids.back().class_ids = splitValue(value);
+            hwd_ids.back().class_ids = split_value(value);
             break;
         case mhwd::utils::hash_compile_time("vendorids"):
             // Add new HardwareIDs group to vector if vector is not empty
             if (!hwd_ids.back().vendor_ids.empty()) {
-                hwd_ids.emplace_back(HardwareID{});
+                hwd_ids.emplace_back();
             }
 
-            hwd_ids.back().vendor_ids = splitValue(value);
+            hwd_ids.back().vendor_ids = split_value(value);
             break;
         case mhwd::utils::hash_compile_time("deviceids"):
             // Add new HardwareIDs group to vector if vector is not empty
             if (!hwd_ids.back().device_ids.empty()) {
-                hwd_ids.emplace_back(HardwareID{});
+                hwd_ids.emplace_back();
             }
 
-            hwd_ids.back().device_ids = splitValue(value);
+            hwd_ids.back().device_ids = split_value(value);
             break;
         case mhwd::utils::hash_compile_time("blacklistedclassids"):
-            hwd_ids.back().blacklisted_class_ids = splitValue(value);
+            hwd_ids.back().blacklisted_class_ids = split_value(value);
             break;
         case mhwd::utils::hash_compile_time("blacklistedvendorids"):
-            hwd_ids.back().blacklisted_vendor_ids = splitValue(value);
+            hwd_ids.back().blacklisted_vendor_ids = split_value(value);
             break;
         case mhwd::utils::hash_compile_time("blacklisteddeviceids"):
-            hwd_ids.back().blacklisted_device_ids = splitValue(value);
+            hwd_ids.back().blacklisted_device_ids = split_value(value);
             break;
         case mhwd::utils::hash_compile_time("mhwddepends"):
-            dependencies = splitValue(value);
+            dependencies = split_value(value);
             break;
         case mhwd::utils::hash_compile_time("mhwdconflicts"):
-            conflicts = splitValue(value);
+            conflicts = split_value(value);
             break;
         }
     }
 
     // Append * to all empty vectors
-    for (auto& hwdid : hwd_ids) {
-        if (hwdid.class_ids.empty()) {
-            hwdid.class_ids.emplace_back("*");
+    for (auto& hwd_id : hwd_ids) {
+        if (hwd_id.class_ids.empty()) {
+            hwd_id.class_ids.emplace_back("*");
         }
 
-        if (hwdid.vendor_ids.empty()) {
-            hwdid.vendor_ids.emplace_back("*");
+        if (hwd_id.vendor_ids.empty()) {
+            hwd_id.vendor_ids.emplace_back("*");
         }
 
-        if (hwdid.device_ids.empty()) {
-            hwdid.device_ids.emplace_back("*");
+        if (hwd_id.device_ids.empty()) {
+            hwd_id.device_ids.emplace_back("*");
         }
     }
 
