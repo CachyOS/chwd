@@ -209,11 +209,6 @@ bool kernel_remove(const AlpmHelper& alpm_helper, const std::vector<std::string>
 }  // namespace
 
 int main(int argc, char** argv) {
-    auto args = std::span{argv, static_cast<std::size_t>(argc)};
-    if (args.size() < 2) {
-        err("No arguments given (use -h for help).");
-    }
-
     const auto& process_args = [](auto&& args) {
         std::vector<std::string> kernels{};
         kernels.reserve(static_cast<size_t>(args.size() - 1));
@@ -222,6 +217,12 @@ int main(int argc, char** argv) {
         }
         return kernels;
     };
+
+    auto args = std::span{argv, static_cast<std::size_t>(argc)};
+    if (args.size() < 2) {
+        err("No arguments given (use -h for help).");
+    }
+
     const std::string_view argument{args[1]};
     if (argument == "-h" || argument == "--help") {
         kernel_usage();
