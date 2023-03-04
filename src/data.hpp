@@ -76,7 +76,7 @@ class Data final {
     Data()  = default;
     ~Data() = default;
 
-    struct [[gnu::packed]] Environment {
+    struct Environment {
         bool syncPackageManagerDatabase = true;
         std::string PMCachePath{consts::MHWD_PM_CACHE_DIR};
         std::string PMConfigPath{consts::MHWD_PM_CONFIG};

@@ -50,7 +50,7 @@
 
 namespace mhwd {
 
-struct [[gnu::packed]] HardwareID {
+struct HardwareID {
     std::vector<std::string> class_ids;
     std::vector<std::string> vendor_ids;
     std::vector<std::string> device_ids;
@@ -59,7 +59,7 @@ struct [[gnu::packed]] HardwareID {
     std::vector<std::string> blacklisted_device_ids;
 };
 
-struct [[gnu::packed]] Config final {
+struct Config final {
     Config(const std::string_view& configPath, std::string conf_type)
       : type(std::move(conf_type)), base_path(configPath.substr(0, configPath.find_last_of('/'))),
         config_path(configPath) { }
