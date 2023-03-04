@@ -18,6 +18,7 @@
 #include "mhwd.hpp"
 #include "vita/string.hpp"
 
+#include <algorithm>   // for any_of
 #include <array>       // for array
 #include <filesystem>  // for exists, copy, remove_all
 #include <stdexcept>   // for runtime_error
