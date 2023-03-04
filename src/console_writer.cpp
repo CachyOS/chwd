@@ -53,7 +53,7 @@
 namespace mhwd::console_writer {
 
 namespace {
-inline constexpr void print_line() noexcept {
+inline void print_line() noexcept {
     fmt::print(FMT_COMPILE("{:->80}"), "\n");  // use '-' as a fill char
 }
 
