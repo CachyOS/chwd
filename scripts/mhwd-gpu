@@ -5,6 +5,7 @@
 PARAM=$#
 MHWDXORGCONF="/etc/X11/xorg.conf.d/90-mhwd.conf"
 CHECKCONFIG="false"
+CLEANUPCONFIGS="false"
 SETXORGCONF=""
 SETMOD=""
 ARCH=$(uname -m)
@@ -74,6 +75,7 @@ print_help()
     echo "   --help                      show help"
     echo "   --status                    show current status"
     echo "   --check                     check for invalid symlinks and repair"
+    echo "   --cleanup                   delete the configs"
     echo "   --setxorg [PATH]            set xorg configuration file"
     echo "   --setmod [nvidia/catalyst]  set modules"
     echo ""
@@ -96,6 +98,9 @@ for (( I=1; $I <= $PARAM; I++ ));do
         ;;
         --check)
             CHECKCONFIG="true"
+        ;;
+        --cleanup)
+            CLEANUPCONFIGS="true"
         ;;
         --setxorg)
             shift
@@ -127,9 +132,6 @@ fi
 if [ "${SETMOD}" == "nvidia" ]; then
     set_modules_load "nvidia" "nvidia-drm" "nvidia-uvm"
     set_modules_blacklist "nouveau" "ttm" "drm_kms_helper" "drm"
-elif [ "${SETMOD}" == "catalyst" ] || [ "${SETMOD}" == "ati" ]; then
-    set_modules_load "fglrx"
-    set_modules_blacklist "radeon"
 elif [ "${SETMOD}" != "" ]; then
     echo "error: invalid argument '${SETMOD}'"
     exit 1
@@ -148,4 +150,12 @@ if [ "${CHECKCONFIG}" == "true" ]; then
     elif [ -e "${MHWDXORGCONF}" ]; then
         echo "xorg configuration symlink valid..."
     fi
+fi
+
+# Cleanup configs
+if [ "${CLEANUPCONFIGS}" == "true" ]; then
+    rm -f "${MODPROBE_CONF}/mhwd-gpu.conf"
+    rm -f "${MODULES_LOAD}/mhwd-gpu.conf"
+    rm -f "${MHWDXORGCONF}"
+    echo "Cleaning..."
 fi
