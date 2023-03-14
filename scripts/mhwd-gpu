@@ -132,9 +132,6 @@ fi
 if [ "${SETMOD}" == "nvidia" ]; then
     set_modules_load "nvidia" "nvidia-drm" "nvidia-uvm"
     set_modules_blacklist "nouveau" "ttm" "drm_kms_helper" "drm"
-elif [ "${SETMOD}" == "catalyst" ] || [ "${SETMOD}" == "ati" ]; then
-    set_modules_load "fglrx"
-    set_modules_blacklist "radeon"
 elif [ "${SETMOD}" != "" ]; then
     echo "error: invalid argument '${SETMOD}'"
     exit 1
