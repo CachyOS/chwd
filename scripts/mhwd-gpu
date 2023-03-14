@@ -125,7 +125,7 @@ fi
 
 # Set Modules
 if [ "${SETMOD}" == "nvidia" ]; then
-    set_modules_load "nvidia" "nvidia-drm"
+    set_modules_load "nvidia" "nvidia-drm" "nvidia-uvm"
     set_modules_blacklist "nouveau" "ttm" "drm_kms_helper" "drm"
 elif [ "${SETMOD}" == "catalyst" ] || [ "${SETMOD}" == "ati" ]; then
     set_modules_load "fglrx"
