@@ -20,9 +20,6 @@ set_target_properties(mhwd-kernel-bin PROPERTIES OUTPUT_NAME mhwd-kernel)
 install(PROGRAMS mhwd
   DESTINATION /var/lib/mhwd/scripts)
 
-install(PROGRAMS mhwd-gpu
-  DESTINATION /usr/bin)
-
 install(
    TARGETS mhwd-kernel-bin
    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
