@@ -28,11 +28,6 @@ install(
 install(PROGRAMS mhwd-fb
   DESTINATION /usr/bin)
 
-file(GLOB INCLUDEFILES "include/*")
-
-install(PROGRAMS ${INCLUDEFILES}
-  DESTINATION /var/lib/mhwd/scripts/include)
-
 install(FILES "initcpio/hooks/mhwd-fb"
   DESTINATION /usr/lib/initcpio/hooks)
 

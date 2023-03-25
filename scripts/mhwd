@@ -120,7 +120,6 @@ declare -fr MHWD_HEADING MHWD_PCI_BUS_ID
 ### Main ###
 ARCH="$(uname -m)"
 PARAM=$#
-INCLUDEPATH="/var/lib/mhwd/scripts/include"
 PACMAN="pacman --noconfirm"
 SYNC=""
 INSTALL=""
@@ -198,14 +197,6 @@ PACMAN="${PACMAN} --cachedir ${CACHEPATH} --config ${PMCONFIG} --root ${PMROOT}"
 if [ "${CONFIGPATH}" != "" ] && [ -e "${CONFIGPATH}" ]; then
     echo "Sourcing ${CONFIGPATH}"
     . "${CONFIGPATH}"
-
-    for classid in ${CLASSIDS} ; do
-        echo "Processing classid: ${classid}"
-        if [ -e "${INCLUDEPATH}/${classid}" ]; then
-            echo "Sourcing ${INCLUDEPATH}/${classid}"
-            . "${INCLUDEPATH}/${classid}"
-        fi
-    done
 else
     exit 1
 fi
