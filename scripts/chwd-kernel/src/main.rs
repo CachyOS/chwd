@@ -200,14 +200,14 @@ fn main() {
 
     if args.list {
         let alpm_handle = &*ALPM_HANDLE.lock().unwrap();
-        let kernels = kernel::get_kernels(&alpm_handle);
+        let kernels = kernel::get_kernels(alpm_handle);
         show_available_kernels(&kernels);
         return;
     }
 
     if args.list_installed {
         let alpm_handle = &*ALPM_HANDLE.lock().unwrap();
-        let kernels = kernel::get_kernels(&alpm_handle);
+        let kernels = kernel::get_kernels(alpm_handle);
         show_installed_kernels(&kernels);
         return;
     }
@@ -230,14 +230,14 @@ fn main() {
             root_check();
 
             let alpm_handle = &*ALPM_HANDLE.lock().unwrap();
-            let kernels = kernel::get_kernels(&alpm_handle);
+            let kernels = kernel::get_kernels(alpm_handle);
             kernel_install(&kernels, &args.install_kernels);
         }
         Some(WorkingMode::KernelRemove) => {
             root_check();
 
             let alpm_handle = &*ALPM_HANDLE.lock().unwrap();
-            let kernels = kernel::get_kernels(&alpm_handle);
+            let kernels = kernel::get_kernels(alpm_handle);
             kernel_remove(&kernels, &args.remove_kernels);
         }
         _ => occur_err("Invalid argument (use -h for help)."),
