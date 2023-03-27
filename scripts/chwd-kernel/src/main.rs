@@ -107,7 +107,7 @@ fn show_installed_kernels(kernels: &[kernel::Kernel]) {
 }
 
 fn show_available_kernels(kernels: &[kernel::Kernel]) {
-    println!("\x1B[32mavailable kernels:\x1B[0m",);
+    println!("\x1B[32mavailable kernels:\x1B[0m");
     for kernel in kernels {
         println!("{} {}", kernel.raw, kernel.version().unwrap());
     }
