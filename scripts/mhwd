@@ -182,7 +182,7 @@ if [ "$ACTION" == "remove" ]; then
     MHWD_CHECK_PKGS
 
     if [ -n "${PACKAGES}" ]; then
-        ${PACMAN} -Rs ${PACKAGES} || _pacman_die
+        ${PACMAN} -Rscn ${PACKAGES} || _pacman_die
     fi
 
     # Run postremove function
