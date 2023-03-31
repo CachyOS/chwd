@@ -4,6 +4,11 @@ MHWDDEVICES=()
 
 ### Module Functions ###
 
+_pacman_die() {
+    echo "Error: pacman failed!"
+    exit 1
+}
+
 MHWD_CHECK_KMODS()
 {
     CONKMODS=""
@@ -155,11 +160,7 @@ if [ "${INSTALL}" == "true" ]; then
     MHWD_CHECK_PKGS
 
     if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rdd ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
+        ${PACMAN} -Rdd ${PACKAGES} || _pacman_die
     fi
 
     PACKAGES=""
@@ -189,11 +190,7 @@ if [ "${INSTALL}" == "true" ]; then
     MHWD_CHECK_PKGS
 
     if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rsu ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
+        ${PACMAN} -Rsu ${PACKAGES} || _pacman_die
     fi
 
     PACKAGES=""
@@ -221,16 +218,8 @@ if [ "${INSTALL}" == "true" ]; then
     fi
 
     if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} --needed -S${SYNC} ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
-        ${PACMAN} -D --asexplicit ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
+        ${PACMAN} --needed -S${SYNC} ${PACKAGES} || _pacman_die
+        ${PACMAN} -D --asexplicit ${PACKAGES} || _pacman_die
     elif [ "${SYNC}" != "" ]; then
         ${PACMAN} -S${SYNC}
     fi
@@ -275,11 +264,7 @@ if [ "${REMOVE}" == "true" ]; then
     MHWD_CHECK_PKGS
 
     if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rs ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
+        ${PACMAN} -Rs ${PACKAGES} || _pacman_die
     fi
 
     PACKAGES=""
@@ -301,22 +286,14 @@ if [ "${REMOVE}" == "true" ]; then
     fi
 
     if [ "${OPTREMPACKAGES}" != "" ]; then
-        ${PACMAN} -D --asdeps ${OPTREMPACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
+        ${PACMAN} -D --asdeps ${OPTREMPACKAGES} || _pacman_die
     fi
 
     # Check if packages are installed
     MHWD_CHECK_PKGS
 
     if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rs ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
+        ${PACMAN} -Rs ${PACKAGES} || _pacman_die
     fi
 
     # Run postremove function
