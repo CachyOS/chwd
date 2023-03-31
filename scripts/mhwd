@@ -126,7 +126,7 @@ else
     exit 1
 fi
 
-if [ "$ACTION" == "true" ]; then
+if [ "$ACTION" == "install" ]; then
     # Run preinstall function
     if [[ "$(type -t pre_install)" == "function" ]]; then
        pre_install
@@ -208,7 +208,7 @@ if [ "$ACTION" == "true" ]; then
     fi
 fi
 
-if [ "$ACTION" == "true" ]; then
+if [ "$ACTION" == "remove" ]; then
     # Run preremove function
     if [[ "$(type -t pre_remove)" == "function" ]]; then
        pre_remove
