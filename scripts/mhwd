@@ -39,11 +39,9 @@ MHWD_CHECK_PKGS()
     local REMOVEPKGS=""
 
     for PKG in ${PACKAGES} ; do
-        for RMPKG in $(pacman -Qq | grep ${PKG}) ; do
-            if [ "${PKG}" == "${RMPKG}" ] ; then
-               REMOVEPKGS="${REMOVEPKGS} ${RMPKG}"
-            fi
-        done
+        if [ pacman -Qqs "${PKG}" ]; then
+            REMOVEPKGS="${REMOVEPKGS} ${RMPKG}"
+        fi
     done
 
     PACKAGES="${REMOVEPKGS}"
@@ -179,6 +177,7 @@ if [ "${INSTALL}" == "true" ]; then
     if [ "${CONKMODS}" != "" ]; then
         PACKAGES="${PACKAGES} ${CONKMODS}"
     fi
+
 
     # Check if packages are installed
     MHWD_CHECK_PKGS
