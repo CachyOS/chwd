@@ -5,7 +5,7 @@ MHWDDEVICES=()
 ### Module Functions ###
 
 _check_on_multilib() {
-    if [ grep -q "^\[multilib\]" "$PMCONFIG" ]; then
+    if grep -q "^\[multilib\]" "$PMCONFIG"; then
         return 0
     else
         return 1
@@ -131,7 +131,7 @@ if [ "$ACTION" == "install" ]; then
     if [ -n "${DEPENDS}" ]; then
         PACKAGES="${DEPENDS}"
     fi
-    if [ -n "${DEPENDS_64}" ] && [ _check_on_multilib ]; then
+    if [ -n "${DEPENDS_64}" ] && _check_on_multilib; then
         PACKAGES="${PACKAGES} ${DEPENDS_64}"
     fi
 
@@ -168,7 +168,7 @@ if [ "$ACTION" == "remove" ]; then
     if [ -n "${DEPENDS}" ]; then
         PACKAGES="${DEPENDS}"
     fi
-    if [ -n "${DEPENDS_64}" ] && [ _check_on_multilib ]; then
+    if [ -n "${DEPENDS_64}" ] && _check_on_multilib; then
         PACKAGES="${PACKAGES} ${DEPENDS_64}"
     fi
     if [ -n "${DEPKMODS}" ]; then
@@ -189,7 +189,7 @@ if [ "$ACTION" == "remove" ]; then
     if [ -n "${OPTREMDEPENDS}" ]; then
         OPTREMPACKAGES="${OPTREMDEPENDS}"
     fi
-    if [ -n "${OPTREMDEPENDS_64}" ] && [ _check_on_multilib ]; then
+    if [ -n "${OPTREMDEPENDS_64}" ] && _check_on_multilib; then
         OPTREMPACKAGES="${OPTREMPACKAGES} ${OPTREMDEPENDS_64}"
     fi
 
