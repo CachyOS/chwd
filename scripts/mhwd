@@ -22,7 +22,7 @@ MHWD_CHECK_KMODS()
     CONKMODS=""
     DEPKMODS=""
 
-    if [ "${CONKMOD}" != "" ]; then
+    if [ -n "${CONKMOD}" ]; then
         for KERNEL in ${KERNELS} ; do
             if [ pacman -Qqs "${KERNEL}" ]; then
                 for KMOD in ${CONKMOD} ; do
@@ -31,7 +31,7 @@ MHWD_CHECK_KMODS()
             fi
         done
     fi
-    if [ "${DEPKMOD}" != "" ]; then
+    if [ -n "${DEPKMOD}" ]; then
         for KERNEL in ${KERNELS} ; do
             if [ pacman -Qqs "${KERNEL}" ]; then
                 for KMOD in ${DEPKMOD} ; do
@@ -119,7 +119,7 @@ done
 # Set final variables
 PACMAN="${PACMAN} --cachedir ${CACHEPATH} --config ${PMCONFIG} --root ${PMROOT}"
 
-if [ "${CONFIGPATH}" != "" ] && [ -e "${CONFIGPATH}" ]; then
+if [ -n "${CONFIGPATH}" ] && [ -e "${CONFIGPATH}" ]; then
     echo "Sourcing ${CONFIGPATH}"
     . "${CONFIGPATH}"
 else
@@ -135,21 +135,18 @@ if [ "$ACTION" == "true" ]; then
     PACKAGES=""
 
     # Remove conflicts
-    if [ "${CONFLDD}" != "" ]; then
+    if [ -n "${CONFLDD}" ]; then
         PACKAGES="${CONFLDD}"
     fi
-    if [ "${CONFLDD_64}" != "" ]; then
-        if [ _check_on_multilib ]; then
-            PACKAGES="${PACKAGES} ${CONFLDD_64}"
-        else
-            PACKAGES="${PACKAGES}"
-        fi
+
+    if [ -n "${CONFLDD_64}" ] && [ _check_on_multilib ]; then
+        PACKAGES="${PACKAGES} ${CONFLDD_64}"
     fi
 
     # Check if packages are installed
     MHWD_CHECK_PKGS
 
-    if [ "${PACKAGES}" != "" ]; then
+    if [ -n "${PACKAGES}" ]; then
         ${PACMAN} -Rdd ${PACKAGES} || _pacman_die
     fi
 
@@ -159,17 +156,17 @@ if [ "$ACTION" == "true" ]; then
     MHWD_CHECK_KMODS
 
     # Remove conflicts
-    if [ "${CONFLICTS}" != "" ]; then
+    if [ -n "${CONFLICTS}" ]; then
         PACKAGES="${CONFLICTS}"
     fi
-    if [ "${CONFLICTS_64}" != "" ]; then
+    if [ -n "${CONFLICTS_64}" ]; then
         if [ _check_on_multilib ]; then
             PACKAGES="${PACKAGES} ${CONFLICTS_64}"
         else
             PACKAGES="${PACKAGES}"
         fi
     fi
-    if [ "${CONKMODS}" != "" ]; then
+    if [ -n "${CONKMODS}" ]; then
         PACKAGES="${PACKAGES} ${CONKMODS}"
     fi
 
@@ -177,34 +174,31 @@ if [ "$ACTION" == "true" ]; then
     # Check if packages are installed
     MHWD_CHECK_PKGS
 
-    if [ "${PACKAGES}" != "" ]; then
+    if [ -n "${PACKAGES}" ]; then
         ${PACMAN} -Rsu ${PACKAGES} || _pacman_die
     fi
 
     PACKAGES=""
 
-    [ "${OPTREMDEPENDS}" != "" ] && DEPENDS="${DEPENDS} ${OPTREMDEPENDS}"
-    [ "${OPTREMDEPENDS_64}" != "" ] && DEPENDS_64="${DEPENDS_64} ${OPTREMDEPENDS_64}"
+    [ -n "${OPTREMDEPENDS}" ] && DEPENDS="${DEPENDS} ${OPTREMDEPENDS}"
+    [ -n "${OPTREMDEPENDS_64}" ] && DEPENDS_64="${DEPENDS_64} ${OPTREMDEPENDS_64}"
 
     # Install dependencies
-    if [ "${DEPENDS}" != "" ]; then
+    if [ -n "${DEPENDS}" ]; then
         PACKAGES="${DEPENDS}"
     fi
-    if [ "${DEPENDS_64}" != "" ]; then
-        if [ _check_on_multilib ]; then
-            PACKAGES="${PACKAGES} ${DEPENDS_64}"
-        else
-            PACKAGES="${PACKAGES}"
-        fi
+    if [ -n "${DEPENDS_64}" ] && [ _check_on_multilib ]; then
+        PACKAGES="${PACKAGES} ${DEPENDS_64}"
     fi
-    if [ "${DEPKMODS}" != "" ]; then
+
+    if [ -n "${DEPKMODS}" ]; then
         PACKAGES="${PACKAGES} ${DEPKMODS}"
     fi
 
-    if [ "${PACKAGES}" != "" ]; then
+    if [ -n "${PACKAGES}" ]; then
         ${PACMAN} --needed -S${SYNC} ${PACKAGES} || _pacman_die
         ${PACMAN} -D --asexplicit ${PACKAGES} || _pacman_die
-    elif [ "${SYNC}" != "" ]; then
+    elif [ -n "${SYNC}" ]; then
         ${PACMAN} -S${SYNC}
     fi
 
@@ -227,24 +221,20 @@ if [ "$ACTION" == "true" ]; then
     MHWD_CHECK_KMODS
 
     # Remove dependencies
-    if [ "${DEPENDS}" != "" ]; then
+    if [ -n "${DEPENDS}" ]; then
         PACKAGES="${DEPENDS}"
     fi
-    if [ "${DEPENDS_64}" != "" ]; then
-        if [ _check_on_multilib ]; then
-            PACKAGES="${PACKAGES} ${DEPENDS_64}"
-        else
-            PACKAGES="${PACKAGES}"
-        fi
+    if [ -n "${DEPENDS_64}" ] && [ _check_on_multilib ]; then
+        PACKAGES="${PACKAGES} ${DEPENDS_64}"
     fi
-    if [ "${DEPKMODS}" != "" ]; then
+    if [ -n "${DEPKMODS}" ]; then
         PACKAGES="${PACKAGES} ${DEPKMODS}"
     fi
 
     # Check if packages are installed
     MHWD_CHECK_PKGS
 
-    if [ "${PACKAGES}" != "" ]; then
+    if [ -n "${PACKAGES}" ]; then
         ${PACMAN} -Rs ${PACKAGES} || _pacman_die
     fi
 
@@ -252,25 +242,21 @@ if [ "$ACTION" == "true" ]; then
 
     # Remove OPTREM dependencies
     # Has to be run after normal dependencies were removed, since said dependencies may optionally depend on an OPTREM package
-    if [ "${OPTREMDEPENDS}" != "" ]; then
+    if [ -n "${OPTREMDEPENDS}" ]; then
         OPTREMPACKAGES="${OPTREMDEPENDS}"
     fi
-    if [ "${OPTREMDEPENDS_64}" != "" ]; then
-        if [ "${MHWD64_IS_LIB32}" == "true" ]; then
-            OPTREMPACKAGES="${OPTREMPACKAGES} ${OPTREMDEPENDS_64}"
-        else
-            OPTREMPACKAGES="${OPTREMPACKAGES}"
-        fi
+    if [ -n "${OPTREMDEPENDS_64}" ] && [ _check_on_multilib ]; then
+        OPTREMPACKAGES="${OPTREMPACKAGES} ${OPTREMDEPENDS_64}"
     fi
 
-    if [ "${OPTREMPACKAGES}" != "" ]; then
+    if [ -n "${OPTREMPACKAGES}" ]; then
         ${PACMAN} -D --asdeps ${OPTREMPACKAGES} || _pacman_die
     fi
 
     # Check if packages are installed
     MHWD_CHECK_PKGS
 
-    if [ "${PACKAGES}" != "" ]; then
+    if [ -n "${PACKAGES}" ]; then
         ${PACMAN} -Rs ${PACKAGES} || _pacman_die
     fi
 
