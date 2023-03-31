@@ -5,7 +5,7 @@ MHWDDEVICES=()
 ### Module Functions ###
 
 _check_on_multilib() {
-    if [ grep -q "^\[multilib\]" /etc/pacman.conf ]; then
+    if [ grep -q "^\[multilib\]" "$PMCONFIG" ]; then
         return 0
     else
         return 1
