@@ -53,7 +53,6 @@ MHWD_CHECK_PKGS()
 declare -fr MHWD_PCI_BUS_ID
 
 ### Main ###
-ARCH="$(uname -m)"
 PARAM=$#
 PACMAN="pacman --noconfirm"
 SYNC=""
@@ -69,16 +68,14 @@ KERNELS=$(pacman -Qqs "^linux(.*)$" | awk '/linux/ && !/headers/ && !/doc/ && !/
 MHWD64CONF="/etc/mhwd-x86_64.conf"
 
 # source lib32 true/false for x86_64
-if [ "${ARCH}" == "x86_64" ];then
-    if [ -f ${MHWD64CONF} ];then
-        echo "Sourcing ${MHWD64CONF}"
-        . ${MHWD64CONF}
-    else
-        echo "Using default"
-        MHWD64_IS_LIB32="true"
-    fi
-    echo "Has lib32 support: ${MHWD64_IS_LIB32}"
+if [ -f ${MHWD64CONF} ];then
+    echo "Sourcing ${MHWD64CONF}"
+    . ${MHWD64CONF}
+else
+    echo "Using default"
+    MHWD64_IS_LIB32="true"
 fi
+echo "Has lib32 support: ${MHWD64_IS_LIB32}"
 
 if [ "${PARAM}" -lt 1 ]; then
     echo "No Arguments!"
@@ -148,7 +145,7 @@ if [ "${INSTALL}" == "true" ]; then
     if [ "${CONFLDD}" != "" ]; then
         PACKAGES="${CONFLDD}"
     fi
-    if [ "${ARCH}" == "x86_64" ] && [ "${CONFLDD_64}" != "" ]; then
+    if [ "${CONFLDD_64}" != "" ]; then
         if [ "${MHWD64_IS_LIB32}" == "true" ];then
             PACKAGES="${PACKAGES} ${CONFLDD_64}"
         else
@@ -172,10 +169,7 @@ if [ "${INSTALL}" == "true" ]; then
     if [ "${CONFLICTS}" != "" ]; then
         PACKAGES="${CONFLICTS}"
     fi
-    if [ "${ARCH}" == "i686" ] && [ "${CONFLICTS_32}" != "" ]; then
-        PACKAGES="${PACKAGES} ${CONFLICTS_32}"
-    fi
-    if [ "${ARCH}" == "x86_64" ] && [ "${CONFLICTS_64}" != "" ]; then
+    if [ "${CONFLICTS_64}" != "" ]; then
         if [ "${MHWD64_IS_LIB32}" == "true" ];then
             PACKAGES="${PACKAGES} ${CONFLICTS_64}"
         else
@@ -196,17 +190,13 @@ if [ "${INSTALL}" == "true" ]; then
     PACKAGES=""
 
     [ "${OPTREMDEPENDS}" != "" ] && DEPENDS="${DEPENDS} ${OPTREMDEPENDS}"
-    [ "${OPTREMDEPENDS_32}" != "" ] && DEPENDS_32="${DEPENDS_32} ${OPTREMDEPENDS_32}"
     [ "${OPTREMDEPENDS_64}" != "" ] && DEPENDS_64="${DEPENDS_64} ${OPTREMDEPENDS_64}"
 
     # Install dependencies
     if [ "${DEPENDS}" != "" ]; then
         PACKAGES="${DEPENDS}"
     fi
-    if [ "${ARCH}" == "i686" ] && [ "${DEPENDS_32}" != "" ]; then
-        PACKAGES="${PACKAGES} ${DEPENDS_32}"
-    fi
-    if [ "${ARCH}" == "x86_64" ] && [ "${DEPENDS_64}" != "" ]; then
+    if [ "${DEPENDS_64}" != "" ]; then
         if [ "${MHWD64_IS_LIB32}" == "true" ];then
             PACKAGES="${PACKAGES} ${DEPENDS_64}"
         else
@@ -246,10 +236,7 @@ if [ "${REMOVE}" == "true" ]; then
     if [ "${DEPENDS}" != "" ]; then
         PACKAGES="${DEPENDS}"
     fi
-    if [ "${ARCH}" == "i686" ] && [ "${DEPENDS_32}" != "" ]; then
-        PACKAGES="${PACKAGES} ${DEPENDS_32}"
-    fi
-    if [ "${ARCH}" == "x86_64" ] && [ "${DEPENDS_64}" != "" ]; then
+    if [ "${DEPENDS_64}" != "" ]; then
         if [ "${MHWD64_IS_LIB32}" == "true" ];then
             PACKAGES="${PACKAGES} ${DEPENDS_64}"
         else
@@ -274,10 +261,7 @@ if [ "${REMOVE}" == "true" ]; then
     if [ "${OPTREMDEPENDS}" != "" ]; then
         OPTREMPACKAGES="${OPTREMDEPENDS}"
     fi
-    if [ "${ARCH}" == "i686" ] && [ "${OPTREMDEPENDS_32}" != "" ]; then
-        OPTREMPACKAGES="${OPTREMPACKAGES} ${OPTREMDEPENDS_32}"
-    fi
-    if [ "${ARCH}" == "x86_64" ] && [ "${OPTREMDEPENDS_64}" != "" ]; then
+    if [ "${OPTREMDEPENDS_64}" != "" ]; then
         if [ "${MHWD64_IS_LIB32}" == "true" ]; then
             OPTREMPACKAGES="${OPTREMPACKAGES} ${OPTREMDEPENDS_64}"
         else
