@@ -19,18 +19,8 @@ _pacman_die() {
 
 MHWD_CHECK_KMODS()
 {
-    CONKMODS=""
     DEPKMODS=""
 
-    if [ -n "${CONKMOD}" ]; then
-        for KERNEL in ${KERNELS} ; do
-            if [ pacman -Qqs "${KERNEL}" ]; then
-                for KMOD in ${CONKMOD} ; do
-                    CONKMODS="${CONKMODS} ${KMOD}"
-                done
-            fi
-        done
-    fi
     if [ -n "${DEPKMOD}" ]; then
         for KERNEL in ${KERNELS} ; do
             if [ pacman -Qqs "${KERNEL}" ]; then
@@ -60,7 +50,7 @@ declare -fr MHWD_PCI_BUS_ID
 
 ### Main ###
 PARAM=$#
-PACMAN="pacman --noconfirm"
+PACMAN="pacman"
 SYNC=""
 ACTION=""
 CONFIGPATH=""
@@ -134,52 +124,6 @@ if [ "$ACTION" == "install" ]; then
 
     PACKAGES=""
 
-    # Remove conflicts
-    if [ -n "${CONFLDD}" ]; then
-        PACKAGES="${CONFLDD}"
-    fi
-
-    if [ -n "${CONFLDD_64}" ] && [ _check_on_multilib ]; then
-        PACKAGES="${PACKAGES} ${CONFLDD_64}"
-    fi
-
-    # Check if packages are installed
-    MHWD_CHECK_PKGS
-
-    if [ -n "${PACKAGES}" ]; then
-        ${PACMAN} -Rdd ${PACKAGES} || _pacman_die
-    fi
-
-    PACKAGES=""
-
-    # Check for extramodules
-    MHWD_CHECK_KMODS
-
-    # Remove conflicts
-    if [ -n "${CONFLICTS}" ]; then
-        PACKAGES="${CONFLICTS}"
-    fi
-    if [ -n "${CONFLICTS_64}" ]; then
-        if [ _check_on_multilib ]; then
-            PACKAGES="${PACKAGES} ${CONFLICTS_64}"
-        else
-            PACKAGES="${PACKAGES}"
-        fi
-    fi
-    if [ -n "${CONKMODS}" ]; then
-        PACKAGES="${PACKAGES} ${CONKMODS}"
-    fi
-
-
-    # Check if packages are installed
-    MHWD_CHECK_PKGS
-
-    if [ -n "${PACKAGES}" ]; then
-        ${PACMAN} -Rsu ${PACKAGES} || _pacman_die
-    fi
-
-    PACKAGES=""
-
     [ -n "${OPTREMDEPENDS}" ] && DEPENDS="${DEPENDS} ${OPTREMDEPENDS}"
     [ -n "${OPTREMDEPENDS_64}" ] && DEPENDS_64="${DEPENDS_64} ${OPTREMDEPENDS_64}"
 
@@ -196,7 +140,7 @@ if [ "$ACTION" == "install" ]; then
     fi
 
     if [ -n "${PACKAGES}" ]; then
-        ${PACMAN} --needed -S${SYNC} ${PACKAGES} || _pacman_die
+        yes | ${PACMAN} --needed -S${SYNC} ${PACKAGES} || _pacman_die
         ${PACMAN} -D --asexplicit ${PACKAGES} || _pacman_die
     elif [ -n "${SYNC}" ]; then
         ${PACMAN} -S${SYNC}
