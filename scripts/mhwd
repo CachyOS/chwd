@@ -4,6 +4,14 @@ MHWDDEVICES=()
 
 ### Module Functions ###
 
+_check_on_multilib() {
+    if [ grep -q "^\[multilib\]" /etc/pacman.conf ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 _pacman_die() {
     echo "Error: pacman failed!"
     exit 1
@@ -62,18 +70,6 @@ PMCONFIG="/etc/pacman.conf"
 PMROOT="/"
 PACKAGES=""
 KERNELS=$(pacman -Qqs "^linux(.*)$" | awk '/linux/ && !/headers/ && !/doc/ && !/firmware/ && !/tool/ && !/python/ && !/sampler/ && !/steam/ && !/console/')
-# lib32 config true/false
-MHWD64CONF="/etc/mhwd-x86_64.conf"
-
-# source lib32 true/false for x86_64
-if [ -f ${MHWD64CONF} ];then
-    echo "Sourcing ${MHWD64CONF}"
-    . ${MHWD64CONF}
-else
-    echo "Using default"
-    MHWD64_IS_LIB32="true"
-fi
-echo "Has lib32 support: ${MHWD64_IS_LIB32}"
 
 if [ "${PARAM}" -lt 1 ]; then
     echo "No Arguments!"
@@ -144,7 +140,7 @@ if [ "${INSTALL}" == "true" ]; then
         PACKAGES="${CONFLDD}"
     fi
     if [ "${CONFLDD_64}" != "" ]; then
-        if [ "${MHWD64_IS_LIB32}" == "true" ];then
+        if [ _check_on_multilib ]; then
             PACKAGES="${PACKAGES} ${CONFLDD_64}"
         else
             PACKAGES="${PACKAGES}"
@@ -168,7 +164,7 @@ if [ "${INSTALL}" == "true" ]; then
         PACKAGES="${CONFLICTS}"
     fi
     if [ "${CONFLICTS_64}" != "" ]; then
-        if [ "${MHWD64_IS_LIB32}" == "true" ];then
+        if [ _check_on_multilib ]; then
             PACKAGES="${PACKAGES} ${CONFLICTS_64}"
         else
             PACKAGES="${PACKAGES}"
@@ -196,7 +192,7 @@ if [ "${INSTALL}" == "true" ]; then
         PACKAGES="${DEPENDS}"
     fi
     if [ "${DEPENDS_64}" != "" ]; then
-        if [ "${MHWD64_IS_LIB32}" == "true" ];then
+        if [ _check_on_multilib ]; then
             PACKAGES="${PACKAGES} ${DEPENDS_64}"
         else
             PACKAGES="${PACKAGES}"
@@ -236,7 +232,7 @@ if [ "${REMOVE}" == "true" ]; then
         PACKAGES="${DEPENDS}"
     fi
     if [ "${DEPENDS_64}" != "" ]; then
-        if [ "${MHWD64_IS_LIB32}" == "true" ];then
+        if [ _check_on_multilib ]; then
             PACKAGES="${PACKAGES} ${DEPENDS_64}"
         else
             PACKAGES="${PACKAGES}"
