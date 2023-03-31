@@ -38,7 +38,7 @@ MHWD_CHECK_PKGS()
 
     for PKG in ${PACKAGES} ; do
         if pacman -Qqs "${PKG}"; then
-            REMOVEPKGS="${REMOVEPKGS} ${RMPKG}"
+            REMOVEPKGS="${REMOVEPKGS} ${PKG}"
         fi
     done
 
