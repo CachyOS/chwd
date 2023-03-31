@@ -16,7 +16,7 @@ MHWD_CHECK_KMODS()
 
     if [ "${CONKMOD}" != "" ]; then
         for KERNEL in ${KERNELS} ; do
-            if [ "$(pacman -Qq | grep -o ${KERNEL} -m1)" != "" ]; then
+            if [ pacman -Qqs "${KERNEL}" ]; then
                 for KMOD in ${CONKMOD} ; do
                     CONKMODS="${CONKMODS} ${KMOD}"
                 done
@@ -25,7 +25,7 @@ MHWD_CHECK_KMODS()
     fi
     if [ "${DEPKMOD}" != "" ]; then
         for KERNEL in ${KERNELS} ; do
-            if [ "$(pacman -Qq | grep -o ${KERNEL} -m1)" != "" ]; then
+            if [ pacman -Qqs "${KERNEL}" ]; then
                 for KMOD in ${DEPKMOD} ; do
                     DEPKMODS="${DEPKMODS} ${KMOD}"
                 done
