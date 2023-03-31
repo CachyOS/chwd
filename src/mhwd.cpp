@@ -341,18 +341,8 @@ bool Mhwd::runScript(const config_t& config, mhwd::transaction_t operation) noex
 
     cmd += " 2>&1";
 
-    auto* script_process = popen(cmd.c_str(), "r");
-    if (script_process == nullptr) {
-        return false;
-    }
-    static constexpr auto RUN_BUF_SIZE = 512;
-    std::array<char, RUN_BUF_SIZE> buf{};
-    while (fgets(buf.data(), buf.size(), script_process) != nullptr) {
-        mhwd::console_writer::print_message(mhwd::message_t::CONSOLE_OUTPUT, buf.data());
-    }
-
-    const auto stat = pclose(script_process);
-    if (WEXITSTATUS(stat) != 0) {
+    const auto& exit_code = std::system(cmd.c_str());
+    if (exit_code != 0) {
         return false;
     }
     // Only one database sync is required
