@@ -23,7 +23,7 @@ MHWD_CHECK_KMODS()
 
     if [ -n "${DEPKMOD}" ]; then
         for KERNEL in ${KERNELS} ; do
-            if [ pacman -Qqs "${KERNEL}" ]; then
+            if pacman -Qqs "${KERNEL}"; then
                 for KMOD in ${DEPKMOD} ; do
                     DEPKMODS="${DEPKMODS} ${KMOD}"
                 done
@@ -37,7 +37,7 @@ MHWD_CHECK_PKGS()
     local REMOVEPKGS=""
 
     for PKG in ${PACKAGES} ; do
-        if [ pacman -Qqs "${PKG}" ]; then
+        if pacman -Qqs "${PKG}"; then
             REMOVEPKGS="${REMOVEPKGS} ${RMPKG}"
         fi
     done
