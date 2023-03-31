@@ -50,7 +50,7 @@ declare -fr MHWD_PCI_BUS_ID
 
 ### Main ###
 PARAM=$#
-PACMAN="pacman"
+PACMAN="pacman --noconfirm"
 SYNC=""
 ACTION=""
 CONFIGPATH=""
@@ -140,7 +140,7 @@ if [ "$ACTION" == "install" ]; then
     fi
 
     if [ -n "${PACKAGES}" ]; then
-        yes | ${PACMAN} --needed -S${SYNC} ${PACKAGES} || _pacman_die
+        ${PACMAN} --needed -S${SYNC} ${PACKAGES} || _pacman_die
         ${PACMAN} -D --asexplicit ${PACKAGES} || _pacman_die
     elif [ -n "${SYNC}" ]; then
         ${PACMAN} -S${SYNC}
