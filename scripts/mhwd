@@ -62,8 +62,7 @@ declare -fr MHWD_PCI_BUS_ID
 PARAM=$#
 PACMAN="pacman --noconfirm"
 SYNC=""
-INSTALL=""
-REMOVE=""
+ACTION=""
 CONFIGPATH=""
 CACHEPATH="/var/cache/pacman/pkg"
 PMCONFIG="/etc/pacman.conf"
@@ -79,10 +78,10 @@ fi
 for (( I=1; $I <= $PARAM; I++ ));do
     case "$1" in
         --install)
-            INSTALL="true"
+            ACTION="install"
         ;;
         --remove)
-            REMOVE="true"
+            ACTION="remove"
         ;;
         --sync)
             SYNC="y"
@@ -127,7 +126,7 @@ else
     exit 1
 fi
 
-if [ "${INSTALL}" == "true" ]; then
+if [ "$ACTION" == "true" ]; then
     # Run preinstall function
     if [[ "$(type -t pre_install)" == "function" ]]; then
        pre_install
@@ -215,7 +214,7 @@ if [ "${INSTALL}" == "true" ]; then
     fi
 fi
 
-if [ "${REMOVE}" == "true" ]; then
+if [ "$ACTION" == "true" ]; then
     # Run preremove function
     if [[ "$(type -t pre_remove)" == "function" ]]; then
        pre_remove
