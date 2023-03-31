@@ -135,7 +135,7 @@ fi
 
 if [ "${INSTALL}" == "true" ]; then
     # Run preinstall function
-    if [ "`grep "pre_install" "${CONFIGPATH}" | cut -d"#" -f1 | cut -d"(" -f1 | grep "pre_install"`" == "pre_install" ]; then
+    if [[ "$(type -t pre_install)" == "function" ]]; then
        pre_install
     fi
 
@@ -215,14 +215,14 @@ if [ "${INSTALL}" == "true" ]; then
     fi
 
     # Run postinstall function
-    if [ "`grep "post_install" "${CONFIGPATH}" | cut -d"#" -f1 | cut -d"(" -f1 | grep "post_install"`" == "post_install" ]; then
+    if [[ "$(type -t post_install)" == "function" ]]; then
        post_install
     fi
 fi
 
 if [ "${REMOVE}" == "true" ]; then
     # Run preremove function
-    if [ "`grep "pre_remove" "${CONFIGPATH}" | cut -d"#" -f1 | cut -d"(" -f1 | grep "pre_remove"`" == "pre_remove" ]; then
+    if [[ "$(type -t pre_remove)" == "function" ]]; then
        pre_remove
     fi
 
@@ -281,7 +281,7 @@ if [ "${REMOVE}" == "true" ]; then
     fi
 
     # Run postremove function
-    if [ "`grep "post_remove" "${CONFIGPATH}" | cut -d"#" -f1 | cut -d"(" -f1 | grep "post_remove"`" == "post_remove" ]; then
+    if [[ "$(type -t post_remove)" == "function" ]]; then
        post_remove
     fi
 fi
