@@ -4,23 +4,26 @@ MHWDDEVICES=()
 
 ### Module Functions ###
 
+_check_on_multilib() {
+    if grep -q "^\[multilib\]" "$PMCONFIG"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+_pacman_die() {
+    echo "Error: pacman failed!"
+    exit 1
+}
+
 MHWD_CHECK_KMODS()
 {
-    CONKMODS=""
     DEPKMODS=""
 
-    if [ "${CONKMOD}" != "" ]; then
+    if [ -n "${DEPKMOD}" ]; then
         for KERNEL in ${KERNELS} ; do
-            if [ "$(pacman -Qq | grep -o ${KERNEL} -m1)" != "" ]; then
-                for KMOD in ${CONKMOD} ; do
-                    CONKMODS="${CONKMODS} ${KMOD}"
-                done
-            fi
-        done
-    fi
-    if [ "${DEPKMOD}" != "" ]; then
-        for KERNEL in ${KERNELS} ; do
-            if [ "$(pacman -Qq | grep -o ${KERNEL} -m1)" != "" ]; then
+            if pacman -Qqs "${KERNEL}"; then
                 for KMOD in ${DEPKMOD} ; do
                     DEPKMODS="${DEPKMODS} ${KMOD}"
                 done
@@ -34,11 +37,9 @@ MHWD_CHECK_PKGS()
     local REMOVEPKGS=""
 
     for PKG in ${PACKAGES} ; do
-        for RMPKG in $(pacman -Qq | grep ${PKG}) ; do
-            if [ "${PKG}" == "${RMPKG}" ] ; then
-               REMOVEPKGS="${REMOVEPKGS} ${RMPKG}"
-            fi
-        done
+        if pacman -Qqs "${PKG}"; then
+            REMOVEPKGS="${REMOVEPKGS} ${PKG}"
+        fi
     done
 
     PACKAGES="${REMOVEPKGS}"
@@ -48,32 +49,16 @@ MHWD_CHECK_PKGS()
 declare -fr MHWD_PCI_BUS_ID
 
 ### Main ###
-ARCH="$(uname -m)"
 PARAM=$#
 PACMAN="pacman --noconfirm"
 SYNC=""
-INSTALL=""
-REMOVE=""
+ACTION=""
 CONFIGPATH=""
 CACHEPATH="/var/cache/pacman/pkg"
 PMCONFIG="/etc/pacman.conf"
 PMROOT="/"
 PACKAGES=""
 KERNELS=$(pacman -Qqs "^linux(.*)$" | awk '/linux/ && !/headers/ && !/doc/ && !/firmware/ && !/tool/ && !/python/ && !/sampler/ && !/steam/ && !/console/')
-# lib32 config true/false
-MHWD64CONF="/etc/mhwd-x86_64.conf"
-
-# source lib32 true/false for x86_64
-if [ "${ARCH}" == "x86_64" ];then
-    if [ -f ${MHWD64CONF} ];then
-        echo "Sourcing ${MHWD64CONF}"
-        . ${MHWD64CONF}
-    else
-        echo "Using default"
-        MHWD64_IS_LIB32="true"
-    fi
-    echo "Has lib32 support: ${MHWD64_IS_LIB32}"
-fi
 
 if [ "${PARAM}" -lt 1 ]; then
     echo "No Arguments!"
@@ -83,10 +68,10 @@ fi
 for (( I=1; $I <= $PARAM; I++ ));do
     case "$1" in
         --install)
-            INSTALL="true"
+            ACTION="install"
         ;;
         --remove)
-            REMOVE="true"
+            ACTION="remove"
         ;;
         --sync)
             SYNC="y"
@@ -124,126 +109,55 @@ done
 # Set final variables
 PACMAN="${PACMAN} --cachedir ${CACHEPATH} --config ${PMCONFIG} --root ${PMROOT}"
 
-if [ "${CONFIGPATH}" != "" ] && [ -e "${CONFIGPATH}" ]; then
+if [ -n "${CONFIGPATH}" ] && [ -e "${CONFIGPATH}" ]; then
     echo "Sourcing ${CONFIGPATH}"
     . "${CONFIGPATH}"
 else
     exit 1
 fi
 
-if [ "${INSTALL}" == "true" ]; then
+if [ "$ACTION" == "install" ]; then
     # Run preinstall function
-    if [ "`grep "pre_install" "${CONFIGPATH}" | cut -d"#" -f1 | cut -d"(" -f1 | grep "pre_install"`" == "pre_install" ]; then
+    if [[ "$(type -t pre_install)" == "function" ]]; then
        pre_install
     fi
 
     PACKAGES=""
 
-    # Remove conflicts
-    if [ "${CONFLDD}" != "" ]; then
-        PACKAGES="${CONFLDD}"
-    fi
-    if [ "${ARCH}" == "x86_64" ] && [ "${CONFLDD_64}" != "" ]; then
-        if [ "${MHWD64_IS_LIB32}" == "true" ];then
-            PACKAGES="${PACKAGES} ${CONFLDD_64}"
-        else
-            PACKAGES="${PACKAGES}"
-        fi
-    fi
-
-    # Check if packages are installed
-    MHWD_CHECK_PKGS
-
-    if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rdd ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
-    fi
-
-    PACKAGES=""
-
-    # Check for extramodules
-    MHWD_CHECK_KMODS
-
-    # Remove conflicts
-    if [ "${CONFLICTS}" != "" ]; then
-        PACKAGES="${CONFLICTS}"
-    fi
-    if [ "${ARCH}" == "i686" ] && [ "${CONFLICTS_32}" != "" ]; then
-        PACKAGES="${PACKAGES} ${CONFLICTS_32}"
-    fi
-    if [ "${ARCH}" == "x86_64" ] && [ "${CONFLICTS_64}" != "" ]; then
-        if [ "${MHWD64_IS_LIB32}" == "true" ];then
-            PACKAGES="${PACKAGES} ${CONFLICTS_64}"
-        else
-            PACKAGES="${PACKAGES}"
-        fi
-    fi
-    if [ "${CONKMODS}" != "" ]; then
-        PACKAGES="${PACKAGES} ${CONKMODS}"
-    fi
-
-    # Check if packages are installed
-    MHWD_CHECK_PKGS
-
-    if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rsu ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
-    fi
-
-    PACKAGES=""
-
-    [ "${OPTREMDEPENDS}" != "" ] && DEPENDS="${DEPENDS} ${OPTREMDEPENDS}"
-    [ "${OPTREMDEPENDS_32}" != "" ] && DEPENDS_32="${DEPENDS_32} ${OPTREMDEPENDS_32}"
-    [ "${OPTREMDEPENDS_64}" != "" ] && DEPENDS_64="${DEPENDS_64} ${OPTREMDEPENDS_64}"
+    [ -n "${OPTREMDEPENDS_64}" ] && OPTREMDEPENDS="${OPTREMDEPENDS} ${OPTREMDEPENDS_64}"
 
     # Install dependencies
-    if [ "${DEPENDS}" != "" ]; then
+    if [ -n "${DEPENDS}" ]; then
         PACKAGES="${DEPENDS}"
     fi
-    if [ "${ARCH}" == "i686" ] && [ "${DEPENDS_32}" != "" ]; then
-        PACKAGES="${PACKAGES} ${DEPENDS_32}"
+    if [ -n "${DEPENDS_64}" ] && _check_on_multilib; then
+        PACKAGES="${PACKAGES} ${DEPENDS_64}"
     fi
-    if [ "${ARCH}" == "x86_64" ] && [ "${DEPENDS_64}" != "" ]; then
-        if [ "${MHWD64_IS_LIB32}" == "true" ];then
-            PACKAGES="${PACKAGES} ${DEPENDS_64}"
-        else
-            PACKAGES="${PACKAGES}"
-        fi
-    fi
-    if [ "${DEPKMODS}" != "" ]; then
+
+    if [ -n "${DEPKMODS}" ]; then
         PACKAGES="${PACKAGES} ${DEPKMODS}"
     fi
 
-    if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} --needed -S${SYNC} ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
+    if [ -n "${PACKAGES}" ]; then
+        ${PACMAN} --needed -S${SYNC} ${PACKAGES} || _pacman_die
+        ${PACMAN} -D --asexplicit ${PACKAGES} || _pacman_die
+        if [ -n "${OPTREMDEPENDS}" ]; then
+            ${PACMAN} --asdeps -S ${OPTREMDEPENDS} || _pacman_die
         fi
-        ${PACMAN} -D --asexplicit ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
-    elif [ "${SYNC}" != "" ]; then
+    elif [ -n "${SYNC}" ]; then
         ${PACMAN} -S${SYNC}
     fi
 
+
     # Run postinstall function
-    if [ "`grep "post_install" "${CONFIGPATH}" | cut -d"#" -f1 | cut -d"(" -f1 | grep "post_install"`" == "post_install" ]; then
+    if [[ "$(type -t post_install)" == "function" ]]; then
        post_install
     fi
 fi
 
-if [ "${REMOVE}" == "true" ]; then
+if [ "$ACTION" == "remove" ]; then
     # Run preremove function
-    if [ "`grep "pre_remove" "${CONFIGPATH}" | cut -d"#" -f1 | cut -d"(" -f1 | grep "pre_remove"`" == "pre_remove" ]; then
+    if [[ "$(type -t pre_remove)" == "function" ]]; then
        pre_remove
     fi
 
@@ -254,73 +168,25 @@ if [ "${REMOVE}" == "true" ]; then
     MHWD_CHECK_KMODS
 
     # Remove dependencies
-    if [ "${DEPENDS}" != "" ]; then
+    if [ -n "${DEPENDS}" ]; then
         PACKAGES="${DEPENDS}"
     fi
-    if [ "${ARCH}" == "i686" ] && [ "${DEPENDS_32}" != "" ]; then
-        PACKAGES="${PACKAGES} ${DEPENDS_32}"
+    if [ -n "${DEPENDS_64}" ] && _check_on_multilib; then
+        PACKAGES="${PACKAGES} ${DEPENDS_64}"
     fi
-    if [ "${ARCH}" == "x86_64" ] && [ "${DEPENDS_64}" != "" ]; then
-        if [ "${MHWD64_IS_LIB32}" == "true" ];then
-            PACKAGES="${PACKAGES} ${DEPENDS_64}"
-        else
-            PACKAGES="${PACKAGES}"
-        fi
-    fi
-    if [ "${DEPKMODS}" != "" ]; then
+    if [ -n "${DEPKMODS}" ]; then
         PACKAGES="${PACKAGES} ${DEPKMODS}"
     fi
 
     # Check if packages are installed
     MHWD_CHECK_PKGS
 
-    if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rs ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
-    fi
-
-    PACKAGES=""
-
-    # Remove OPTREM dependencies
-    # Has to be run after normal dependencies were removed, since said dependencies may optionally depend on an OPTREM package
-    if [ "${OPTREMDEPENDS}" != "" ]; then
-        OPTREMPACKAGES="${OPTREMDEPENDS}"
-    fi
-    if [ "${ARCH}" == "i686" ] && [ "${OPTREMDEPENDS_32}" != "" ]; then
-        OPTREMPACKAGES="${OPTREMPACKAGES} ${OPTREMDEPENDS_32}"
-    fi
-    if [ "${ARCH}" == "x86_64" ] && [ "${OPTREMDEPENDS_64}" != "" ]; then
-        if [ "${MHWD64_IS_LIB32}" == "true" ]; then
-            OPTREMPACKAGES="${OPTREMPACKAGES} ${OPTREMDEPENDS_64}"
-        else
-            OPTREMPACKAGES="${OPTREMPACKAGES}"
-        fi
-    fi
-
-    if [ "${OPTREMPACKAGES}" != "" ]; then
-        ${PACMAN} -D --asdeps ${OPTREMPACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
-    fi
-
-    # Check if packages are installed
-    MHWD_CHECK_PKGS
-
-    if [ "${PACKAGES}" != "" ]; then
-        ${PACMAN} -Rs ${PACKAGES}
-        if [ "$?" -ne "0" ]; then
-            echo "Error: pacman failed!"
-            exit 1
-        fi
+    if [ -n "${PACKAGES}" ]; then
+        ${PACMAN} -Rscn ${PACKAGES} || _pacman_die
     fi
 
     # Run postremove function
-    if [ "`grep "post_remove" "${CONFIGPATH}" | cut -d"#" -f1 | cut -d"(" -f1 | grep "post_remove"`" == "post_remove" ]; then
+    if [[ "$(type -t post_remove)" == "function" ]]; then
        post_remove
     fi
 fi
