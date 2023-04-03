@@ -70,12 +70,8 @@ local function get_opts(args)
 end
 
 local function is_installed(package_name)
-    local _, _, code = os.execute("pacman -Qqs " .. package_name .. " 1>/dev/null")
-    if code == 0 then
-        return true
-    else
-        return false
-    end
+    local status = os.execute("pacman -Qqs " .. package_name .. " 1>/dev/null")
+    return status
 end
 
 local function pacman_handle(action, pkgs)
