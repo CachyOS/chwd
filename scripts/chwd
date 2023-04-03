@@ -162,9 +162,8 @@ local function main()
     pmconfig = get_opt_argument(options, "pmconfig", "/etc/pacman.conf")
     sync = get_opt_argument(options, "sync", "")
     pacman = table.concat({"pacman --noconfirm", "--cachedir", cachedir, "-r", pmroot, "--config", pmconfig}, " ")
-    -- TODO: add default profiles path
     local profile_name = get_opt_argument(options, "profile")
-    local path = get_opt_argument(options, "path")
+    local path = get_opt_argument(options, "path", "/var/lib/mhwd/db/profiles.toml")
 
     local profile = get_profile(profile_name, path)
     local packages = get_packages(profile)
