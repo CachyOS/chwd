@@ -107,6 +107,12 @@ local function remove(packages)
     end
 end
 
+local function exec_hook(profile, name)
+    if profile[name] then
+        os.execute(profile[name])
+    end
+end
+
 local function get_profile(name, path)
     local status, entry = pcall(toml.decodeFromFile, path)
     if status then
@@ -167,9 +173,13 @@ local function main()
     local profile = get_profile(profile_name, path)
     local packages = get_packages(profile)
     if options.install then
+        exec_hook(profile, "pre_install")
         install(packages)
+        exec_hook(profile, "post_install")
     elseif options.remove then
+        exec_hook(profile, "pre_remove")
         remove(packages)
+        exec_hook(profile, "post_remove")
     else
         die("Action is missing, exit...")
     end
