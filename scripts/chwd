@@ -18,7 +18,6 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 --]]
 local toml = require 'toml'
 local pacman, pmconfig, pmroot, cachedir, sync
-local multilib_enabled
 
 local function die(err, ...)
     print(err:format(...))
@@ -26,18 +25,13 @@ local function die(err, ...)
 end
 
 local function check_on_multilib()
-    if multilib_enabled == nil then
-        local multilib_pattern = "^%[multilib%]"
-        for line in io.lines(pmconfig) do
-            if line:match(multilib_pattern) then
-                multilib_enabled = true
-                break
-            else
-                multilib_enabled = false
-            end
+    local multilib_pattern = "^%[multilib%]"
+    for line in io.lines(pmconfig) do
+        if line:match(multilib_pattern) then
+            return true
+        else
+            return false
         end
-    else
-        return multilib_enabled
     end
 end
 
@@ -93,22 +87,16 @@ local function pacman_handle(action, pkgs)
 end
 
 local function install(packages)
-    local pkgs = ""
-
-    for i = 1, #packages do
-        pkgs = pkgs .. " " .. packages[i]
-    end
-
-    pacman_handle("--needed -S" .. sync, pkgs)
+    pacman_handle("--needed -S" .. sync, packages)
 end
 
 local function remove(packages)
-    local pkgs = ""
+    packages = split(packages, " ")
 
-    for i = 1, #packages do
-        local package = packages[i]
-        if is_installed(package) then
-            pkgs = pkgs .. " " .. package
+    local pkgs = ""
+    for _, pkg in ipairs(packages) do
+        if is_installed(pkg) then
+            pkgs = pkgs .. " " .. pkg
         end
     end
 
@@ -119,7 +107,7 @@ local function remove(packages)
     end
 end
 
-local function get_packages(name, path)
+local function get_profile(name, path)
     local status, entry = pcall(toml.decodeFromFile, path)
     if status then
         local keys = split(name, ".")
@@ -128,23 +116,21 @@ local function get_packages(name, path)
         if profile == nil then
             die("Profile %s is not found in profiles file.", name)
         end
-
-        local packages = {}
-        local multilib_pattern = "^lib32-.+"
-        for i = 1, #profile.packages do
-            local package = profile.packages[i]
-            if package:match(multilib_pattern) then
-                if check_on_multilib() then
-                    packages[#packages+1] = package
-                end
-            else
-                packages[#packages+1] = package
-            end
-        end
-        return packages
+        return profile
     else
         die("Profiles file is not valid or not found: %s", entry)
     end
+end
+
+local function get_packages(profile)
+    local packages = profile.packages
+    local multilib_pattern = "%s?(lib32-.+)%s?"
+
+    if not check_on_multilib() then
+        packages:gsub(multilib_pattern, "")
+    end
+
+    return packages
 end
 
 local function get_opt_argument(options, option, default)
@@ -178,7 +164,8 @@ local function main()
     local profile_name = get_opt_argument(options, "profile")
     local path = get_opt_argument(options, "path")
 
-    local packages = get_packages(profile_name, path)
+    local profile = get_profile(profile_name, path)
+    local packages = get_packages(profile)
     if options.install then
         install(packages)
     elseif options.remove then
