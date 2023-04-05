@@ -32,16 +32,6 @@ pub struct Kernel<'a> {
 }
 
 impl Kernel<'_> {
-    pub fn new() -> Self {
-        Self {
-            name: "".to_owned(),
-            repo: "local".to_owned(),
-            raw: "".to_owned(),
-            alpm_pkg: None,
-            alpm_handle: None,
-        }
-    }
-
     // Name must be without any repo name (e.g. core/linux)
     pub fn is_installed(&self) -> Option<bool> {
         let local_db = self.alpm_handle.as_ref()?.localdb();
