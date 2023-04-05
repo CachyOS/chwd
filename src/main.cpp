@@ -45,7 +45,7 @@
 
 int main(int argc, char** argv) {
     try {
-        mhwd::Mhwd mhwd("0.6.13", "2022-2023");
+        mhwd::Mhwd mhwd("0.6.14", "2022-2023");
         return mhwd.launch(std::span{argv, static_cast<std::size_t>(argc)});
     } catch (...) {
         std::cerr << "Unknown errors occurred...";
