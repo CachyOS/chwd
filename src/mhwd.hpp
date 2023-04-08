@@ -52,27 +52,26 @@ class Mhwd {
         bool LIST_INSTALLED = false;
         bool LIST_AVAILABLE = false;
         bool LIST_HARDWARE  = false;
-        bool CUSTOM_INSTALL = false;
         bool AUTOCONFIGURE  = false;
     } m_arguments;
 
     std::string_view m_version{};
     std::string_view m_year{};
-    std::shared_ptr<Config> m_config;
+    std::shared_ptr<Profile> m_config;
     Data m_data;
     std::vector<std::string> m_configs{};
 
-    bool performTransaction(const config_t& config, mhwd::transaction_t type);
+    bool performTransaction(const profile_t& config, mhwd::transaction_t type);
 
-    [[nodiscard]] auto getInstalledConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> config_t;
-    [[nodiscard]] auto getDatabaseConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> config_t;
-    [[nodiscard]] auto getAvailableConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> config_t;
+    [[nodiscard]] auto getInstalledConfig(const std::string_view& config_name, std::string_view config_type) const noexcept -> profile_t;
+    [[nodiscard]] auto getDatabaseConfig(const std::string_view& config_name, std::string_view config_type) const noexcept -> profile_t;
+    [[nodiscard]] auto getAvailableConfig(const std::string_view& config_name, std::string_view config_type) const noexcept -> profile_t;
 
     auto performTransaction(const Transaction& transaction) -> mhwd::status_t;
 
-    auto installConfig(const config_t& config) -> mhwd::status_t;
-    auto uninstallConfig(Config* config) noexcept -> mhwd::status_t;
-    bool runScript(const config_t& config, mhwd::transaction_t operation) noexcept;
+    auto installConfig(const profile_t& config) -> mhwd::status_t;
+    auto uninstallConfig(Profile* config) noexcept -> mhwd::status_t;
+    bool runScript(const profile_t& config, mhwd::transaction_t operation) noexcept;
     auto tryToParseCmdLineOptions(std::span<char*> args, bool& autoconf_nonfree_driver,
         std::string& operation, std::string& autoconf_class_id) noexcept(false) -> std::int32_t;
     void optionsDontInterfereWithEachOther() const noexcept(false);

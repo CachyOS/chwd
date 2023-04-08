@@ -59,8 +59,8 @@ struct Device {
     std::string vendor_id;
     std::string sysfs_busid;
     std::string sysfs_id;
-    std::vector<std::shared_ptr<Config>> available_configs;
-    std::vector<std::shared_ptr<Config>> installed_configs;
+    std::vector<std::shared_ptr<Profile>> available_configs;
+    std::vector<std::shared_ptr<Profile>> installed_configs;
 };
 
 }  // namespace mhwd

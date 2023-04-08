@@ -66,9 +66,9 @@
 
 namespace mhwd {
 
-using config_t          = std::shared_ptr<Config>;
+using profile_t         = std::shared_ptr<Profile>;
 using device_t          = std::shared_ptr<Device>;
-using list_of_configs_t = std::vector<config_t>;
+using list_of_configs_t = std::vector<profile_t>;
 using list_of_devices_t = std::vector<device_t>;
 
 class Data final {
@@ -92,20 +92,16 @@ class Data final {
     list_of_configs_t installedPCIConfigs;
     list_of_configs_t allUSBConfigs;
     list_of_configs_t allPCIConfigs;
-    list_of_configs_t invalidConfigs;
+    std::vector<std::string> invalidConfigs;
 
     void updateInstalledConfigData() noexcept;
-    void getAllDevicesOfConfig(const config_t& config, list_of_devices_t& found_devices) const noexcept;
+    void getAllDevicesOfConfig(const profile_t& config, list_of_devices_t& found_devices) const noexcept;
 
-    [[nodiscard]] auto getAllDependenciesToInstall(const config_t& config) const noexcept -> list_of_configs_t;
-    void getAllDependenciesToInstall(const config_t& config, const list_of_configs_t& installed_configs, list_of_configs_t* dependencies) const noexcept;
-    [[nodiscard]] auto getDatabaseConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> config_t;
-    [[nodiscard]] auto getAllLocalConflicts(const config_t& config) const noexcept -> list_of_configs_t;
-    [[nodiscard]] auto getAllLocalRequirements(const config_t& config) const noexcept -> list_of_configs_t;
+    [[nodiscard]] auto getDatabaseConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> profile_t;
 
  private:
-    void fillInstalledConfigs(const std::string_view& type) noexcept;
-    void fillAllConfigs(const std::string_view& type) noexcept;
+    void fillInstalledConfigs(std::string_view type) noexcept;
+    void fillAllConfigs(std::string_view type) noexcept;
     void updateConfigData() noexcept;
 };
 

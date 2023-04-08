@@ -1,26 +1,3 @@
-/*
- *  This file is part of the mhwd - Manjaro Hardware Detection project
- *
- *  mhwd - Manjaro Hardware Detection
- *  Roland Singer <roland@manjaro.org>
- *  Łukasz Matysiak <december0123@gmail.com>
- *  Filipe Marques <eagle.software3@gmail.com>
- *
- *  Copyright (C) 2012 - 2016 Manjaro (http://manjaro.org)
- *
- *  This program is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
 //
 // Copyright (C) 2022-2023 Vladislav Nepogodin
 //
@@ -78,12 +55,6 @@ void print_message(mhwd::message_t type, const std::string_view& msg) {
     case mhwd::message_t::CONSOLE_OUTPUT:
         fmt::print("{}{}{}", CONSOLE_TEXT_OUTPUT_COLOR, msg, CONSOLE_COLOR_RESET);
         break;
-    case mhwd::message_t::INSTALLDEPENDENCY_START:
-        print_status("Installing dependency {} ...", msg);
-        break;
-    case mhwd::message_t::INSTALLDEPENDENCY_END:
-        print_status("Successfully installed dependency  {}", msg);
-        break;
     case mhwd::message_t::INSTALL_START:
         print_status("Installing {} ...", msg);
         break;
@@ -116,7 +87,6 @@ void print_help() noexcept {
               << "  -li/--listinstalled\t\t\tlist installed driver configs\n"
               << "  -lh/--listhardware\t\t\tlist hardware information\n"
               << "  -i/--install <usb/pci> <config(s)>\tinstall driver config(s)\n"
-              << "  -ic/--installcustom <usb/pci> <path>\tinstall custom config(s)\n"
               << "  -r/--remove <usb/pci> <config(s)>\tremove driver config(s)\n"
               << "  -a/--auto <usb/pci> <free/nonfree> <classid>\tauto install configs for classid\n"
               << "  --pmcachedir <path>\t\t\tset package manager cache path\n"
@@ -128,7 +98,6 @@ void print_help() noexcept {
 void print_version(const std::string_view& version_mhwd, const std::string_view& year_copy) noexcept {
     std::cout << "CachyOS Hardware Detection v" << version_mhwd << "\n\n"
               << "Copyright (C) " << year_copy << " CachyOS Developers\n"
-              << "Copyright (C) 2021 Manjaro Linux Developers\n"
               << "This is free software licensed under GNU GPL v3.0\n"
               << "FITNESS FOR A PARTICULAR PURPOSE.\n"
               << '\n';
@@ -152,10 +121,10 @@ void list_devices(const list_of_devices_t& devices, const std::string_view& type
 void list_configs(const list_of_configs_t& configs, const std::string_view& header) {
     print_status(header);
     print_line();
-    fmt::print(FMT_COMPILE("{:>24}{:>22}{:>18}{:>15}\n"), "NAME", "VERSION", "FREEDRIVER", "TYPE");
+    fmt::print(FMT_COMPILE("{:>24}{:>22}{:>15}\n"), "NAME", "NONFREE", "TYPE");
     print_line();
     for (const auto& config : configs) {
-        fmt::print(FMT_COMPILE("{:>24}{:>22}{:>18}{:>15}\n"), config->name, config->version, config->is_freedriver, config->type);
+        fmt::print(FMT_COMPILE("{:>24}{:>22}{:>15}\n"), config->name, config->is_nonfree, config->type);
     }
     fmt::print("\n\n");
 }
@@ -204,7 +173,7 @@ void printInstalledConfigs(const std::string_view& device_type, const list_of_co
     fmt::print("\n");
 }
 
-void printConfigDetails(const Config& config) noexcept {
+void printConfigDetails(const Profile& config) noexcept {
     const auto& split_by_space = [](const auto& vec) {
         const auto& space_fold = [](auto&& lhs, const auto& rhs) {
             return rhs + ' ' + std::forward<decltype(lhs)>(lhs);
@@ -221,15 +190,11 @@ void printConfigDetails(const Config& config) noexcept {
         vendor_ids += split_by_space(hwd.vendor_ids);
         class_ids += split_by_space(hwd.class_ids);
     }
-    const auto& dependencies = split_by_space(config.dependencies);
-    const auto& conflicts    = split_by_space(config.conflicts);
 
-    fmt::print(FMT_COMPILE("   NAME:\t{}\n   ATTACHED:\t{}\n   VERSION:\t{}\n   INFO:\t{}\n   PRIORITY:\t{}\n   FREEDRIVER:\t{}\n   DEPENDS:\t{}\n   CONFLICTS:\t{}\n   CLASSIDS:\t{}\n   VENDORIDS:\t{}\n\n"),
-        config.name, config.type, config.version,
-        (config.info.empty() ? "-" : config.info),
-        config.priority, config.is_freedriver,
-        dependencies,
-        conflicts,
+    fmt::print(FMT_COMPILE("   NAME:\t{}\n   ATTACHED:\t{}\n   INFO:\t{}\n   PRIORITY:\t{}\n   NONFREE:\t{}\n   CLASSIDS:\t{}\n   VENDORIDS:\t{}\n\n"),
+        config.name, config.type,
+        (config.desc.empty() ? "-" : config.desc),
+        config.priority, config.is_nonfree,
         class_ids, vendor_ids);
 }
 

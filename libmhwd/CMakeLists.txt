@@ -14,7 +14,7 @@ set(LIB_SOURCES
 )
 
 add_library(mhwd STATIC ${LIB_SOURCES} ${LIB_HEADERS})
-target_link_libraries(mhwd PRIVATE project_warnings project_options fmt::fmt hd::hd x86emu uuid)
+target_link_libraries(mhwd PRIVATE project_warnings project_options fmt::fmt)
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
    target_link_libraries(mhwd PRIVATE range-v3::range-v3)
 endif()

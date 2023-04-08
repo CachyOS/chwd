@@ -45,8 +45,6 @@ namespace mhwd {
 
 enum class status_t {
     SUCCESS,
-    ERROR_CONFLICTS,
-    ERROR_REQUIREMENTS,
     ERROR_NOT_INSTALLED,
     ERROR_ALREADY_INSTALLED,
     ERROR_NO_MATCH_LOCAL_CONFIG,
@@ -56,8 +54,6 @@ enum class status_t {
 
 enum class message_t {
     CONSOLE_OUTPUT,
-    INSTALLDEPENDENCY_START,
-    INSTALLDEPENDENCY_END,
     INSTALL_START,
     INSTALL_END,
     REMOVE_START,

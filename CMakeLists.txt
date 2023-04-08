@@ -43,6 +43,13 @@ CPMAddPackage(
   EXCLUDE_FROM_ALL YES
 )
 
+CPMAddPackage(
+  NAME tomlplusplus
+  GITHUB_REPOSITORY marzer/tomlplusplus
+  GIT_TAG ad55bae8a11a6eee39e2292b01e95b529b105767
+  EXCLUDE_FROM_ALL YES
+)
+
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
    CPMAddPackage(
      NAME range-v3
