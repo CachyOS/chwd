@@ -44,9 +44,9 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-  NAME tomlplusplus
-  GITHUB_REPOSITORY marzer/tomlplusplus
-  GIT_TAG ad55bae8a11a6eee39e2292b01e95b529b105767
+  NAME Corrosion
+  GITHUB_REPOSITORY corrosion-rs/corrosion
+  GIT_TAG 14d5ecf8b85e15abc19f24f309df81f5f1d0d7ca
   EXCLUDE_FROM_ALL YES
 )
 
@@ -90,6 +90,13 @@ if(ENABLE_UNITY)
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/src)
+
+if(ENABLE_SANITIZER_ADDRESS)
+    list(APPEND CARGO_FLAGS "-Z" "build-std")
+endif()
+
+corrosion_import_crate(MANIFEST_PATH "chwd-rust/Cargo.toml" FLAGS "${CARGO_FLAGS}")
+corrosion_add_cxxbridge(chwd-cxxbridge CRATE chwd-rust MANIFEST_PATH "chwd-rust/Cargo.toml" FILES lib.rs)
 
 add_subdirectory(libmhwd)
 add_subdirectory(src)

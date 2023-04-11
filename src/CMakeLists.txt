@@ -14,7 +14,7 @@ add_executable(mhwd-bin
 
 include_directories(${CMAKE_SOURCE_DIR}/libmhwd)
 
-target_link_libraries(mhwd-bin PRIVATE project_warnings project_options mhwd::mhwd tomlplusplus::tomlplusplus fmt::fmt hd::hd x86emu::x86emu uuid)
+target_link_libraries(mhwd-bin PRIVATE project_warnings project_options mhwd::mhwd chwd-cxxbridge fmt::fmt hd::hd x86emu::x86emu uuid)
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
    target_link_libraries(mhwd-bin PRIVATE range-v3::range-v3)
 endif()

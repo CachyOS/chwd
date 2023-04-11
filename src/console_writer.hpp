@@ -86,7 +86,7 @@ void list_devices(const list_of_devices_t& devices, const std::string_view& type
 void list_configs(const list_of_configs_t& configs, const std::string_view& header);
 void printAvailableConfigsInDetail(const std::string_view& device_type, const list_of_devices_t& devices);
 void printInstalledConfigs(const std::string_view& device_type, const list_of_configs_t& installed_configs);
-void printConfigDetails(const Profile& config) noexcept;
+void printConfigDetails(const chwd::Profile& config) noexcept;
 void printDeviceDetails(hw_item item, FILE* file_obj = stdout) noexcept;
 
 void print_help() noexcept;

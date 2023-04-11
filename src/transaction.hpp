@@ -52,14 +52,14 @@
 namespace mhwd {
 
 struct Transaction final {
-    Transaction(std::shared_ptr<Profile> conf, mhwd::transaction_t transaction_type, bool allow_reinstallation)
+    Transaction(std::shared_ptr<chwd::Profile> conf, mhwd::transaction_t transaction_type, bool allow_reinstallation)
       : is_reinstall_allowed(allow_reinstallation),
         type(transaction_type), config(std::move(conf)) { }
 
     bool is_reinstall_allowed{};
     mhwd::transaction_t type{};
 
-    std::shared_ptr<Profile> config{};
+    std::shared_ptr<chwd::Profile> config{};
 
     // Deleted constructor
     Transaction() = delete;

@@ -55,38 +55,44 @@ void getAllDevicesOfConfig(const list_of_devices_t& devices, const profile_t& co
         // Check all devices
         for (auto&& i_device : devices) {
             // Check class ids
-            bool found = ranges::find_if(hwdID.class_ids, [i_device](const std::string& classID) {
-                return fnmatch(classID.c_str(), i_device->class_id.c_str(), FNM_CASEFOLD) == 0;
+            bool found = ranges::find_if(hwdID.class_ids, [i_device](const auto& classID) {
+                const auto& classID_conv = std::string(classID);
+                return fnmatch(classID_conv.c_str(), i_device->class_id.c_str(), FNM_CASEFOLD) == 0;
             }) != hwdID.class_ids.end();
 
             if (found) {
                 // Check blacklisted class ids
-                found = ranges::find_if(hwdID.blacklisted_class_ids, [i_device](const std::string& blacklistedClassID) {
-                    return fnmatch(blacklistedClassID.c_str(), i_device->class_id.c_str(), FNM_CASEFOLD) == 0;
+                found = ranges::find_if(hwdID.blacklisted_class_ids, [i_device](const auto& blacklistedClassID) {
+                    const auto& blacklistedClassID_conv = std::string(blacklistedClassID);
+                    return fnmatch(blacklistedClassID_conv.c_str(), i_device->class_id.c_str(), FNM_CASEFOLD) == 0;
                 }) != hwdID.blacklisted_class_ids.end();
 
                 if (!found) {
                     // Check vendor ids
-                    found = ranges::find_if(hwdID.vendor_ids, [i_device](const std::string& vendorID) {
-                        return fnmatch(vendorID.c_str(), i_device->vendor_id.c_str(), FNM_CASEFOLD) == 0;
+                    found = ranges::find_if(hwdID.vendor_ids, [i_device](const auto& vendorID) {
+                        const auto& vendorID_conv = std::string(vendorID);
+                        return fnmatch(vendorID_conv.c_str(), i_device->vendor_id.c_str(), FNM_CASEFOLD) == 0;
                     }) != hwdID.vendor_ids.end();
 
                     if (found) {
                         // Check blacklisted vendor ids
-                        found = ranges::find_if(hwdID.blacklisted_vendor_ids, [i_device](const std::string& blacklistedVendorID) {
-                            return fnmatch(blacklistedVendorID.c_str(), i_device->vendor_id.c_str(), FNM_CASEFOLD) == 0;
+                        found = ranges::find_if(hwdID.blacklisted_vendor_ids, [i_device](const auto& blacklistedVendorID) {
+                            const auto& blacklistedVendorID_conv = std::string(blacklistedVendorID);
+                            return fnmatch(blacklistedVendorID_conv.c_str(), i_device->vendor_id.c_str(), FNM_CASEFOLD) == 0;
                         }) != hwdID.blacklisted_vendor_ids.end();
 
                         if (!found) {
                             // Check device ids
-                            found = ranges::find_if(hwdID.device_ids, [i_device](const std::string& deviceID) {
-                                return fnmatch(deviceID.c_str(), i_device->device_id.c_str(), FNM_CASEFOLD) == 0;
+                            found = ranges::find_if(hwdID.device_ids, [i_device](const auto& deviceID) {
+                                const auto& deviceID_conv = std::string(deviceID);
+                                return fnmatch(deviceID_conv.c_str(), i_device->device_id.c_str(), FNM_CASEFOLD) == 0;
                             }) != hwdID.device_ids.end();
 
                             if (found) {
                                 // Check blacklisted device ids
-                                found = ranges::find_if(hwdID.blacklisted_device_ids, [i_device](const std::string& blacklistedDeviceID) {
-                                    return fnmatch(blacklistedDeviceID.c_str(), i_device->device_id.c_str(), FNM_CASEFOLD) == 0;
+                                found = ranges::find_if(hwdID.blacklisted_device_ids, [i_device](const auto& blacklistedDeviceID) {
+                                    const auto& blacklistedDeviceID_conv = std::string(blacklistedDeviceID);
+                                    return fnmatch(blacklistedDeviceID_conv.c_str(), i_device->device_id.c_str(), FNM_CASEFOLD) == 0;
                                 }) != hwdID.blacklisted_device_ids.end();
                                 if (!found) {
                                     found_device = true;
@@ -109,7 +115,7 @@ void getAllDevicesOfConfig(const list_of_devices_t& devices, const profile_t& co
 void addConfigSorted(list_of_configs_t& configs, const profile_t& newConfig) noexcept {
     const bool found = ranges::find_if(configs.begin(), configs.end(),
                            [&newConfig](const profile_t& config) {
-                               return newConfig->name == config->name;
+                               return std::string(newConfig->name) == std::string(config->name);
                            })
         != configs.end();
 
@@ -212,42 +218,46 @@ void Data::updateInstalledConfigData() noexcept {
 
 void Data::fillInstalledConfigs(std::string_view type) noexcept {
     const auto& db_path = ("USB"sv == type) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
-    auto& configs       = ("USB"sv == type) ? installedUSBConfigs : installedPCIConfigs;
+    auto* configs       = ("USB"sv == type) ? &installedUSBConfigs : &installedPCIConfigs;
 
     for (const fs::path& dir_entry : fs::directory_iterator{db_path}) {
         /* clang-format off */
         if (fs::is_directory(dir_entry) || dir_entry.filename() != consts::CHWD_CONFIG_FILE) { continue; }
         /* clang-format on */
 
-        auto profiles = Profile::parse_profiles(dir_entry.c_str(), type);
+        auto profiles = chwd::parse_profiles(dir_entry.c_str(), type);
         if (profiles) {
             ranges::transform(
-                profiles.value(), std::back_inserter(configs),
+                profiles.value(), std::back_inserter(*configs),
                 [](auto&& profile) {
-                    return std::make_unique<Profile>(std::forward<decltype(profile)>(profile));
+                    return std::make_unique<chwd::Profile>(std::forward<decltype(profile)>(profile));
                 });
         }
 
-        auto invalid_profiles = Profile::get_invalid_profiles(dir_entry.c_str()).value_or(std::vector<std::string>{});
-        invalidConfigs.insert(invalidConfigs.cend(), invalid_profiles.begin(), invalid_profiles.end());
+        auto invalid_profiles = chwd::get_invalid_profiles(dir_entry.c_str()).value_or(chwd::vec_str_t{});
+        ranges::transform(
+            invalid_profiles, std::back_inserter(invalidConfigs),
+            [](auto&& profile) {
+                return std::string{profile.c_str()};
+            });
     }
-    std::sort(configs.begin(), configs.end(), [](auto lhs, auto rhs) { return lhs->priority > rhs->priority; });
+    std::sort(configs->begin(), configs->end(), [](auto lhs, auto rhs) { return lhs->priority > rhs->priority; });
 }
 
 void Data::getAllDevicesOfConfig(const profile_t& config, list_of_devices_t& found_devices) const noexcept {
-    const auto& devices = ("USB"sv == config->type) ? USBDevices : PCIDevices;
+    const auto& devices = ("USB"sv == std::string(config->prof_type)) ? USBDevices : PCIDevices;
     ::mhwd::getAllDevicesOfConfig(devices, config, found_devices);
 }
 
 auto Data::getDatabaseConfig(const std::string_view& config_name, const std::string_view& config_type) const noexcept -> profile_t {
     const auto& allConfigs = ("USB"sv == config_type) ? allUSBConfigs : allPCIConfigs;
-    const auto& result     = ranges::find_if(allConfigs.begin(), allConfigs.end(), [&config_name](const auto& config) { return config->name == config_name; });
+    const auto& result     = ranges::find_if(allConfigs.begin(), allConfigs.end(), [&config_name](const auto& config) { return std::string(config->name) == config_name; });
     return (result != allConfigs.end()) ? *result : nullptr;
 }
 
 void Data::fillAllConfigs(std::string_view type) noexcept {
     const auto& conf_path = ("USB"sv == type) ? consts::CHWD_USB_CONFIG_DIR : consts::CHWD_PCI_CONFIG_DIR;
-    auto& configs         = ("USB"sv == type) ? allUSBConfigs : allPCIConfigs;
+    auto* configs         = ("USB"sv == type) ? &allUSBConfigs : &allPCIConfigs;
 
     for (const fs::path& dir_entry : fs::directory_iterator{conf_path}) {
         const auto& config_file_path = fmt::format("{}/{}", dir_entry.c_str(), consts::CHWD_CONFIG_FILE);
@@ -255,20 +265,24 @@ void Data::fillAllConfigs(std::string_view type) noexcept {
         if (!fs::exists(config_file_path)) { continue; }
         /* clang-format on */
 
-        auto profiles = Profile::parse_profiles(config_file_path, type);
+        auto profiles = chwd::parse_profiles(config_file_path, type);
         if (profiles) {
             ranges::transform(
-                profiles.value(), std::back_inserter(configs),
+                profiles.value(), std::back_inserter(*configs),
                 [](auto&& profile) {
-                    return std::make_unique<Profile>(std::forward<decltype(profile)>(profile));
+                    return std::make_unique<chwd::Profile>(std::forward<decltype(profile)>(profile));
                 });
         }
 
-        auto invalid_profiles = Profile::get_invalid_profiles(config_file_path).value_or(std::vector<std::string>{});
-        invalidConfigs.insert(invalidConfigs.cend(), invalid_profiles.begin(), invalid_profiles.end());
+        auto invalid_profiles = chwd::get_invalid_profiles(config_file_path).value_or(chwd::vec_str_t{});
+        ranges::transform(
+            invalid_profiles, std::back_inserter(invalidConfigs),
+            [](auto&& profile) {
+                return std::string{profile.c_str()};
+            });
     }
 
-    std::sort(configs.begin(), configs.end(), [](auto lhs, auto rhs) { return lhs->priority > rhs->priority; });
+    std::sort(configs->begin(), configs->end(), [](auto lhs, auto rhs) { return lhs->priority > rhs->priority; });
 }
 
 void Data::updateConfigData() noexcept {

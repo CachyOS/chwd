@@ -66,7 +66,7 @@
 
 namespace mhwd {
 
-using profile_t         = std::shared_ptr<Profile>;
+using profile_t         = std::shared_ptr<chwd::Profile>;
 using device_t          = std::shared_ptr<Device>;
 using list_of_configs_t = std::vector<profile_t>;
 using list_of_devices_t = std::vector<device_t>;

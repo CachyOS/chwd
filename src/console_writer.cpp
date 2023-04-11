@@ -124,7 +124,7 @@ void list_configs(const list_of_configs_t& configs, const std::string_view& head
     fmt::print(FMT_COMPILE("{:>24}{:>22}{:>15}\n"), "NAME", "NONFREE", "TYPE");
     print_line();
     for (const auto& config : configs) {
-        fmt::print(FMT_COMPILE("{:>24}{:>22}{:>15}\n"), config->name, config->is_nonfree, config->type);
+        fmt::print(FMT_COMPILE("{:>24}{:>22}{:>15}\n"), std::string(config->name), config->is_nonfree, std::string(config->prof_type));
     }
     fmt::print("\n\n");
 }
@@ -173,10 +173,10 @@ void printInstalledConfigs(const std::string_view& device_type, const list_of_co
     fmt::print("\n");
 }
 
-void printConfigDetails(const Profile& config) noexcept {
+void printConfigDetails(const chwd::Profile& config) noexcept {
     const auto& split_by_space = [](const auto& vec) {
-        const auto& space_fold = [](auto&& lhs, const auto& rhs) {
-            return rhs + ' ' + std::forward<decltype(lhs)>(lhs);
+        const auto& space_fold = [](const auto& lhs, const auto& rhs) {
+            return std::string(rhs) + ' ' + std::string(std::forward<decltype(lhs)>(lhs));
         };
 
         return vec.empty() ? "-" : std::accumulate(std::next(vec.begin()), vec.end(),
@@ -187,13 +187,13 @@ void printConfigDetails(const Profile& config) noexcept {
     std::string class_ids{};
     std::string vendor_ids{};
     for (const auto& hwd : config.hwd_ids) {
-        vendor_ids += split_by_space(hwd.vendor_ids);
-        class_ids += split_by_space(hwd.class_ids);
+        vendor_ids += std::string(split_by_space(hwd.vendor_ids));
+        class_ids += std::string(split_by_space(hwd.class_ids));
     }
 
     fmt::print(FMT_COMPILE("   NAME:\t{}\n   ATTACHED:\t{}\n   INFO:\t{}\n   PRIORITY:\t{}\n   NONFREE:\t{}\n   CLASSIDS:\t{}\n   VENDORIDS:\t{}\n\n"),
-        config.name, config.type,
-        (config.desc.empty() ? "-" : config.desc),
+        std::string(config.name), std::string(config.prof_type),
+        (config.desc.empty() ? "-" : std::string(config.desc)),
         config.priority, config.is_nonfree,
         class_ids, vendor_ids);
 }

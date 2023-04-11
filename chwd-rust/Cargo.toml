@@ -1,0 +1,25 @@
+[package]
+name = "chwd-rust"
+version = "0.1.0"
+build = "build.rs"
+authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
+license = "GPLv3"
+edition = "2021"
+
+[dependencies]
+toml = "0.7.3"
+cxx = "1.0"
+anyhow = "1"
+
+[build-dependencies]
+cxx-build = "1"
+
+[lib]
+crate-type = ["staticlib"]
+
+[profile.release]
+strip = "symbols"
+panic = "abort"
+lto = true
+opt-level = 3
+codegen-units = 1

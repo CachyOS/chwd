@@ -57,7 +57,7 @@ class Mhwd {
 
     std::string_view m_version{};
     std::string_view m_year{};
-    std::shared_ptr<Profile> m_config;
+    std::shared_ptr<chwd::Profile> m_config;
     Data m_data;
     std::vector<std::string> m_configs{};
 
@@ -70,7 +70,7 @@ class Mhwd {
     auto performTransaction(const Transaction& transaction) -> mhwd::status_t;
 
     auto installConfig(const profile_t& config) -> mhwd::status_t;
-    auto uninstallConfig(Profile* config) noexcept -> mhwd::status_t;
+    auto uninstallConfig(chwd::Profile* config) noexcept -> mhwd::status_t;
     bool runScript(const profile_t& config, mhwd::transaction_t operation) noexcept;
     auto tryToParseCmdLineOptions(std::span<char*> args, bool& autoconf_nonfree_driver,
         std::string& operation, std::string& autoconf_class_id) noexcept(false) -> std::int32_t;

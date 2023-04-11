@@ -18,40 +18,33 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-#include "enums.hpp"
-#include "vita/string.hpp"
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdollar-in-identifier-extension"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
 
-#include <string>
-#include <utility>
-#include <vector>
+#include "chwd-cxxbridge/lib.h"
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
+
 #include <optional>
 
-namespace mhwd {
+namespace chwd {
 
-struct HardwareID {
-    std::vector<std::string> class_ids;
-    std::vector<std::string> vendor_ids;
-    std::vector<std::string> device_ids;
-    std::vector<std::string> blacklisted_class_ids;
-    std::vector<std::string> blacklisted_vendor_ids;
-    std::vector<std::string> blacklisted_device_ids;
-};
+using parse_profile_t = decltype(chwd::parse_profiles_ffi("", ""));
+using vec_str_t = decltype(chwd::get_invalid_profiles_ffi(""));
 
-struct Profile {
-    bool is_nonfree{false};
+auto parse_profiles(std::string_view file_path, std::string_view type) noexcept -> std::optional<parse_profile_t>;
+auto get_invalid_profiles(std::string_view file_path) noexcept -> std::optional<vec_str_t> ;
 
-    std::string type{};
-    std::string name{};
-    std::string desc{};
-    std::int32_t priority{};
-
-    std::vector<HardwareID> hwd_ids{1};
-
-    static auto parse_profiles(const std::string_view& file_path, std::string_view type_name) noexcept -> std::optional<std::vector<Profile>>;
-    static auto get_invalid_profiles(const std::string_view& file_path) noexcept -> std::optional<std::vector<std::string>>;
-    static auto write_profile_to_file(const std::string_view& file_path, const Profile& profile) noexcept -> bool;
-};
-
-}  // namespace mhwd
+}  // namespace chwd
 
 #endif  // CONFIG_HPP
