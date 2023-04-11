@@ -28,6 +28,7 @@ Options:
   --prefix=                Specify install prefix.
   --libdir=                Specify lib directory.
   --path=, -p=             Specify build directory.
+  --use_clang              Use Clang compiler.
 EOF
 exit 0
 fi
@@ -37,10 +38,13 @@ _buildpath="build"
 _prefix="/usr/local"
 _libdir="lib"
 _buildtype="RelWithDebInfo"
+_buildfolder="${_buildpath}/${_buildtype}"
+_use_clang=false
 for i in "$@"; do
   case $i in
     -t=*|--buildtype=*)
       _buildtype="${i#*=}"
+      _buildfolder="${_buildpath}/${_buildtype}"
       shift # past argument=value
       ;;
     --prefix=*)
@@ -53,18 +57,38 @@ for i in "$@"; do
       ;;
     -p=*|--path=*)
       _buildpath="${i#*=}"
+      _buildfolder="${_buildpath}/${_buildtype}"
+      shift # past argument=value
+      ;;
+    --use_clang)
+      _use_clang=true
       shift # past argument=value
       ;;
     *)
       # unknown option
+      echo "Unknown option [$i]"
+      exit 255
       ;;
   esac
 done
 
-cmake -S . -B ${_buildpath}/${_buildtype} \
+if ${_use_clang}; then
+  export AR=llvm-ar
+  export CC=clang
+  export CXX=clang++
+  export NM=llvm-nm
+  export RANLIB=llvm-ranlib
+fi
+
+if command -v ninja &> /dev/null; then
+  _configure_flags+=('-GNinja')
+fi
+
+cmake -S . -B ${_buildfolder} \
     -DCMAKE_BUILD_TYPE=${_buildtype} \
     -DCMAKE_INSTALL_PREFIX=${_prefix} \
-    -DCMAKE_INSTALL_LIBDIR=${_libdir}
+    -DCMAKE_INSTALL_LIBDIR=${_libdir} \
+    "${_configure_flags[@]}"
 
 cat > build.sh <<EOF
 #!/bin/bash
@@ -88,7 +112,7 @@ set -e
 
 cd "\`dirname "\$0"\`"
 
-cmake --build ${_buildpath}/${_buildtype} --parallel $(nproc)
+cmake --build ${_buildfolder} --parallel $(nproc)
 EOF
 
 chmod +x ./build.sh
