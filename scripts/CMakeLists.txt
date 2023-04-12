@@ -1,4 +1,4 @@
-install(PROGRAMS mhwd
+install(PROGRAMS chwd
   DESTINATION /var/lib/mhwd/scripts)
 
 install(PROGRAMS mhwd-fb
