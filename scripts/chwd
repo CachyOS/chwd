@@ -16,12 +16,21 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 --]]
-local toml = require 'toml'
 local pacman, pmconfig, pmroot, cachedir, sync
 
 local function die(err, ...)
     print(err:format(...))
     os.exit(1)
+end
+
+local function file_exists(path)
+    local file = io.open(path, "r")
+    if file then
+        file:close()
+        return true
+    else
+        return false
+    end
 end
 
 local function check_on_multilib()
@@ -109,26 +118,27 @@ local function exec_hook(profile, name)
     end
 end
 
-local function get_profile(name, path)
-    local status, entry = pcall(toml.decodeFromFile, path)
-    if status then
-        local keys = split(name, ".")
-        local profile = recurse_table_search(entry, keys)
-
-        if profile == nil then
-            die("Profile %s is not found in profiles file.", name)
-        end
-        return profile
-    else
-        die("Profiles file is not valid or not found: %s", entry)
-    end
+local function escape_pattern(text)
+    return text:gsub("([^%w])", "%%%1")
 end
 
-local function get_packages(profile)
-    local packages = profile.packages
+local function get_packages(name, path)
+    local profile_name_pattern = "^%[" .. escape_pattern(name) .. "%]"
+    local packages_pattern  = "^packages%s*=%s*'?\"?([A-Za-z0-9- ]+)'?\"?"
     local multilib_pattern = "%s?(lib32-.+)%s?"
+    local packages, profile
 
-    if not check_on_multilib() then
+    for line in io.lines(path) do
+        if profile == nil then
+            profile = line:match(profile_name_pattern)
+        elseif packages == nil then
+            packages = line:match(packages_pattern)
+        else
+            break
+        end
+    end
+
+    if not check_on_multilib() and packages then
         packages:gsub(multilib_pattern, "")
     end
 
@@ -165,16 +175,24 @@ local function main()
     local profile_name = get_opt_argument(options, "profile")
     local path = get_opt_argument(options, "path", "/var/lib/mhwd/db/profiles.toml")
 
-    local profile = get_profile(profile_name, path)
-    local packages = get_packages(profile)
+    if not file_exists(path) then
+        die("Profiles file is not found: %s", path)
+    end
+
+    local packages = get_packages(profile_name, path)
+
+    if not packages then
+        die("Profiles not valid or not found: %s", path)
+    end
+
     if options.install then
-        exec_hook(profile, "pre_install")
+        --exec_hook(profile, "pre_install")
         install(packages)
-        exec_hook(profile, "post_install")
+        --exec_hook(profile, "post_install")
     elseif options.remove then
-        exec_hook(profile, "pre_remove")
+        --exec_hook(profile, "pre_remove")
         remove(packages)
-        exec_hook(profile, "post_remove")
+        --exec_hook(profile, "post_remove")
     else
         die("Action is missing, exit...")
     end
