@@ -31,7 +31,7 @@ namespace mhwd::console_writer {
 
 namespace {
 inline void print_line() noexcept {
-    fmt::print(FMT_COMPILE("{:->80}"), "\n");  // use '-' as a fill char
+    fmt::print(FMT_COMPILE("{:->50}"), "\n");  // use '-' as a fill char
 }
 
 static constexpr auto CONSOLE_COLOR_RESET{"\033[m"};
@@ -121,10 +121,10 @@ void list_devices(const list_of_devices_t& devices, const std::string_view& type
 void list_configs(const list_of_configs_t& configs, const std::string_view& header) {
     print_status(header);
     print_line();
-    fmt::print(FMT_COMPILE("{:>24}{:>22}{:>15}\n"), "NAME", "NONFREE", "TYPE");
+    fmt::print(FMT_COMPILE("{:>20}{:>10}{:>7}\n"), "NAME", "NONFREE", "TYPE");
     print_line();
     for (const auto& config : configs) {
-        fmt::print(FMT_COMPILE("{:>24}{:>22}{:>15}\n"), std::string(config->name), config->is_nonfree, std::string(config->prof_type));
+        fmt::print(FMT_COMPILE("{:>20}{:>10}{:>7}\n"), std::string(config->name), config->is_nonfree, std::string(config->prof_type));
     }
     fmt::print("\n\n");
 }
