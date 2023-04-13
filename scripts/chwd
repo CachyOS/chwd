@@ -212,7 +212,7 @@ local function main()
     local packages, hooks = get_profile(profile_name, path)
 
     if not packages then
-        die("Profiles not valid or not found: %s", path)
+        die("Profiles not valid or not found in %s", path)
     end
 
     if options.install then
