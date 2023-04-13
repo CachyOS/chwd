@@ -180,11 +180,14 @@ local function get_opt_argument(options, option, default)
         else
             die("The mandatory option %s is omitted", option)
         end
-        return default
     else
         local option_argument = arg[index+1]
         if option_argument == nil or options[option_argument:gsub("-%-", "")] then
-            die("Missing argument for option %s", option)
+            if default then
+                return default
+            else
+                die("Missing argument for option %s", option)
+            end
         else
             return option_argument
         end
@@ -197,7 +200,7 @@ local function main()
     cachedir = get_opt_argument(options, "cachedir", "/var/cache/pacman/pkg")
     pmroot = get_opt_argument(options, "pmroot", "/")
     pmconfig = get_opt_argument(options, "pmconfig", "/etc/pacman.conf")
-    sync = get_opt_argument(options, "sync", "")
+    sync = get_opt_argument(options, "sync", "y")
     pacman = table.concat({"pacman --noconfirm", "--cachedir", cachedir, "-r", pmroot, "--config", pmconfig}, " ")
     local profile_name = get_opt_argument(options, "profile")
     local path = get_opt_argument(options, "path", "/var/lib/mhwd/db/profiles.toml")
