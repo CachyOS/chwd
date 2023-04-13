@@ -186,11 +186,7 @@ local function get_opt_argument(options, option, default)
     else
         local option_argument = arg[index+1]
         if option_argument == nil or options[option_argument:gsub("-%-", "")] then
-            if default then
-                return default
-            else
-                die("Missing argument for option %s", option)
-            end
+            die("Missing argument for option %s", option)
         else
             return option_argument
         end
