@@ -245,7 +245,7 @@ bool Mhwd::runScript(const profile_t& config, mhwd::transaction_t operation) noe
     cmd += fmt::format(FMT_COMPILE(" --pmconfig \"{}\""), m_data.environment.PMConfigPath);
     cmd += fmt::format(FMT_COMPILE(" --pmroot \"{}\""), m_data.environment.PMRootPath);
     cmd += fmt::format(FMT_COMPILE(" --profile \"{}\""), std::string(config->name));
-    cmd += fmt::format(FMT_COMPILE(" --path \"{}\""), fmt::format(FMT_COMPILE("{}/{}"), conf_path, consts::CHWD_CONFIG_FILE));
+    cmd += fmt::format(FMT_COMPILE(" --path \"{}\""), std::string(config->prof_path));
 
     // Set all config devices as argument
     list_of_devices_t found_devices;

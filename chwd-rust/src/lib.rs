@@ -17,6 +17,7 @@ mod ffi {
     pub struct Profile {
         pub is_nonfree: bool,
 
+        pub prof_path: String,
         pub prof_type: String,
         pub name: String,
         pub desc: String,
@@ -37,6 +38,7 @@ impl ffi::Profile {
     pub fn new() -> Self {
         Self {
             is_nonfree: false,
+            prof_path: "".to_owned(),
             prof_type: "".to_owned(),
             name: "".to_owned(),
             desc: "".to_owned(),
@@ -78,10 +80,12 @@ pub fn parse_profiles_ffi(file_path: &str, type_name: &str) -> Result<Vec<ffi::P
             }
             let mut nested_profile = nested_profile?;
             nested_profile.prof_type = type_name.to_owned();
+            nested_profile.prof_path = file_path.to_owned();
             profiles.push(nested_profile);
         }
         let mut toplevel_profile = toplevel_profile?;
         toplevel_profile.prof_type = type_name.to_owned();
+        toplevel_profile.prof_path = file_path.to_owned();
         profiles.push(toplevel_profile);
     }
 
@@ -129,6 +133,7 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<ffi::Profile>
             .and_then(|x| x.as_bool())
             .unwrap_or(false)
             .to_owned(),
+        prof_path: "".to_owned(),
         prof_type: "".to_owned(),
         name: profile_name.to_owned(),
         desc: node
