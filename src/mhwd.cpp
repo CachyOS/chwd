@@ -229,7 +229,6 @@ auto Mhwd::uninstallConfig(chwd::Profile* config) noexcept -> mhwd::status_t {
 
 bool Mhwd::runScript(const profile_t& config, mhwd::transaction_t operation) noexcept {
     auto cmd              = fmt::format(FMT_COMPILE("exec {}"), consts::CHWD_SCRIPT_PATH);
-    const auto& conf_path = ("USB" == std::string(config->prof_type)) ? consts::CHWD_USB_CONFIG_DIR : consts::CHWD_PCI_CONFIG_DIR;
 
     if (mhwd::transaction_t::remove == operation) {
         cmd += " --remove";
