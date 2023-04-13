@@ -112,9 +112,9 @@ local function remove(packages)
     end
 end
 
-local function exec_hook(profile, name)
-    if profile[name] then
-        os.execute(profile[name])
+local function exec_hook(hook)
+    if hook ~= "" then
+        os.execute(hook)
     end
 end
 
@@ -122,27 +122,54 @@ local function escape_pattern(text)
     return text:gsub("([^%w])", "%%%1")
 end
 
-local function get_packages(name, path)
-    local profile_name_pattern = "^%[" .. escape_pattern(name) .. "%]"
+local function get_profile(name, path)
+    local profile_name_pattern = "^%[([A-Za-z0-9-. ]+)%]"
     local packages_pattern  = "^packages%s*=%s*'?\"?([A-Za-z0-9- ]+)'?\"?"
-    local multilib_pattern = "%s?(lib32-.+)%s?"
-    local packages, profile
+    local packages, profile, last_hook
+    local hooks = {
+        ["pre_install"] = "",
+        ["post_install"] = "",
+        ["post_remove"] = "",
+        ["pre_remove"] = ""
+    }
 
     for line in io.lines(path) do
         if profile == nil then
             profile = line:match(profile_name_pattern)
+            if profile ~= name then
+                profile = nil
+            end
         elseif packages == nil then
             packages = line:match(packages_pattern)
         else
-            break
+            if line:match(profile_name_pattern) then
+                break
+            end
+
+            if last_hook == nil then
+                for hook in pairs(hooks) do
+                    local hook_pattern  = '^' .. escape_pattern(hook) .. '%s*=%s*"""'
+                    if line:match(hook_pattern) then
+                        last_hook = hook
+                    end
+                end
+            else
+                local hook_end = line:match('(.*)"""')
+                if hook_end then
+                    hooks[last_hook] = hooks[last_hook] .. hook_end
+                    last_hook = nil
+                else
+                    hooks[last_hook] = hooks[last_hook] .. line .. "\n"
+                end
+            end
         end
     end
 
     if not check_on_multilib() and packages then
-        packages:gsub(multilib_pattern, "")
+        packages:gsub("%s?(lib32-.+)%s?", "")
     end
 
-    return packages
+    return packages, hooks
 end
 
 local function get_opt_argument(options, option, default)
@@ -179,20 +206,20 @@ local function main()
         die("Profiles file is not found: %s", path)
     end
 
-    local packages = get_packages(profile_name, path)
+    local packages, hooks = get_profile(profile_name, path)
 
     if not packages then
         die("Profiles not valid or not found: %s", path)
     end
 
     if options.install then
-        --exec_hook(profile, "pre_install")
+        exec_hook(hooks["pre_install"])
         install(packages)
-        --exec_hook(profile, "post_install")
+        exec_hook(hooks["post_install"])
     elseif options.remove then
-        --exec_hook(profile, "pre_remove")
+        exec_hook(hooks["pre_remove"])
         remove(packages)
-        --exec_hook(profile, "post_remove")
+        exec_hook(hooks["post_remove"])
     else
         die("Action is missing, exit...")
     end
