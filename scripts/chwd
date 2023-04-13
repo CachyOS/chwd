@@ -93,7 +93,7 @@ end
 
 local function install(packages)
     if sync then
-        pacman_handle("Sy", "")
+        pacman_handle("-Sy", "")
     end
     pacman_handle("--needed -S", packages)
 end
