@@ -92,7 +92,10 @@ local function pacman_handle(action, pkgs)
 end
 
 local function install(packages)
-    pacman_handle("--needed -S" .. sync, packages)
+    if sync then
+        pacman_handle("Sy", "")
+    end
+    pacman_handle("--needed -S", packages)
 end
 
 local function remove(packages)
@@ -200,10 +203,13 @@ local function main()
     cachedir = get_opt_argument(options, "cachedir", "/var/cache/pacman/pkg")
     pmroot = get_opt_argument(options, "pmroot", "/")
     pmconfig = get_opt_argument(options, "pmconfig", "/etc/pacman.conf")
-    sync = get_opt_argument(options, "sync", "y")
     pacman = table.concat({"pacman --noconfirm", "--cachedir", cachedir, "-r", pmroot, "--config", pmconfig}, " ")
     local profile_name = get_opt_argument(options, "profile")
     local path = get_opt_argument(options, "path", "/var/lib/mhwd/db/profiles.toml")
+
+    if options.sync then
+        sync = true
+    end
 
     if not file_exists(path) then
         die("Profiles file is not found: %s", path)
