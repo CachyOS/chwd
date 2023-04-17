@@ -1,0 +1,23 @@
+[package]
+name = "libhd"
+version = "0.1.0"
+edition = "2021"
+authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
+license = "GPLv3"
+
+description = "Rust bindings for libhd"
+homepage = "https://github.com/CachyOS/mhwd-cachyos"
+repository = "https://github.com/CachyOS/mhwd-cachyos"
+categories = ["api-bindings"]
+
+[dependencies]
+libhd-sys = { path = "../libhd-sys", default-features = false, version = "0.1.0" }
+libc = "0.2.141"
+
+[features]
+default = []
+
+std = ["libhd-sys/std"]
+
+[[example]]
+name = "example1"

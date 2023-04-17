@@ -41,25 +41,19 @@
 #ifndef TRANSACTION_HPP
 #define TRANSACTION_HPP
 
-#include "config.hpp"
-#include "data.hpp"
-#include "enums.hpp"
-
-#include <memory>
-#include <utility>
-#include <vector>
+#include <memory> // for shared_ptr
 
 namespace mhwd {
 
 struct Transaction final {
-    Transaction(std::shared_ptr<chwd::Profile> conf, mhwd::transaction_t transaction_type, bool allow_reinstallation)
+    Transaction(std::shared_ptr<chwd::Profile> conf, chwd::Transaction transaction_type, bool allow_reinstallation)
       : is_reinstall_allowed(allow_reinstallation),
-        type(transaction_type), config(std::move(conf)) { }
+        type(transaction_type), profile(std::move(conf)) { }
 
     bool is_reinstall_allowed{};
-    mhwd::transaction_t type{};
+    chwd::Transaction type{};
 
-    std::shared_ptr<chwd::Profile> config{};
+    std::shared_ptr<chwd::Profile> profile{};
 
     // Deleted constructor
     Transaction() = delete;

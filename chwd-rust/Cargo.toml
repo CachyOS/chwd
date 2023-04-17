@@ -10,12 +10,15 @@ edition = "2021"
 toml = "0.7.3"
 cxx = "1.0"
 anyhow = "1"
+libhd = { path = "../libhd", version = "0.1.0" }
+subprocess = "0.2.9"
+colored = "2.0.0"
 
 [build-dependencies]
 cxx-build = "1"
 
 [lib]
-crate-type = ["staticlib"]
+crate-type = ["staticlib", "rlib"]
 
 [profile.release]
 strip = "symbols"

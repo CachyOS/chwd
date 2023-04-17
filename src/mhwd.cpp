@@ -16,10 +16,11 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "mhwd.hpp"
+#include "const.hpp"
+#include "console_writer.hpp"
 #include "vita/string.hpp"
 
 #include <algorithm>   // for any_of
-#include <array>       // for array
 #include <filesystem>  // for exists, copy, remove_all
 #include <stdexcept>   // for runtime_error
 #include <string>      // for string
@@ -31,7 +32,6 @@
 #pragma clang diagnostic ignored "-Wimplicit-int-conversion"
 
 #include <range/v3/algorithm/any_of.hpp>
-#include <range/v3/algorithm/find.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 
 #pragma clang diagnostic pop
@@ -54,250 +54,157 @@ inline bool is_user_root() noexcept {
     return ROOT_UID == getuid();
 }
 
-auto check_environment() -> std::vector<std::string> {
-    std::vector<std::string> missingDirs;
-    if (!fs::exists(consts::CHWD_USB_CONFIG_DIR)) {
-        missingDirs.emplace_back(consts::CHWD_USB_CONFIG_DIR);
+auto find_profile(const std::string_view& profile_name, const chwd::list_of_configs_t& profiles) noexcept -> chwd::profile_t {
+    auto profile = ranges::find_if(profiles,
+        [profile_name](const auto& temp) {
+            return std::string(temp->name) == profile_name;
+        });
+    if (profile != profiles.end()) {
+        return *profile;
     }
-    if (!fs::exists(consts::CHWD_PCI_CONFIG_DIR)) {
-        missingDirs.emplace_back(consts::CHWD_PCI_CONFIG_DIR);
-    }
-    if (!fs::exists(consts::MHWD_USB_DATABASE_DIR)) {
-        missingDirs.emplace_back(consts::MHWD_USB_DATABASE_DIR);
-    }
-    if (!fs::exists(consts::MHWD_PCI_DATABASE_DIR)) {
-        missingDirs.emplace_back(consts::MHWD_PCI_DATABASE_DIR);
-    }
-
-    return missingDirs;
+    return nullptr;
 }
 
 }  // namespace
 
-bool Mhwd::performTransaction(const profile_t& config, mhwd::transaction_t transaction_type) {
-    const auto transaction = Transaction{config, transaction_type, m_arguments.FORCE};
+bool Mhwd::perform_transaction(const chwd::profile_t& profile, chwd::Transaction transaction_type) {
+    const auto transaction = Transaction{profile, transaction_type, m_arguments.force};
     const auto& status     = performTransaction(transaction);
 
     switch (status) {
-    case mhwd::status_t::SUCCESS:
+    case chwd::Status::Success:
         break;
-    case mhwd::status_t::ERROR_NOT_INSTALLED:
-        mhwd::console_writer::print_error("config '{}' is not installed!", std::string(config->name));
+    case chwd::Status::ErrorNotInstalled:
+        mhwd::console_writer::print_error("profile '{}' is not installed!", std::string(profile->name));
         break;
-    case mhwd::status_t::ERROR_ALREADY_INSTALLED:
-        mhwd::console_writer::print_warning("a version of config '{}' is already installed!\nUse -f/--force to force installation...", std::string(config->name));
+    case chwd::Status::ErrorAlreadyInstalled:
+        mhwd::console_writer::print_warning("a version of profile '{}' is already installed!\nUse -f/--force to force installation...", std::string(profile->name));
         break;
-    case mhwd::status_t::ERROR_NO_MATCH_LOCAL_CONFIG:
-        mhwd::console_writer::print_error("passed config does not match with installed config!");
+    case chwd::Status::ErrorNoMatchLocalConfig:
+        mhwd::console_writer::print_error("passed profile does not match with installed profile!");
         break;
-    case mhwd::status_t::ERROR_SCRIPT_FAILED:
+    case chwd::Status::ErrorScriptFailed:
         mhwd::console_writer::print_error("script failed!");
         break;
-    case mhwd::status_t::ERROR_SET_DATABASE:
+    case chwd::Status::ErrorSetDatabase:
         mhwd::console_writer::print_error("failed to set database!");
         break;
     }
 
-    m_data.updateInstalledConfigData();
+    m_data.update_installed_profile_data();
 
-    return (mhwd::status_t::SUCCESS == status);
+    return (chwd::Status::Success == status);
 }
 
-auto Mhwd::getInstalledConfig(const std::string_view& config_name, std::string_view config_type) const noexcept -> profile_t {
-    // Get the right configs
-    const auto& installed_configs = ("USB" == config_type) ? &m_data.installedUSBConfigs : &m_data.installedPCIConfigs;
-
-    auto installed_config = ranges::find_if(*installed_configs,
-        [config_name](const auto& temp) {
-            return config_name == std::string(temp->name);
-        });
-
-    if (installed_config != installed_configs->end()) {
-        return *installed_config;
-    }
-    return nullptr;
+auto Mhwd::get_installed_profile(const std::string_view& profile_name, std::string_view config_type) const noexcept -> chwd::profile_t {
+    // Get the right profiles
+    const auto& installed_profiles = ("USB" == config_type) ? m_data.get_installed_usb_profiles() : m_data.get_installed_pci_profiles();
+    return find_profile(profile_name, installed_profiles);
 }
 
-auto Mhwd::getDatabaseConfig(const std::string_view& config_name, std::string_view config_type) const noexcept -> profile_t {
-    // Get the right configs
-    const auto& allConfigs = ("USB" == config_type) ? &m_data.allUSBConfigs : &m_data.allPCIConfigs;
-
-    auto config = ranges::find_if(*allConfigs,
-        [config_name](const auto& temp) {
-            return std::string(temp->name) == config_name;
-        });
-    if (config != allConfigs->end()) {
-        return *config;
-    }
-    return nullptr;
+auto Mhwd::get_db_profile(const std::string_view& profile_name, std::string_view config_type) const noexcept -> chwd::profile_t {
+    // Get the right profiles
+    const auto& all_profiles = ("USB" == config_type) ? m_data.get_all_usb_profiles() : m_data.get_all_pci_profiles();
+    return find_profile(profile_name, all_profiles);
 }
 
-auto Mhwd::getAvailableConfig(const std::string_view& config_name, std::string_view config_type) const noexcept -> profile_t {
+auto Mhwd::get_available_profile(const std::string_view& config_name, std::string_view config_type) const noexcept -> chwd::profile_t {
     // Get the right devices
-    const auto& devices = ("USB" == config_type) ? m_data.USBDevices : m_data.PCIDevices;
+    const auto& devices = ("USB" == config_type) ? m_data.get_usb_devices() : m_data.get_pci_devices();
 
-    for (auto&& device : devices) {
-        if (device->available_configs.empty()) {
+    for (const auto& device : devices) {
+        const auto& available_profiles = device.get_available_profiles();
+        if (available_profiles.empty()) {
             continue;
         }
-        auto& available_configs = device->available_configs;
-        auto available_config   = ranges::find_if(available_configs,
+        auto available_profile   = ranges::find_if(available_profiles,
               [config_name](const auto& temp) {
-                return std::string(temp->name) == config_name;
+                return std::string(temp.name) == config_name;
             });
-        if (available_config != available_configs.end()) {
-            return *available_config;
+        if (available_profile != available_profiles.end()) {
+            return std::make_unique<chwd::Profile>(*available_profile);
         }
     }
     return nullptr;
 }
 
-auto Mhwd::performTransaction(const Transaction& transaction) -> mhwd::status_t {
+auto Mhwd::performTransaction(const Transaction& transaction) -> chwd::Status {
     // Check if already installed
-    auto installed_config{getInstalledConfig(std::string(transaction.config->name),
-        std::string(transaction.config->prof_type))};
-    mhwd::status_t status = mhwd::status_t::SUCCESS;
+    const auto& installed_profile = get_installed_profile(std::string(transaction.profile->name), std::string(transaction.profile->prof_type));
+    chwd::Status status = chwd::Status::Success;
 
-    if ((mhwd::transaction_t::remove == transaction.type)
-        || (installed_config != nullptr && transaction.is_reinstall_allowed)) {
-        if (nullptr == installed_config) {
-            return mhwd::status_t::ERROR_NOT_INSTALLED;
+    if ((chwd::Transaction::Remove == transaction.type)
+        || (installed_profile != nullptr && transaction.is_reinstall_allowed)) {
+        if (nullptr == installed_profile) {
+            return chwd::Status::ErrorNotInstalled;
         }
-        mhwd::console_writer::print_message(mhwd::message_t::REMOVE_START, std::string(installed_config->name));
-        status = uninstallConfig(installed_config.get());
-        if (mhwd::status_t::SUCCESS != status) {
+        mhwd::console_writer::print_message(chwd::Message::RemoveStart, std::string(installed_profile->name));
+        status = uninstall_profile(installed_profile);
+        if (chwd::Status::Success != status) {
             return status;
         }
-        mhwd::console_writer::print_message(mhwd::message_t::REMOVE_END, std::string(installed_config->name));
+        mhwd::console_writer::print_message(chwd::Message::RemoveEnd, std::string(installed_profile->name));
     }
 
-    if (mhwd::transaction_t::install == transaction.type) {
+    if (chwd::Transaction::Install == transaction.type) {
         // Check if already installed but not allowed to reinstall
-        if ((nullptr != installed_config) && !transaction.is_reinstall_allowed) {
-            return mhwd::status_t::ERROR_ALREADY_INSTALLED;
+        if ((nullptr != installed_profile) && !transaction.is_reinstall_allowed) {
+            return chwd::Status::ErrorAlreadyInstalled;
         }
-        mhwd::console_writer::print_message(mhwd::message_t::INSTALL_START, std::string(transaction.config->name));
-        status = installConfig(transaction.config);
-        if (mhwd::status_t::SUCCESS != status) {
+        mhwd::console_writer::print_message(chwd::Message::InstallStart, std::string(transaction.profile->name));
+        status = install_profile(transaction.profile);
+        if (chwd::Status::Success != status) {
             return status;
         }
-        mhwd::console_writer::print_message(mhwd::message_t::INSTALL_END,
-            std::string(transaction.config->name));
+        mhwd::console_writer::print_message(chwd::Message::InstallEnd, std::string(transaction.profile->name));
     }
     return status;
 }
 
-auto Mhwd::installConfig(const profile_t& config) -> mhwd::status_t {
-    if (!runScript(config, mhwd::transaction_t::install)) {
-        return mhwd::status_t::ERROR_SCRIPT_FAILED;
+auto Mhwd::install_profile(const chwd::profile_t& profile) -> chwd::Status {
+    if (!run_script(*profile, chwd::Transaction::Install)) {
+        return chwd::Status::ErrorScriptFailed;
     }
 
-    const auto& databaseDir = ("USB" == std::string(config->prof_type)) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
-    if (!chwd::write_profile_to_file(fmt::format(FMT_COMPILE("{}/{}"), databaseDir, consts::CHWD_CONFIG_FILE), *config)) {
-        return mhwd::status_t::ERROR_SET_DATABASE;
+    const auto& db_dir = ("USB" == std::string(profile->prof_type)) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
+    if (!chwd::write_profile_to_file(fmt::format(FMT_COMPILE("{}/{}"), db_dir, consts::CHWD_CONFIG_FILE), *profile)) {
+        return chwd::Status::ErrorSetDatabase;
     }
 
-    // Installed config vectors have to be updated manual with updateInstalledConfigData(Data*)
-    return mhwd::status_t::SUCCESS;
+    // Note: installed profile vectors have to be updated manually with update_installed_profile_data(Data*)
+    return chwd::Status::Success;
 }
 
-auto Mhwd::uninstallConfig(chwd::Profile* config) noexcept -> mhwd::status_t {
-    auto installed_config{getInstalledConfig(std::string(config->name), std::string(config->prof_type))};
+auto Mhwd::uninstall_profile(const chwd::profile_t& profile) noexcept -> chwd::Status {
+    const auto& installed_profile = get_installed_profile(std::string(profile->name), std::string(profile->prof_type));
 
     // Check if installed
-    if (nullptr == installed_config) {
-        return mhwd::status_t::ERROR_NOT_INSTALLED;
+    if (nullptr == installed_profile) {
+        return chwd::Status::ErrorNotInstalled;
     }
     // Run script
-    if (!runScript(installed_config, mhwd::transaction_t::remove)) {
-        return mhwd::status_t::ERROR_SCRIPT_FAILED;
+    if (!run_script(*installed_profile, chwd::Transaction::Remove)) {
+        return chwd::Status::ErrorScriptFailed;
     }
-
-    const auto& databaseDir = ("USB" == std::string(config->prof_type)) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
 
     std::error_code err_code{};
-    fs::remove(fmt::format(FMT_COMPILE("{}/{}"), databaseDir, consts::CHWD_CONFIG_FILE), err_code);
+    const auto& db_dir = ("USB" == std::string(profile->prof_type)) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
+    fs::remove(fmt::format(FMT_COMPILE("{}/{}"), db_dir, consts::CHWD_CONFIG_FILE), err_code);
     if (err_code.value() != 0) {
-        return mhwd::status_t::ERROR_SET_DATABASE;
+        return chwd::Status::ErrorSetDatabase;
     }
 
-    // Installed config vectors have to be updated manual with updateInstalledConfigData(Data*)
-    m_data.updateInstalledConfigData();
-
-    return mhwd::status_t::SUCCESS;
+    m_data.update_installed_profile_data();
+    return chwd::Status::Success;
 }
 
-bool Mhwd::runScript(const profile_t& config, mhwd::transaction_t operation) noexcept {
-    auto cmd              = fmt::format(FMT_COMPILE("exec {}"), consts::CHWD_SCRIPT_PATH);
-
-    if (mhwd::transaction_t::remove == operation) {
-        cmd += " --remove";
-    } else {
-        cmd += " --install";
-    }
-
-    if (m_data.environment.syncPackageManagerDatabase) {
-        cmd += " --sync";
-    }
-
-    cmd += fmt::format(FMT_COMPILE(" --cachedir \"{}\""), m_data.environment.PMCachePath);
-    cmd += fmt::format(FMT_COMPILE(" --pmconfig \"{}\""), m_data.environment.PMConfigPath);
-    cmd += fmt::format(FMT_COMPILE(" --pmroot \"{}\""), m_data.environment.PMRootPath);
-    cmd += fmt::format(FMT_COMPILE(" --profile \"{}\""), std::string(config->name));
-    cmd += fmt::format(FMT_COMPILE(" --path \"{}\""), std::string(config->prof_path));
-
-    // Set all config devices as argument
-    list_of_devices_t found_devices;
-    list_of_devices_t devices;
-    m_data.getAllDevicesOfConfig(config, found_devices);
-
-    for (auto&& found_device : found_devices) {
-        // Check if already in list
-        const bool found = ranges::any_of(devices,
-            [&found_device](auto&& dev) { return (found_device->sysfs_busid == dev->sysfs_busid)
-                                              && (found_device->sysfs_id == dev->sysfs_id); });
-
-        if (!found) {
-            devices.push_back(found_device);
-        }
-    }
-
-    static constexpr auto HEX_BASE = 16;
-    for (auto&& dev : devices) {
-        auto busID = dev->sysfs_busid;
-
-        if ("PCI" == std::string(config->prof_type)) {
-            const auto& split = Vita::string(busID).replace(".", ":").explode(":");
-            const auto& size  = split.size();
-
-            if (size >= 3) {
-                // Convert to int to remove leading 0
-                busID = fmt::format(FMT_COMPILE("{}:{}:{}"),
-                    std::stoi(split[size - 3], nullptr, HEX_BASE),
-                    std::stoi(split[size - 2], nullptr, HEX_BASE),
-                    std::stoi(split[size - 1], nullptr, HEX_BASE));
-            }
-        }
-
-        cmd += fmt::format(FMT_COMPILE(" --device \"{}|{}|{}|{}\""), dev->class_id, dev->vendor_id, dev->device_id, busID);
-    }
-
-    cmd += " 2>&1";
-
-    const auto& exit_code = std::system(cmd.c_str());
-    if (exit_code != 0) {
-        return false;
-    }
-    // Only one database sync is required
-    if (mhwd::transaction_t::install == operation) {
-        m_data.environment.syncPackageManagerDatabase = false;
-    }
-    return true;
+bool Mhwd::run_script(const chwd::Profile& config, chwd::Transaction operation) noexcept {
+    return chwd::run_script(m_data.get_raw_data(), config, operation);
 }
 
 auto Mhwd::tryToParseCmdLineOptions(std::span<char*> args, bool& autoconf_nonfree_driver, std::string& operation, std::string& autoconf_class_id) noexcept(false) -> std::int32_t {
     if (args.size() <= 1) {
-        m_arguments.LIST_AVAILABLE = true;
+        m_arguments.list_available = true;
     }
     const auto& proceed_install_option = [&operation](const auto& option, const auto& argument) {
         const std::string_view& device_type{argument};
@@ -315,24 +222,24 @@ auto Mhwd::tryToParseCmdLineOptions(std::span<char*> args, bool& autoconf_nonfre
             mhwd::console_writer::print_version(m_version, m_year);
             return 1;
         } else if ("--is_nvidia_card" == option) {
-            checkNvidiaCard();
+            chwd::check_nvidia_card();
             return 1;
         } else if (("-f" == option) || ("--force" == option)) {
-            m_arguments.FORCE = true;
+            m_arguments.force = true;
         } else if (("-d" == option) || ("--detail" == option)) {
-            m_arguments.DETAIL = true;
+            m_arguments.detail = true;
         } else if (("-la" == option) || ("--listall" == option)) {
-            m_arguments.LIST_ALL = true;
+            m_arguments.list_all = true;
         } else if (("-li" == option) || ("--listinstalled" == option)) {
-            m_arguments.LIST_INSTALLED = true;
+            m_arguments.list_installed = true;
         } else if (("-l" == option) || ("--list" == option)) {
-            m_arguments.LIST_AVAILABLE = true;
+            m_arguments.list_available = true;
         } else if (("-lh" == option) || ("--listhardware" == option)) {
-            m_arguments.LIST_HARDWARE = true;
+            m_arguments.list_hardware = true;
         } else if ("--pci" == option) {
-            m_arguments.SHOW_PCI = true;
+            m_arguments.show_pci = true;
         } else if ("--usb" == option) {
-            m_arguments.SHOW_USB = true;
+            m_arguments.show_usb = true;
         } else if (("-a" == option) || ("--auto" == option)) {
             nArg += 3;
             if (nArg >= args.size()) {
@@ -348,13 +255,13 @@ auto Mhwd::tryToParseCmdLineOptions(std::span<char*> args, bool& autoconf_nonfre
             operation                 = Vita::string{device_type}.to_upper();
             autoconf_nonfree_driver   = ("nonfree" == driver_type);
             autoconf_class_id         = Vita::string{class_id}.to_lower().trim();
-            m_arguments.AUTOCONFIGURE = true;
+            m_arguments.autoconfigure = true;
         } else if (("-i" == option) || ("--install" == option)) {
             ++nArg;
             if (nArg >= args.size()) {
                 throw std::runtime_error{fmt::format(FMT_COMPILE("Too few arguments: {}\n"), option)};
             }
-            m_arguments.INSTALL = true;
+            m_arguments.install = true;
             proceed_install_option(option, args[nArg]);
         } else if (("-r" == option) || ("--remove" == option)) {
             if ((nArg + 1) >= args.size()) {
@@ -365,45 +272,45 @@ auto Mhwd::tryToParseCmdLineOptions(std::span<char*> args, bool& autoconf_nonfre
                 throw std::runtime_error{fmt::format(FMT_COMPILE("Invalid device type: {}\n"), device_type)};
             }
             operation          = Vita::string{device_type}.to_upper();
-            m_arguments.REMOVE = true;
+            m_arguments.remove = true;
         } else if ("--pmcachedir" == option) {
             if ((nArg + 1) >= args.size()) {
                 throw std::runtime_error{fmt::format(FMT_COMPILE("Too few arguments: {}\n"), option)};
             }
-            m_data.environment.PMCachePath = Vita::string(args[++nArg]).trim("\"").trim();
+            m_data.get_env_mut().pmcache_path = Vita::string(args[++nArg]).trim("\"").trim();
         } else if ("--pmconfig" == option) {
             if (nArg + 1 >= args.size()) {
                 throw std::runtime_error{fmt::format(FMT_COMPILE("Too few arguments: {}\n"), option)};
             }
-            m_data.environment.PMConfigPath = Vita::string(args[++nArg]).trim("\"").trim();
+            m_data.get_env_mut().pmconfig_path = Vita::string(args[++nArg]).trim("\"").trim();
         } else if ("--pmroot" == option) {
             if (nArg + 1 >= args.size()) {
                 throw std::runtime_error{fmt::format(FMT_COMPILE("Too few arguments: {}\n"), option)};
             }
-            m_data.environment.PMRootPath = Vita::string(args[++nArg]).trim("\"").trim();
-        } else if (m_arguments.INSTALL || m_arguments.REMOVE) {
+            m_data.get_env_mut().pmroot_path = Vita::string(args[++nArg]).trim("\"").trim();
+        } else if (m_arguments.install || m_arguments.remove) {
             const auto& name = Vita::string(args[nArg]).to_lower();
-            if (!ranges::any_of(m_configs, [name](auto&& config) { return name == config; })) {
-                m_configs.push_back(name);
+            if (!ranges::any_of(m_profiles, [name](auto&& config) { return name == config; })) {
+                m_profiles.push_back(name);
             }
         } else {
             throw std::runtime_error{fmt::format(FMT_COMPILE("invalid option: {}\n"), args[nArg])};
         }
     }
-    if (!m_arguments.SHOW_PCI && !m_arguments.SHOW_USB) {
-        m_arguments.SHOW_USB = true;
-        m_arguments.SHOW_PCI = true;
+    if (!m_arguments.show_pci && !m_arguments.show_usb) {
+        m_arguments.show_usb = true;
+        m_arguments.show_pci = true;
     }
 
     return 0;
 }
 
 void Mhwd::optionsDontInterfereWithEachOther() const noexcept(false) {
-    if (m_arguments.INSTALL && m_arguments.REMOVE) {
+    if (m_arguments.install && m_arguments.remove) {
         throw std::runtime_error{"install and remove options can only be used separately!\n"};
-    } else if ((m_arguments.INSTALL || m_arguments.REMOVE) && m_arguments.AUTOCONFIGURE) {
+    } else if ((m_arguments.install || m_arguments.remove) && m_arguments.autoconfigure) {
         throw std::runtime_error{"auto option can't be combined with install and remove options!\n"};
-    } else if ((m_arguments.REMOVE || m_arguments.INSTALL) && m_configs.empty()) {
+    } else if ((m_arguments.remove || m_arguments.install) && m_profiles.empty()) {
         throw std::runtime_error{"nothing to do?!\n"};
     }
 }
@@ -427,224 +334,61 @@ auto Mhwd::launch(std::span<char*> args) -> std::int32_t {
         return 1;
     }
 
-    m_data = mhwd::Data::initialize_data();
+    m_data = chwd::Data::initialize_data();
 
-    const auto& missingDirs = check_environment();
-    if (!missingDirs.empty()) {
+    const auto& missing_dirs = chwd::check_environment();
+    if (!missing_dirs.empty()) {
         mhwd::console_writer::print_error("Following directories do not exist:");
-        for (const auto& dir : missingDirs) {
-            mhwd::console_writer::print_status(dir);
+        for (const auto& missing_dir : missing_dirs) {
+            mhwd::console_writer::print_status(std::string(missing_dir));
         }
         return 1;
     }
 
-    // Check for invalid configs
-    for (const auto& invalidConfig : m_data.invalidConfigs) {
-        mhwd::console_writer::print_warning("config '{}' is invalid!", invalidConfig);
-    }
-
     // > Perform operations:
-
-    // List all configs
-    if (m_arguments.LIST_ALL && m_arguments.SHOW_PCI) {
-        if (!m_data.allPCIConfigs.empty()) {
-            mhwd::console_writer::list_configs(m_data.allPCIConfigs, "All PCI configs:");
-        } else {
-            mhwd::console_writer::print_warning("No PCI configs found!");
-        }
-    }
-    if (m_arguments.LIST_ALL && m_arguments.SHOW_USB) {
-        if (!m_data.allUSBConfigs.empty()) {
-            mhwd::console_writer::list_configs(m_data.allUSBConfigs, "All USB configs:");
-        } else {
-            mhwd::console_writer::print_warning("No USB configs found!");
-        }
-    }
-
-    // List installed configs
-    if (m_arguments.LIST_INSTALLED && m_arguments.SHOW_PCI) {
-        if (m_arguments.DETAIL) {
-            mhwd::console_writer::printInstalledConfigs("PCI", m_data.installedPCIConfigs);
-        } else {
-            if (!m_data.installedPCIConfigs.empty()) {
-                mhwd::console_writer::list_configs(m_data.installedPCIConfigs, "Installed PCI configs:");
-            } else {
-                mhwd::console_writer::print_warning("No installed PCI configs!");
-            }
-        }
-    }
-    if (m_arguments.LIST_INSTALLED && m_arguments.SHOW_USB) {
-        if (m_arguments.DETAIL) {
-            mhwd::console_writer::printInstalledConfigs("USB", m_data.installedUSBConfigs);
-        } else {
-            if (!m_data.installedUSBConfigs.empty()) {
-                mhwd::console_writer::list_configs(m_data.installedUSBConfigs, "Installed USB configs:");
-            } else {
-                mhwd::console_writer::print_warning("No installed USB configs!");
-            }
-        }
-    }
-
-    // List available configs
-    if (m_arguments.LIST_AVAILABLE && m_arguments.SHOW_PCI) {
-        if (m_arguments.DETAIL) {
-            mhwd::console_writer::printAvailableConfigsInDetail("PCI", m_data.PCIDevices);
-        } else {
-            for (auto&& PCIdevice : m_data.PCIDevices) {
-                if (!PCIdevice->available_configs.empty()) {
-                    mhwd::console_writer::list_configs(PCIdevice->available_configs,
-                        fmt::format(FMT_COMPILE("{} ({}:{}:{}) {} {}:"), PCIdevice->sysfs_busid, PCIdevice->class_id,
-                            PCIdevice->vendor_id, PCIdevice->device_id,
-                            PCIdevice->class_name, PCIdevice->vendor_name));
-                }
-            }
-        }
-    }
-
-    if (m_arguments.LIST_AVAILABLE && m_arguments.SHOW_USB) {
-        if (m_arguments.DETAIL) {
-            mhwd::console_writer::printAvailableConfigsInDetail("USB", m_data.USBDevices);
-        } else {
-            for (auto&& USBdevice : m_data.USBDevices) {
-                if (!USBdevice->available_configs.empty()) {
-                    mhwd::console_writer::list_configs(USBdevice->available_configs,
-                        fmt::format(FMT_COMPILE("{} ({}:{}:{}) {} {}:"), USBdevice->sysfs_busid, USBdevice->class_id,
-                            USBdevice->vendor_id, USBdevice->device_id,
-                            USBdevice->class_name, USBdevice->vendor_name));
-                }
-            }
-        }
-    }
-
-    // List hardware information
-    if (m_arguments.LIST_HARDWARE && m_arguments.SHOW_PCI) {
-        if (m_arguments.DETAIL) {
-            mhwd::console_writer::printDeviceDetails(hw_pci);
-        } else {
-            mhwd::console_writer::list_devices(m_data.PCIDevices, "PCI");
-        }
-    }
-    if (m_arguments.LIST_HARDWARE && m_arguments.SHOW_USB) {
-        if (m_arguments.DETAIL) {
-            mhwd::console_writer::printDeviceDetails(hw_usb);
-        } else {
-            mhwd::console_writer::list_devices(m_data.USBDevices, "USB");
-        }
-    }
+    chwd::handle_arguments_listing(m_data.get_raw_data(), m_arguments);
 
     // Auto configuration
-    if (m_arguments.AUTOCONFIGURE) {
-        const auto& devices           = ("USB" == operation) ? m_data.USBDevices : m_data.PCIDevices;
-        const auto& installed_configs = ("USB" == operation) ? m_data.installedUSBConfigs : m_data.installedPCIConfigs;
-
-        bool found_device = false;
-        for (auto&& device : devices) {
-            if (device->class_id != autoconf_class_id) {
-                continue;
-            }
-            found_device = true;
-            profile_t config;
-
-            for (auto&& available_config : device->available_configs) {
-                if (autoconf_nonfree_driver || !available_config->is_nonfree) {
-                    config = available_config;
-                    break;
-                }
-            }
-
-            const auto& device_info = fmt::format(FMT_COMPILE("{} ({}:{}:{}) {} {} {}"),
-                device->sysfs_busid,
-                device->class_id, device->vendor_id,
-                device->device_id, device->class_name,
-                device->vendor_name, device->device_name);
-
-            if (nullptr == config) {
-                mhwd::console_writer::print_warning("No config found for device: {}", device_info);
-                continue;
-            }
-            // If force is not set then skip found config
-            bool skip = false;
-            if (!m_arguments.FORCE) {
-                skip = ranges::find_if(installed_configs,
-                           [&config](const auto& temp) -> bool {
-                               return std::string(temp->name) == std::string(config->name);
-                           })
-                    != installed_configs.end();
-            }
-            // Print found config
-            if (skip) {
-                mhwd::console_writer::print_status("Skipping already installed config '{}' for device: {}", std::string(config->name), device_info);
-            } else {
-                mhwd::console_writer::print_status("Using config '{}' for device: {}", std::string(config->name), device_info);
-            }
-
-            const bool config_exists = ranges::find(m_configs, std::string(config->name)) != m_configs.cend();
-            if (!config_exists && !skip) {
-                m_configs.emplace_back(std::string(config->name));
-            }
-        }
-
-        if (!found_device) {
-            mhwd::console_writer::print_warning("No device of class {} found!", autoconf_class_id);
-        } else if (!m_configs.empty()) {
-            m_arguments.INSTALL = true;
-        }
+    const auto& prepared_profiles = chwd::prepare_autoconfigure(m_data.get_raw_data(), m_arguments, operation.c_str(), autoconf_class_id.c_str(), autoconf_nonfree_driver);
+    for (const auto& prepared_profile : prepared_profiles) {
+        m_profiles.push_back(std::string(prepared_profile));
     }
 
     // Transaction
     /* clang-format off */
-    if (!(m_arguments.INSTALL || m_arguments.REMOVE)) { return 0; }
+    if (!(m_arguments.install || m_arguments.remove)) { return 0; }
     /* clang-format on */
     if (!is_user_root()) {
         mhwd::console_writer::print_error("You cannot perform this operation unless you are root!");
         return 1;
     }
-    for (auto&& config_name : m_configs) {
-        if (m_arguments.INSTALL) {
-            m_config = getAvailableConfig(config_name, operation);
-            if (m_config == nullptr) {
-                m_config = getDatabaseConfig(config_name, operation);
-                if (m_config == nullptr) {
-                    mhwd::console_writer::print_error("config '{}' does not exist!", config_name);
+    for (auto&& profile_name : m_profiles) {
+        if (m_arguments.install) {
+            m_profile = get_available_profile(profile_name, operation);
+            if (m_profile == nullptr) {
+                m_profile = get_db_profile(profile_name, operation);
+                if (m_profile == nullptr) {
+                    mhwd::console_writer::print_error("profile '{}' does not exist!", profile_name);
                     return 1;
                 }
-                mhwd::console_writer::print_warning("no matching device for config '{}' found!", config_name);
+                mhwd::console_writer::print_warning("no matching device for profile '{}' found!", profile_name);
             }
 
-            if (!performTransaction(m_config, mhwd::transaction_t::install)) {
+            if (!perform_transaction(m_profile, chwd::Transaction::Install)) {
                 return 1;
             }
-        } else if (m_arguments.REMOVE) {
-            m_config = getInstalledConfig(config_name, operation);
+        } else if (m_arguments.remove) {
+            m_profile = get_installed_profile(profile_name, operation);
 
-            if (nullptr == m_config) {
-                mhwd::console_writer::print_error("config '{}' is not installed!", config_name);
+            if (nullptr == m_profile) {
+                mhwd::console_writer::print_error("profile '{}' is not installed!", profile_name);
                 return 1;
-            } else if (!performTransaction(m_config, mhwd::transaction_t::remove)) {
+            } else if (!perform_transaction(m_profile, chwd::Transaction::Remove)) {
                 return 1;
             }
         }
     }
     return 0;
-}
-
-void Mhwd::checkNvidiaCard() noexcept {
-    if (!fs::exists("/var/lib/mhwd/ids/pci/nvidia.ids")) {
-        fmt::print("No nvidia ids found!\n");
-        return;
-    }
-
-    m_data = mhwd::Data::initialize_data();
-    for (auto&& PCIdevice : m_data.PCIDevices) {
-        /* clang-format off */
-        if (PCIdevice->available_configs.empty()) { continue; }
-        /* clang-format on */
-
-        if (PCIdevice->vendor_id == "10de") {
-            fmt::print("NVIDIA card found!\n");
-            return;
-        }
-    }
 }
 
 }  // namespace mhwd

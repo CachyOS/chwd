@@ -40,15 +40,8 @@
 namespace mhwd::consts {
 
 static constexpr auto CHWD_CONFIG_FILE      = "profiles.toml";
-static constexpr auto CHWD_USB_CONFIG_DIR   = "/var/lib/mhwd/db/usb/";
-static constexpr auto CHWD_PCI_CONFIG_DIR   = "/var/lib/mhwd/db/pci/";
 static constexpr auto MHWD_USB_DATABASE_DIR = "/var/lib/mhwd/local/usb/";
 static constexpr auto MHWD_PCI_DATABASE_DIR = "/var/lib/mhwd/local/pci/";
-static constexpr auto CHWD_SCRIPT_PATH      = "/var/lib/mhwd/scripts/chwd";
-
-static constexpr auto MHWD_PM_CACHE_DIR = "/var/cache/pacman/pkg";
-static constexpr auto MHWD_PM_CONFIG    = "/etc/pacman.conf";
-static constexpr auto MHWD_PM_ROOT      = "/";
 
 }  // namespace mhwd::consts
 

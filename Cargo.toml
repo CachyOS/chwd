@@ -1,0 +1,17 @@
+[package]
+name = "chwd"
+version = "0.1.0"
+authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
+license = "GPLv3"
+edition = "2021"
+
+[dependencies]
+chwd-rust = { path = "chwd-rust", version = "0.1.0" }
+clap = { features = ["derive"], version = "4.1.13" }
+
+[profile.release]
+strip = "symbols"
+panic = "abort"
+lto = true
+opt-level = 3
+codegen-units = 1
