@@ -154,22 +154,18 @@ impl Data {
         };
 
         for entry in fs::read_dir(db_path).expect("Failed to read directory!") {
-            let entry = entry.unwrap();
-            let entry_path = entry.path();
-            if Path::new(&entry_path.to_str().unwrap()).is_dir()
-                || entry_path.file_name().unwrap().to_str().unwrap()
-                    != crate::consts::CHWD_CONFIG_FILE
-            {
+            let config_file_path = format!(
+                "{}/{}",
+                entry.as_ref().unwrap().path().as_os_str().to_str().unwrap(),
+                crate::consts::CHWD_CONFIG_FILE
+            );
+            if !Path::new(&config_file_path).exists() {
                 continue;
             }
-            if let Ok(mut profiles) =
-                crate::parse_profiles(&entry_path.as_path().to_str().unwrap(), profile_type)
-            {
+            if let Ok(mut profiles) = crate::parse_profiles(&config_file_path, profile_type) {
                 configs.append(&mut profiles);
             }
-            if let Ok(mut invalid_profiles) =
-                crate::get_invalid_profiles(&entry_path.as_path().to_str().unwrap())
-            {
+            if let Ok(mut invalid_profiles) = crate::get_invalid_profiles(&config_file_path) {
                 self.invalid_profiles.append(&mut invalid_profiles);
             }
         }

@@ -16,8 +16,8 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 #include "mhwd.hpp"
-#include "const.hpp"
 #include "console_writer.hpp"
+#include "const.hpp"
 #include "vita/string.hpp"
 
 #include <algorithm>   // for any_of
@@ -117,8 +117,8 @@ auto Mhwd::get_available_profile(const std::string_view& config_name, std::strin
         if (available_profiles.empty()) {
             continue;
         }
-        auto available_profile   = ranges::find_if(available_profiles,
-              [config_name](const auto& temp) {
+        auto available_profile = ranges::find_if(available_profiles,
+            [config_name](const auto& temp) {
                 return std::string(temp.name) == config_name;
             });
         if (available_profile != available_profiles.end()) {
@@ -131,7 +131,7 @@ auto Mhwd::get_available_profile(const std::string_view& config_name, std::strin
 auto Mhwd::performTransaction(const Transaction& transaction) -> chwd::Status {
     // Check if already installed
     const auto& installed_profile = get_installed_profile(std::string(transaction.profile->name), std::string(transaction.profile->prof_type));
-    chwd::Status status = chwd::Status::Success;
+    chwd::Status status           = chwd::Status::Success;
 
     if ((chwd::Transaction::Remove == transaction.type)
         || (installed_profile != nullptr && transaction.is_reinstall_allowed)) {
@@ -166,8 +166,11 @@ auto Mhwd::install_profile(const chwd::profile_t& profile) -> chwd::Status {
         return chwd::Status::ErrorScriptFailed;
     }
 
-    const auto& db_dir = ("USB" == std::string(profile->prof_type)) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
-    if (!chwd::write_profile_to_file(fmt::format(FMT_COMPILE("{}/{}"), db_dir, consts::CHWD_CONFIG_FILE), *profile)) {
+    const auto& db_dir      = ("USB" == std::string(profile->prof_type)) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
+    const auto& working_dir = fmt::format(FMT_COMPILE("{}/{}"), db_dir, fs::path{std::string(profile->prof_path)}.parent_path().filename().c_str());
+    std::error_code err_code{};
+    fs::create_directories(working_dir, err_code);
+    if (!chwd::write_profile_to_file(fmt::format(FMT_COMPILE("{}/{}"), working_dir, consts::CHWD_CONFIG_FILE), *profile)) {
         return chwd::Status::ErrorSetDatabase;
     }
 
@@ -188,8 +191,7 @@ auto Mhwd::uninstall_profile(const chwd::profile_t& profile) noexcept -> chwd::S
     }
 
     std::error_code err_code{};
-    const auto& db_dir = ("USB" == std::string(profile->prof_type)) ? consts::MHWD_USB_DATABASE_DIR : consts::MHWD_PCI_DATABASE_DIR;
-    fs::remove(fmt::format(FMT_COMPILE("{}/{}"), db_dir, consts::CHWD_CONFIG_FILE), err_code);
+    fs::remove(std::string(profile->prof_path), err_code);
     if (err_code.value() != 0) {
         return chwd::Status::ErrorSetDatabase;
     }

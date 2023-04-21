@@ -27,6 +27,7 @@ impl Profile {
             prof_type: "".to_owned(),
             name: "".to_owned(),
             desc: "".to_owned(),
+            packages: "".to_owned(),
             priority: 0,
             hwd_ids: Vec::from([Default::default()]),
         }
@@ -113,6 +114,7 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         prof_path: "".to_owned(),
         prof_type: "".to_owned(),
         name: profile_name.to_owned(),
+        packages: node.get("packages").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
         desc: node.get("desc").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
         priority: node.get("priority").and_then(|x| x.as_integer()).unwrap_or(0) as i32,
         hwd_ids: Vec::from([Default::default()]),
@@ -201,6 +203,7 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     let mut table = toml::Table::new();
     table.insert("nonfree".to_owned(), profile.is_nonfree.into());
     table.insert("desc".to_owned(), profile.desc.clone().into());
+    table.insert("packages".to_owned(), profile.packages.clone().into());
     table.insert("priority".to_owned(), profile.priority.into());
 
     let device_ids = profile.hwd_ids.last().unwrap().device_ids.clone();
