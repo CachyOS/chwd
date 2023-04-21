@@ -78,24 +78,6 @@ impl Data {
         set_matching_profiles(&mut self.usb_devices, &mut self.installed_usb_profiles, true);
     }
 
-    pub fn get_all_devices_of_profile_ffi(
-        &self,
-        profile: &Profile,
-        found_devices: &mut Vec<Device>,
-    ) {
-        found_devices.clear();
-        let devices = self.get_associated_devices_for_profile(profile);
-        let devices = self
-            .get_all_devices_of_profile(profile)
-            .into_iter()
-            .map(|index| devices.get(index).unwrap().clone())
-            .collect::<Vec<Device>>();
-
-        for found_device in devices.into_iter() {
-            found_devices.push(found_device);
-        }
-    }
-
     pub fn get_all_devices_of_profile(&self, profile: &Profile) -> Vec<usize> {
         let devices = self.get_associated_devices_for_profile(profile);
         get_all_devices_of_profile(devices, profile)
@@ -142,7 +124,7 @@ impl Data {
     }
 
     fn fill_installed_profiles(&mut self, profile_type: &str) {
-        let db_path = if "USB" == profile_type {
+        let conf_path = if "USB" == profile_type {
             crate::consts::CHWD_USB_DATABASE_DIR
         } else {
             crate::consts::CHWD_PCI_DATABASE_DIR
@@ -153,24 +135,7 @@ impl Data {
             &mut self.installed_pci_profiles
         };
 
-        for entry in fs::read_dir(db_path).expect("Failed to read directory!") {
-            let config_file_path = format!(
-                "{}/{}",
-                entry.as_ref().unwrap().path().as_os_str().to_str().unwrap(),
-                crate::consts::CHWD_CONFIG_FILE
-            );
-            if !Path::new(&config_file_path).exists() {
-                continue;
-            }
-            if let Ok(mut profiles) = crate::parse_profiles(&config_file_path, profile_type) {
-                configs.append(&mut profiles);
-            }
-            if let Ok(mut invalid_profiles) = crate::get_invalid_profiles(&config_file_path) {
-                self.invalid_profiles.append(&mut invalid_profiles);
-            }
-        }
-
-        configs.sort_by(|lhs, rhs| rhs.priority.cmp(&lhs.priority));
+        fill_profiles(profile_type, configs, &mut self.invalid_profiles, conf_path);
     }
 
     fn fill_all_profiles(&mut self, profile_type: &str) {
@@ -185,24 +150,7 @@ impl Data {
             &mut self.all_pci_profiles
         };
 
-        for entry in fs::read_dir(conf_path).expect("Failed to read directory!") {
-            let config_file_path = format!(
-                "{}/{}",
-                entry.as_ref().unwrap().path().as_os_str().to_str().unwrap(),
-                crate::consts::CHWD_CONFIG_FILE
-            );
-            if !Path::new(&config_file_path).exists() {
-                continue;
-            }
-            if let Ok(mut profiles) = crate::parse_profiles(&config_file_path, profile_type) {
-                configs.append(&mut profiles);
-            }
-            if let Ok(mut invalid_profiles) = crate::get_invalid_profiles(&config_file_path) {
-                self.invalid_profiles.append(&mut invalid_profiles);
-            }
-        }
-
-        configs.sort_by(|lhs, rhs| rhs.priority.cmp(&lhs.priority));
+        fill_profiles(profile_type, configs, &mut self.invalid_profiles, conf_path);
     }
 
     fn update_profiles_data(&mut self) {
@@ -224,6 +172,37 @@ impl Data {
 
         self.update_installed_profile_data();
     }
+}
+
+fn fill_profiles(
+    profile_type: &str,
+    configs: &mut ListOfProfilesT,
+    invalid_profiles: &mut Vec<String>,
+    conf_path: &str,
+) {
+    for entry in fs::read_dir(conf_path).expect("Failed to read directory!") {
+        let config_file_path = format!(
+            "{}/{}",
+            entry.as_ref().unwrap().path().as_os_str().to_str().unwrap(),
+            crate::consts::CHWD_CONFIG_FILE
+        );
+        if !Path::new(&config_file_path).exists() {
+            continue;
+        }
+        if let Ok(profiles) = crate::parse_profiles(&config_file_path, profile_type) {
+            for profile in profiles.into_iter() {
+                if profile.packages.is_empty() {
+                    continue;
+                }
+                configs.push(profile);
+            }
+        }
+        if let Ok(mut invalid_profile_names) = crate::get_invalid_profiles(&config_file_path) {
+            invalid_profiles.append(&mut invalid_profile_names);
+        }
+    }
+
+    configs.sort_by(|lhs, rhs| rhs.priority.cmp(&lhs.priority));
 }
 
 fn fill_devices(item: libhd::HWItem) -> Option<ListOfDevicesT> {
