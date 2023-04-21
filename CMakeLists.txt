@@ -30,20 +30,6 @@ CPMAddPackage(
 )
 
 CPMAddPackage(
-  NAME hwinfo
-  GITHUB_REPOSITORY vnepogodin/hwinfo
-  GIT_TAG master
-  EXCLUDE_FROM_ALL YES
-)
-
-CPMAddPackage(
-  NAME x86emu
-  GITHUB_REPOSITORY vnepogodin/libx86emu
-  GIT_TAG master
-  EXCLUDE_FROM_ALL YES
-)
-
-CPMAddPackage(
   NAME Corrosion
   GITHUB_REPOSITORY corrosion-rs/corrosion
   GIT_TAG 14d5ecf8b85e15abc19f24f309df81f5f1d0d7ca
@@ -62,8 +48,6 @@ endif()
 ##
 ## CONFIGURATION
 ##
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-
 if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -flto=thin -fwhole-program-vtables")
    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto=thin -fwhole-program-vtables")

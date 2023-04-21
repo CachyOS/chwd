@@ -18,13 +18,25 @@
 #ifndef MHWD_HPP
 #define MHWD_HPP
 
-#include "config.hpp"
-#include "console_writer.hpp"
-#include "const.hpp"
 #include "data.hpp"
-#include "device.hpp"
-#include "enums.hpp"
 #include "transaction.hpp"
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdollar-in-identifier-extension"
+#pragma clang diagnostic ignored "-Wsign-conversion"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+#endif
+
+#include "chwd-cxxbridge/lib.h"
+
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 #include <memory>       // for shared_ptr
 #include <span>         // for span
@@ -41,41 +53,28 @@ class Mhwd {
     int launch(std::span<char*> args);
 
  private:
-    struct Arguments {
-        bool SHOW_PCI       = false;
-        bool SHOW_USB       = false;
-        bool INSTALL        = false;
-        bool REMOVE         = false;
-        bool DETAIL         = false;
-        bool FORCE          = false;
-        bool LIST_ALL       = false;
-        bool LIST_INSTALLED = false;
-        bool LIST_AVAILABLE = false;
-        bool LIST_HARDWARE  = false;
-        bool AUTOCONFIGURE  = false;
-    } m_arguments;
+    chwd::Arguments m_arguments{};
 
     std::string_view m_version{};
     std::string_view m_year{};
-    std::shared_ptr<chwd::Profile> m_config;
-    Data m_data;
-    std::vector<std::string> m_configs{};
+    std::shared_ptr<chwd::Profile> m_profile;
+    chwd::Data m_data;
+    std::vector<std::string> m_profiles{};
 
-    bool performTransaction(const profile_t& config, mhwd::transaction_t type);
+    bool perform_transaction(const chwd::profile_t& profile, chwd::Transaction transaction_type);
 
-    [[nodiscard]] auto getInstalledConfig(const std::string_view& config_name, std::string_view config_type) const noexcept -> profile_t;
-    [[nodiscard]] auto getDatabaseConfig(const std::string_view& config_name, std::string_view config_type) const noexcept -> profile_t;
-    [[nodiscard]] auto getAvailableConfig(const std::string_view& config_name, std::string_view config_type) const noexcept -> profile_t;
+    [[nodiscard]] auto get_installed_profile(const std::string_view& config_name, std::string_view config_type) const noexcept -> chwd::profile_t;
+    [[nodiscard]] auto get_db_profile(const std::string_view& profile_name, std::string_view config_type) const noexcept -> chwd::profile_t;
+    [[nodiscard]] auto get_available_profile(const std::string_view& config_name, std::string_view config_type) const noexcept -> chwd::profile_t;
 
-    auto performTransaction(const Transaction& transaction) -> mhwd::status_t;
+    auto performTransaction(const Transaction& transaction) -> chwd::Status;
 
-    auto installConfig(const profile_t& config) -> mhwd::status_t;
-    auto uninstallConfig(chwd::Profile* config) noexcept -> mhwd::status_t;
-    bool runScript(const profile_t& config, mhwd::transaction_t operation) noexcept;
+    auto install_profile(const chwd::profile_t& profile) -> chwd::Status;
+    auto uninstall_profile(const chwd::profile_t& profile) noexcept -> chwd::Status;
+    bool run_script(const chwd::Profile& profile, chwd::Transaction operation) noexcept;
     auto tryToParseCmdLineOptions(std::span<char*> args, bool& autoconf_nonfree_driver,
         std::string& operation, std::string& autoconf_class_id) noexcept(false) -> std::int32_t;
     void optionsDontInterfereWithEachOther() const noexcept(false);
-    void checkNvidiaCard() noexcept;
 };
 
 }  // namespace mhwd

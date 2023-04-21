@@ -1,9 +1,41 @@
-use anyhow::Result;
-use std::fs;
+// Copyright (C) 2023 Vladislav Nepogodin
+//
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with this program; if not, write to the Free Software Foundation, Inc.,
+// 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+
+#![feature(extern_types)]
+
+pub mod console_writer;
+pub mod consts;
+pub mod data;
+pub mod device;
+pub mod profile;
+
+use console_writer::*;
+use device::*;
+use profile::*;
+
+use std::path::Path;
+
+use subprocess::Exec;
+
+type DataFFi = data::Data;
+type DeviceFFi = device::Device;
 
 #[cxx::bridge(namespace = "chwd")]
 mod ffi {
-    #[derive(Debug, Default)]
+    #[derive(Debug, Default, Clone)]
     struct HardwareID {
         pub class_ids: Vec<String>,
         pub vendor_ids: Vec<String>,
@@ -13,7 +45,7 @@ mod ffi {
         pub blacklisted_device_ids: Vec<String>,
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     pub struct Profile {
         pub is_nonfree: bool,
 
@@ -26,229 +58,284 @@ mod ffi {
         pub hwd_ids: Vec<HardwareID>,
     }
 
+    #[derive(Debug, Clone)]
+    pub struct Arguments {
+        pub show_pci: bool,
+        pub show_usb: bool,
+        pub install: bool,
+        pub remove: bool,
+        pub detail: bool,
+        pub force: bool,
+        pub list_all: bool,
+        pub list_installed: bool,
+        pub list_available: bool,
+        pub list_hardware: bool,
+        pub autoconfigure: bool,
+    }
+
+    #[derive(Debug)]
+    pub struct Environment {
+        pub sync_package_manager_database: bool,
+        pub pmcache_path: String,
+        pub pmconfig_path: String,
+        pub pmroot_path: String,
+    }
+
+    #[derive(Debug)]
+    pub enum Transaction {
+        Install,
+        Remove,
+    }
+
+    #[derive(Debug)]
+    pub enum Status {
+        Success,
+        ErrorNotInstalled,
+        ErrorAlreadyInstalled,
+        ErrorNoMatchLocalConfig,
+        ErrorScriptFailed,
+        ErrorSetDatabase,
+    }
+
+    #[derive(Debug)]
+    pub enum Message {
+        InstallStart,
+        InstallEnd,
+        RemoveStart,
+        RemoveEnd,
+    }
+
     extern "Rust" {
-        fn new_profile() -> Profile;
-        fn parse_profiles_ffi(file_path: &str, type_name: &str) -> Result<Vec<Profile>>;
-        fn get_invalid_profiles_ffi(file_path: &str) -> Result<Vec<String>>;
+        type DataFFi;
+
+        fn initialize_data_obj() -> Box<DataFFi>;
+        fn get_all_pci_profiles(self: &DataFFi) -> &Vec<Profile>;
+        fn get_all_usb_profiles(self: &DataFFi) -> &Vec<Profile>;
+        fn get_installed_pci_profiles(self: &DataFFi) -> &Vec<Profile>;
+        fn get_installed_usb_profiles(self: &DataFFi) -> &Vec<Profile>;
+        fn get_pci_devices(self: &DataFFi) -> &Vec<DeviceFFi>;
+        fn get_usb_devices(self: &DataFFi) -> &Vec<DeviceFFi>;
+        fn get_env_mut(self: &mut DataFFi) -> &mut Environment;
+
+        fn update_installed_profile_data(self: &mut DataFFi);
+
         fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool;
     }
+
+    extern "Rust" {
+        type DeviceFFi;
+
+        fn get_available_profiles(self: &DeviceFFi) -> Vec<Profile>;
+    }
+
+    extern "Rust" {
+        fn run_script(data: &mut Box<DataFFi>, profile: &Profile, transaction: Transaction)
+            -> bool;
+        fn check_nvidia_card();
+        fn check_environment() -> Vec<String>;
+        fn prepare_autoconfigure(
+            data: &Box<DataFFi>,
+            args: &mut Arguments,
+            operation: &str,
+            autoconf_class_id: &str,
+            autoconf_nonfree_driver: bool,
+        ) -> Vec<String>;
+
+        fn handle_arguments_listing(data: &Box<DataFFi>, args: Arguments);
+
+        fn print_message(msg_type: Message, msg_str: &str);
+        fn print_warning(msg: &str);
+        fn print_error(msg: &str);
+        fn print_status(msg: &str);
+    }
 }
 
-impl ffi::Profile {
-    pub fn new() -> Self {
-        Self {
-            is_nonfree: false,
-            prof_path: "".to_owned(),
-            prof_type: "".to_owned(),
-            name: "".to_owned(),
-            desc: "".to_owned(),
-            priority: 0,
-            hwd_ids: Vec::from([Default::default()]),
+pub fn initialize_data_obj() -> Box<DataFFi> {
+    Box::new(data::Data::new())
+}
+
+pub fn check_nvidia_card() {
+    if !Path::new("/var/lib/mhwd/ids/pci/nvidia.ids").exists() {
+        println!("No nvidia ids found!");
+        return;
+    }
+
+    let data = data::Data::new();
+    for pci_device in data.pci_devices.iter() {
+        if pci_device.available_profiles.is_empty() {
+            continue;
+        }
+
+        if pci_device.vendor_id == "10de" {
+            println!("NVIDIA card found!");
+            return;
         }
     }
 }
 
-pub fn new_profile() -> ffi::Profile {
-    ffi::Profile::new()
-}
+pub fn check_environment() -> Vec<String> {
+    let mut missing_dirs = vec![];
 
-pub fn parse_profiles_ffi(file_path: &str, type_name: &str) -> Result<Vec<ffi::Profile>> {
-    let mut profiles = vec![];
-    let file_content = fs::read_to_string(file_path)?;
-    let toml_table = file_content.parse::<toml::Table>()?;
-
-    for (key, value) in toml_table.iter() {
-        if !value.is_table() {
-            continue;
-        }
-
-        let toplevel_profile = parse_profile(value.as_table().unwrap(), key);
-        if toplevel_profile.is_err() {
-            continue;
-        }
-
-        for (nested_key, nested_value) in value.as_table().unwrap().iter() {
-            if !nested_value.is_table() {
-                continue;
-            }
-            let nested_profile_name = format!("{}.{}", key, nested_key);
-            let mut nested_value_table = nested_value.as_table().unwrap().clone();
-            merge_table_left(&mut nested_value_table, value.as_table().unwrap());
-            let nested_profile = parse_profile(&nested_value_table, &nested_profile_name);
-            if nested_profile.is_err() {
-                continue;
-            }
-            let mut nested_profile = nested_profile?;
-            nested_profile.prof_type = type_name.to_owned();
-            nested_profile.prof_path = file_path.to_owned();
-            profiles.push(nested_profile);
-        }
-        let mut toplevel_profile = toplevel_profile?;
-        toplevel_profile.prof_type = type_name.to_owned();
-        toplevel_profile.prof_path = file_path.to_owned();
-        profiles.push(toplevel_profile);
+    if !Path::new(consts::CHWD_USB_CONFIG_DIR).exists() {
+        missing_dirs.push(consts::CHWD_USB_CONFIG_DIR.to_owned());
+    }
+    if !Path::new(consts::CHWD_PCI_CONFIG_DIR).exists() {
+        missing_dirs.push(consts::CHWD_PCI_CONFIG_DIR.to_owned());
+    }
+    if !Path::new(consts::CHWD_USB_DATABASE_DIR).exists() {
+        missing_dirs.push(consts::CHWD_USB_DATABASE_DIR.to_owned());
+    }
+    if !Path::new(consts::CHWD_PCI_DATABASE_DIR).exists() {
+        missing_dirs.push(consts::CHWD_PCI_DATABASE_DIR.to_owned());
     }
 
-    Ok(profiles)
+    missing_dirs
 }
 
-pub fn get_invalid_profiles_ffi(file_path: &str) -> Result<Vec<String>> {
-    let mut invalid_profile_list = vec![];
-    let file_content = fs::read_to_string(file_path)?;
-    let toml_table = file_content.parse::<toml::Table>()?;
+pub fn run_script(
+    data: &mut Box<data::Data>,
+    profile: &ffi::Profile,
+    transaction: ffi::Transaction,
+) -> bool {
+    let mut cmd = format!("exec {}", consts::CHWD_SCRIPT_PATH);
 
-    for (key, value) in toml_table.iter() {
-        if !value.is_table() {
-            continue;
-        }
-
-        let toplevel_profile = parse_profile(value.as_table().unwrap(), key);
-        if toplevel_profile.is_err() {
-            invalid_profile_list.push(key.to_owned());
-            continue;
-        }
-
-        for (nested_key, nested_value) in value.as_table().unwrap().iter() {
-            if !nested_value.is_table() {
-                continue;
-            }
-            let nested_profile_name = format!("{}.{}", key, nested_key);
-            let mut nested_value_table = nested_value.as_table().unwrap().clone();
-            merge_table_left(&mut nested_value_table, value.as_table().unwrap());
-            let nested_profile = parse_profile(&nested_value_table, &nested_profile_name);
-            if nested_profile.is_ok() {
-                continue;
-            }
-            invalid_profile_list.push(nested_profile_name);
-        }
-    }
-
-    Ok(invalid_profile_list)
-}
-
-fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<ffi::Profile> {
-    let mut profile = ffi::Profile {
-        is_nonfree: node
-            .get("nonfree")
-            .and_then(|x| x.as_bool())
-            .unwrap_or(false)
-            .to_owned(),
-        prof_path: "".to_owned(),
-        prof_type: "".to_owned(),
-        name: profile_name.to_owned(),
-        desc: node
-            .get("desc")
-            .and_then(|x| x.as_str())
-            .unwrap_or("")
-            .to_owned(),
-        priority: node
-            .get("priority")
-            .and_then(|x| x.as_integer())
-            .unwrap_or(0) as i32,
-        hwd_ids: Vec::from([Default::default()]),
-    };
-
-    let conf_devids = node
-        .get("device_ids")
-        .and_then(|x| x.as_str())
-        .unwrap_or("");
-    let conf_vendorids = node
-        .get("vendor_ids")
-        .and_then(|x| x.as_str())
-        .unwrap_or("");
-    let conf_classids = node.get("class_ids").and_then(|x| x.as_str()).unwrap_or("");
-
-    // Read ids in extern file
-    let devids_val = if !conf_devids.is_empty() && conf_devids.as_bytes()[0] == b'>' {
-        parse_ids_file(&conf_devids[1..])?
+    if ffi::Transaction::Remove == transaction {
+        cmd.push_str(" --remove");
     } else {
-        "".to_owned()
+        cmd.push_str(" --install");
+    }
+
+    let environment = &data.environment;
+    if environment.sync_package_manager_database {
+        cmd.push_str(" --sync");
+    }
+
+    cmd.push_str(&format!(" --cachedir \"{}\"", environment.pmcache_path));
+    cmd.push_str(&format!(" --pmconfig \"{}\"", environment.pmconfig_path));
+    cmd.push_str(&format!(" --pmroot \"{}\"", environment.pmroot_path));
+    cmd.push_str(&format!(" --profile \"{}\"", profile.name));
+    cmd.push_str(&format!(" --path \"{}\"", profile.prof_path));
+
+    // Set all profiles devices as argument
+    let devices = data.get_associated_devices_for_profile(profile);
+    let found_devices = data
+        .get_all_devices_of_profile(profile)
+        .into_iter()
+        .map(|index| devices.get(index).unwrap().clone())
+        .collect::<Vec<Device>>();
+
+    // Get only unique ones from found devices
+    let devices = device::get_unique_devices(&found_devices);
+    for dev in devices.iter() {
+        if "PCI" != profile.prof_type {
+            continue;
+        }
+
+        let bus_id = dev.sysfs_busid.replace(".", ":");
+        let split = bus_id.split(":").collect::<Vec<_>>();
+        let split_size = split.len();
+        let bus_id = if split_size >= 3 {
+            // Convert to int to remove leading 0
+            format!(
+                "{}:{}:{}",
+                i64::from_str_radix(split[split_size - 3], 16).unwrap(),
+                i64::from_str_radix(split[split_size - 2], 16).unwrap(),
+                i64::from_str_radix(split[split_size - 1], 16).unwrap()
+            )
+        } else {
+            dev.sysfs_busid.clone()
+        };
+        cmd.push_str(&format!(
+            " --device \"{}|{}|{}|{}\"",
+            dev.class_id, dev.vendor_id, dev.device_id, bus_id
+        ));
+    }
+    cmd.push_str(" 2>&1");
+
+    let status = Exec::shell(cmd).join();
+    if status.is_err() || !status.unwrap().success() {
+        return false;
+    }
+
+    // Only one database sync is required
+    if ffi::Transaction::Install == transaction {
+        data.environment.sync_package_manager_database = false;
+    }
+    false
+}
+
+pub fn prepare_autoconfigure(
+    data: &Box<DataFFi>,
+    args: &mut ffi::Arguments,
+    operation: &str,
+    autoconf_class_id: &str,
+    autoconf_nonfree_driver: bool,
+) -> Vec<String> {
+    if !args.autoconfigure {
+        return vec![];
+    }
+
+    let mut profiles_name = vec![];
+
+    let devices = if "USB" == operation { &data.usb_devices } else { &data.pci_devices };
+    let installed_profiles = if "USB" == operation {
+        &data.installed_usb_profiles
+    } else {
+        &data.installed_pci_profiles
     };
 
-    // Add new HardwareIDs group to vector if vector is not empty
-    if !profile.hwd_ids.last().unwrap().device_ids.is_empty() {
-        profile.hwd_ids.push(Default::default());
-    }
-    profile.hwd_ids.last_mut().unwrap().device_ids = devids_val
-        .split(' ')
-        .into_iter()
-        .filter(|x| !x.is_empty())
-        .map(|x| x.to_owned())
-        .collect::<Vec<_>>();
-    if !profile.hwd_ids.last().unwrap().class_ids.is_empty() {
-        profile.hwd_ids.push(Default::default());
-    }
-    profile.hwd_ids.last_mut().unwrap().class_ids = conf_classids
-        .split(' ')
-        .into_iter()
-        .filter(|x| !x.is_empty())
-        .map(|x| x.to_owned())
-        .collect::<Vec<_>>();
-
-    if !conf_vendorids.is_empty() {
-        // Add new HardwareIDs group to vector if vector is not empty
-        if !profile.hwd_ids.last().unwrap().vendor_ids.is_empty() {
-            profile.hwd_ids.push(Default::default());
+    let mut found_device = false;
+    for device in devices.iter() {
+        if device.class_id != autoconf_class_id {
+            continue;
         }
-        profile.hwd_ids.last_mut().unwrap().vendor_ids = conf_vendorids
-            .split(' ')
-            .into_iter()
-            .filter(|x| !x.is_empty())
-            .map(|x| x.to_owned())
-            .collect::<Vec<_>>();
-    }
+        found_device = true;
+        let profile =
+            device.available_profiles.iter().find(|x| autoconf_nonfree_driver || !x.is_nonfree);
 
-    let append_star = |vec: &mut Vec<_>| {
-        if vec.is_empty() {
-            vec.push("*".to_string());
+        let device_info = format!(
+            "{} ({}:{}:{}) {} {} {}",
+            device.sysfs_busid,
+            device.class_id,
+            device.vendor_id,
+            device.device_id,
+            device.class_name,
+            device.vendor_name,
+            device.device_name
+        );
+        if profile.is_none() {
+            print_warning(&format!("No config found for device: {device_info}"));
+            continue;
         }
-    };
+        let profile = profile.unwrap();
 
-    // Append * to all empty vectors
-    for hwd_id in profile.hwd_ids.iter_mut() {
-        append_star(&mut hwd_id.class_ids);
-        append_star(&mut hwd_id.vendor_ids);
-        append_star(&mut hwd_id.device_ids);
-    }
-    Ok(profile)
-}
+        // If force is not set, then we skip found profile
+        let mut skip = false;
+        if !args.force {
+            skip = installed_profiles.iter().any(|x| x.name == profile.name);
+        }
 
-fn parse_ids_file(file_path: &str) -> Result<String> {
-    let file_content = fs::read_to_string(file_path)?;
-    let parsed_ids = file_content
-        .lines()
-        .filter(|x| !x.trim().is_empty() && x.trim().as_bytes()[0] != b'#')
-        .map(|x| format!(" {}", x.trim()))
-        .collect::<String>();
+        // Print found profile
+        if skip {
+            print_status(&format!(
+                "Skipping already installed profile '{}' for device: {}",
+                profile.name, device_info
+            ));
+        } else {
+            print_status(&format!("Using profile '{}' for device: {}", profile.name, device_info));
+        }
 
-    Ok(parsed_ids
-        .split_ascii_whitespace()
-        .collect::<Vec<_>>()
-        .join(" "))
-}
-
-fn merge_table_left(lhs: &mut toml::Table, rhs: &toml::Table) {
-    for (rhs_key, rhs_val) in rhs {
-        // rhs key not found in lhs - direct move
-        if lhs.get(rhs_key).is_none() {
-            lhs.insert(rhs_key.to_string(), rhs_val.clone());
+        let profile_exists = profiles_name.iter().any(|x| x == &profile.name);
+        if !profile_exists && !skip {
+            profiles_name.push(profile.name.clone());
         }
     }
-}
 
-pub fn write_profile_to_file(file_path: &str, profile: &ffi::Profile) -> bool {
-    let mut table = toml::Table::new();
-    table.insert("nonfree".to_owned(), profile.is_nonfree.into());
-    table.insert("desc".to_owned(), profile.desc.clone().into());
-    table.insert("priority".to_owned(), profile.priority.into());
+    if !found_device {
+        print_warning(&format!("No device of class '{autoconf_class_id}' found!"));
+    } else if !profiles_name.is_empty() {
+        args.install = true;
+    }
 
-    let device_ids = profile.hwd_ids.last().unwrap().device_ids.clone();
-    let vendor_ids = profile.hwd_ids.last().unwrap().vendor_ids.clone();
-    let class_ids = profile.hwd_ids.last().unwrap().class_ids.clone();
-    table.insert("device_ids".to_owned(), device_ids.join(" ").into());
-    table.insert("vendor_ids".to_owned(), vendor_ids.join(" ").into());
-    table.insert("class_ids".to_owned(), class_ids.join(" ").into());
-
-    let toml_string = format!("[{}]\n{}", profile.name, toml::to_string(&table).unwrap());
-    fs::write(file_path, toml_string).is_ok()
+    profiles_name
 }
