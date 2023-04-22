@@ -70,7 +70,6 @@ mod ffi {
         pub list_all: bool,
         pub list_installed: bool,
         pub list_available: bool,
-        pub list_hardware: bool,
         pub autoconfigure: bool,
     }
 

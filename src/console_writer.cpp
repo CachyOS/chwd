@@ -71,7 +71,6 @@ void print_help() noexcept {
               << "  -l/--list\t\t\t\tlist available configs for devices\n"
               << "  -la/--listall\t\t\t\tlist all driver configs\n"
               << "  -li/--listinstalled\t\t\tlist installed driver configs\n"
-              << "  -lh/--listhardware\t\t\tlist hardware information\n"
               << "  -i/--install <usb/pci> <config(s)>\tinstall driver config(s)\n"
               << "  -r/--remove <usb/pci> <config(s)>\tremove driver config(s)\n"
               << "  -a/--auto <usb/pci> <free/nonfree> <classid>\tauto install configs for classid\n"

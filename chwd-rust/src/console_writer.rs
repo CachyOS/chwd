@@ -124,22 +124,6 @@ pub fn handle_arguments_listing(data: &Box<Data>, args: crate::ffi::Arguments) {
             }
         }
     }
-
-    // List hardware information
-    if args.list_hardware && args.show_pci {
-        if args.detail {
-            print_device_details(libhd::HWItem::Pci as u32);
-        } else {
-            list_devices(&data.pci_devices, "PCI");
-        }
-    }
-    if args.list_hardware && args.show_usb {
-        if args.detail {
-            print_device_details(libhd::HWItem::Usb as u32);
-        } else {
-            list_devices(&data.usb_devices, "USB");
-        }
-    }
 }
 
 pub fn list_devices(devices: &Vec<Device>, type_of_device: &str) {
@@ -189,15 +173,6 @@ pub fn print_installed_profiles(device_type: &str, installed_profiles: &Vec<Prof
         crate::profile::print_profile_details(profile);
     }
     print!("\n");
-}
-
-pub fn print_device_details(item: u32) {
-    let mut hd_data = libhd::HDData::new();
-    let hd = libhd::HD::list(&mut hd_data, item.into(), 1 as _, None).unwrap();
-
-    for mut iter in hd.iter_mut() {
-        libhd::HD::dump_entry(&mut hd_data, &mut iter);
-    }
 }
 
 pub fn print_message(msg_type: Message, msg_str: &str) {

@@ -236,8 +236,6 @@ auto Mhwd::tryToParseCmdLineOptions(std::span<char*> args, bool& autoconf_nonfre
             m_arguments.list_installed = true;
         } else if (("-l" == option) || ("--list" == option)) {
             m_arguments.list_available = true;
-        } else if (("-lh" == option) || ("--listhardware" == option)) {
-            m_arguments.list_hardware = true;
         } else if ("--pci" == option) {
             m_arguments.show_pci = true;
         } else if ("--usb" == option) {
