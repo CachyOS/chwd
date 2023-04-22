@@ -28,6 +28,8 @@ impl Profile {
             name: "".to_owned(),
             desc: "".to_owned(),
             packages: "".to_owned(),
+            post_install: "".to_owned(),
+            post_remove: "".to_owned(),
             priority: 0,
             hwd_ids: Vec::from([Default::default()]),
         }
@@ -115,6 +117,8 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         prof_type: "".to_owned(),
         name: profile_name.to_owned(),
         packages: node.get("packages").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
+        post_install: node.get("post_install").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
+        post_remove: node.get("post_remove").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
         desc: node.get("desc").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
         priority: node.get("priority").and_then(|x| x.as_integer()).unwrap_or(0) as i32,
         hwd_ids: Vec::from([Default::default()]),
@@ -205,6 +209,13 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     table.insert("desc".to_owned(), profile.desc.clone().into());
     table.insert("packages".to_owned(), profile.packages.clone().into());
     table.insert("priority".to_owned(), profile.priority.into());
+
+    if !profile.post_install.is_empty() {
+        table.insert("post_install".to_owned(), profile.post_install.clone().into());
+    }
+    if !profile.post_remove.is_empty() {
+        table.insert("post_remove".to_owned(), profile.post_remove.clone().into());
+    }
 
     let device_ids = profile.hwd_ids.last().unwrap().device_ids.clone();
     let vendor_ids = profile.hwd_ids.last().unwrap().vendor_ids.clone();

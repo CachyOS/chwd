@@ -55,6 +55,8 @@ mod ffi {
         pub desc: String,
         pub priority: i32,
         pub packages: String,
+        pub post_install: String,
+        pub post_remove: String,
 
         pub hwd_ids: Vec<HardwareID>,
     }
