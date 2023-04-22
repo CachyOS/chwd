@@ -261,7 +261,7 @@ pub fn run_script(
     if ffi::Transaction::Install == transaction {
         data.environment.sync_package_manager_database = false;
     }
-    false
+    true
 }
 
 pub fn prepare_autoconfigure(
