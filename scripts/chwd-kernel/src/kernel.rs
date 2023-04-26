@@ -16,11 +16,9 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-
-
 const IGNORED_PKG: &str = "linux-api-headers";
 const REPLACE_PART: &str = "-headers";
-//const NEEDLE: &str = "linux[^ ]*-headers";
+// const NEEDLE: &str = "linux[^ ]*-headers";
 
 #[derive(Debug)]
 pub struct Kernel<'a> {
@@ -53,7 +51,8 @@ impl Kernel<'_> {
 /// Find kernel packages by finding packages which have words 'linux' and 'headers'.
 /// From the output of 'pacman -Sl'
 /// - find lines that have words: 'linux' and 'headers'
-/// - drop lines containing 'testing' (=testing repo, causes duplicates) and 'linux-api-headers' (=not a kernel header)
+/// - drop lines containing 'testing' (=testing repo, causes duplicates) and 'linux-api-headers'
+///   (=not a kernel header)
 /// - show the (header) package names
 /// Now we have names of the kernel headers.
 /// Then add the kernel packages to proper places and output the result.
@@ -67,7 +66,7 @@ impl Kernel<'_> {
 pub fn get_kernels(alpm_handle: &alpm::Alpm) -> Vec<Kernel> {
     let mut kernels = Vec::new();
     let needles: &[String] = &["linux-[a-z]".into(), "headers".into()];
-    //let needles: &[String] = &["linux[^ ]*-headers".into()];
+    // let needles: &[String] = &["linux[^ ]*-headers".into()];
 
     for db in alpm_handle.syncdbs() {
         let db_name = db.name();

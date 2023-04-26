@@ -62,11 +62,7 @@ fn new_alpm() -> alpm::Result<alpm::Alpm> {
 }
 
 fn simple_shell_exec(cmd: &str) -> String {
-    let mut exec_out = Exec::shell(cmd)
-        .stdout(Redirection::Pipe)
-        .capture()
-        .unwrap()
-        .stdout_str();
+    let mut exec_out = Exec::shell(cmd).stdout(Redirection::Pipe).capture().unwrap().stdout_str();
     exec_out.pop();
     exec_out
 }
@@ -123,11 +119,11 @@ fn kernel_install(available_kernels: &[kernel::Kernel], kernel_names: &[String])
             rmc = true;
             continue;
         } else if &current_kernel == kernel_name {
-            occur_err("You can't reinstall your current kernel. Please use 'pacman -Syu' instead to update.");
-        } else if available_kernels
-            .iter()
-            .all(|elem| &elem.name != kernel_name)
-        {
+            occur_err(
+                "You can't reinstall your current kernel. Please use 'pacman -Syu' instead to \
+                 update.",
+            );
+        } else if available_kernels.iter().all(|elem| &elem.name != kernel_name) {
             eprintln!("\x1B[31mError:\x1B[0m Please make sure if the given kernel(s) exist(s).");
             show_available_kernels(available_kernels);
             return false;
@@ -153,9 +149,7 @@ fn kernel_install(available_kernels: &[kernel::Kernel], kernel_names: &[String])
         }
     }
 
-    let exit_status = Exec::shell(format!("pacman -Syu {}", pkginstall))
-        .join()
-        .unwrap();
+    let exit_status = Exec::shell(format!("pacman -Syu {}", pkginstall)).join().unwrap();
     if rmc && exit_status.success() {
         let _ = Exec::shell(format!("pacman -R {}", current_kernel)).join();
     } else if rmc && !exit_status.success() {
@@ -183,9 +177,7 @@ fn kernel_remove(available_kernels: &[kernel::Kernel], kernel_names: &[String]) 
         pkgremove.push_str(&format!("{} ", kernel_name));
     }
 
-    let exit_status = Exec::shell(format!("pacman -R {}", pkgremove))
-        .join()
-        .unwrap();
+    let exit_status = Exec::shell(format!("pacman -R {}", pkgremove)).join().unwrap();
     exit_status.success()
 }
 
@@ -232,14 +224,14 @@ fn main() {
             let alpm_handle = &*ALPM_HANDLE.lock().unwrap();
             let kernels = kernel::get_kernels(alpm_handle);
             kernel_install(&kernels, &args.install_kernels);
-        }
+        },
         Some(WorkingMode::KernelRemove) => {
             root_check();
 
             let alpm_handle = &*ALPM_HANDLE.lock().unwrap();
             let kernels = kernel::get_kernels(alpm_handle);
             kernel_remove(&kernels, &args.remove_kernels);
-        }
+        },
         _ => occur_err("Invalid argument (use -h for help)."),
     };
 }
