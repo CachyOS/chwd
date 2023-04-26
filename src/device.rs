@@ -14,7 +14,7 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use crate::ffi::Profile;
+use crate::profile::Profile;
 use crate::{console_writer, profile};
 
 use std::sync::Arc;
@@ -36,12 +36,12 @@ pub struct Device {
 
 impl Device {
     pub fn get_available_profiles(&self) -> Vec<Profile> {
-        let smth_handle_arc = |profile: &Profile| return profile.clone();
-        self.available_profiles.iter().map(|x| smth_handle_arc(&x)).collect()
+        let smth_handle_arc = |profile: &Profile| profile.clone();
+        self.available_profiles.iter().map(|x| smth_handle_arc(x)).collect()
     }
 }
 
-pub fn get_unique_devices(devices: &Vec<Device>) -> Vec<Device> {
+pub fn get_unique_devices(devices: &[Device]) -> Vec<Device> {
     let mut uniq_devices = vec![];
     for device in devices.iter() {
         // Check if already in list
@@ -57,7 +57,7 @@ pub fn get_unique_devices(devices: &Vec<Device>) -> Vec<Device> {
     uniq_devices
 }
 
-pub fn print_available_profiles_in_detail(device_type: &str, devices: &Vec<Device>) {
+pub fn print_available_profiles_in_detail(device_type: &str, devices: &[Device]) {
     let mut config_found = false;
     for device in devices.iter() {
         let available_profiles = &device.available_profiles;

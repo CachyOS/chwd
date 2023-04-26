@@ -6,8 +6,13 @@ license = "GPLv3"
 edition = "2021"
 
 [dependencies]
-chwd-rust = { path = "chwd-rust", version = "0.1.0" }
+toml = "0.7.3"
+libhd = { path = "libhd", version = "0.1.0" }
+subprocess = "0.2.9"
+colored = "2.0.0"
 clap = { features = ["derive"], version = "4.1.13" }
+anyhow = "1"
+nix = "0.26.2"
 
 [profile.release]
 strip = "symbols"

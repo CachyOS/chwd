@@ -15,7 +15,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::device::Device;
-use crate::ffi::{Environment, Profile};
+use crate::profile::Profile;
 
 use std::fs;
 use std::path::Path;
@@ -23,6 +23,14 @@ use std::sync::Arc;
 
 pub type ListOfProfilesT = Vec<Profile>;
 pub type ListOfDevicesT = Vec<Device>;
+
+#[derive(Debug)]
+pub struct Environment {
+    pub sync_package_manager_database: bool,
+    pub pmcache_path: String,
+    pub pmconfig_path: String,
+    pub pmroot_path: String,
+}
 
 impl Default for Environment {
     fn default() -> Environment {
@@ -49,10 +57,11 @@ pub struct Data {
 
 impl Data {
     pub fn new() -> Self {
-        let mut res: Self = Default::default();
-
-        res.pci_devices = fill_devices(libhd::HWItem::Pci).expect("Failed to init");
-        res.usb_devices = fill_devices(libhd::HWItem::Usb).expect("Failed to init");
+        let mut res = Self {
+            pci_devices: fill_devices(libhd::HWItem::Pci).expect("Failed to init"),
+            usb_devices: fill_devices(libhd::HWItem::Usb).expect("Failed to init"),
+            ..Default::default()
+        };
 
         res.update_profiles_data();
         res
@@ -189,7 +198,7 @@ fn fill_profiles(
         if !Path::new(&config_file_path).exists() {
             continue;
         }
-        if let Ok(profiles) = crate::parse_profiles(&config_file_path, profile_type) {
+        if let Ok(profiles) = crate::profile::parse_profiles(&config_file_path, profile_type) {
             for profile in profiles.into_iter() {
                 if profile.packages.is_empty() {
                     continue;
@@ -197,7 +206,9 @@ fn fill_profiles(
                 configs.push(profile);
             }
         }
-        if let Ok(mut invalid_profile_names) = crate::get_invalid_profiles(&config_file_path) {
+        if let Ok(mut invalid_profile_names) =
+            crate::profile::get_invalid_profiles(&config_file_path)
+        {
             invalid_profiles.append(&mut invalid_profile_names);
         }
     }

@@ -14,10 +14,40 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-use crate::ffi::Profile;
-
 use anyhow::Result;
 use std::fs;
+
+#[derive(Debug, Default, Clone)]
+pub struct HardwareID {
+    pub class_ids: Vec<String>,
+    pub vendor_ids: Vec<String>,
+    pub device_ids: Vec<String>,
+    pub blacklisted_class_ids: Vec<String>,
+    pub blacklisted_vendor_ids: Vec<String>,
+    pub blacklisted_device_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Profile {
+    pub is_nonfree: bool,
+
+    pub prof_path: String,
+    pub prof_type: String,
+    pub name: String,
+    pub desc: String,
+    pub priority: i32,
+    pub packages: String,
+    pub post_install: String,
+    pub post_remove: String,
+
+    pub hwd_ids: Vec<HardwareID>,
+}
+
+impl Default for Profile {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Profile {
     pub fn new() -> Self {
@@ -139,18 +169,13 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     if !profile.hwd_ids.last().unwrap().device_ids.is_empty() {
         profile.hwd_ids.push(Default::default());
     }
-    profile.hwd_ids.last_mut().unwrap().device_ids = devids_val
-        .split(' ')
-        .into_iter()
-        .filter(|x| !x.is_empty())
-        .map(|x| x.to_owned())
-        .collect::<Vec<_>>();
+    profile.hwd_ids.last_mut().unwrap().device_ids =
+        devids_val.split(' ').filter(|x| !x.is_empty()).map(|x| x.to_owned()).collect::<Vec<_>>();
     if !profile.hwd_ids.last().unwrap().class_ids.is_empty() {
         profile.hwd_ids.push(Default::default());
     }
     profile.hwd_ids.last_mut().unwrap().class_ids = conf_classids
         .split(' ')
-        .into_iter()
         .filter(|x| !x.is_empty())
         .map(|x| x.to_owned())
         .collect::<Vec<_>>();
@@ -162,7 +187,6 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         }
         profile.hwd_ids.last_mut().unwrap().vendor_ids = conf_vendorids
             .split(' ')
-            .into_iter()
             .filter(|x| !x.is_empty())
             .map(|x| x.to_owned())
             .collect::<Vec<_>>();

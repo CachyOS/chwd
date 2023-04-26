@@ -16,11 +16,12 @@
 
 use crate::data::Data;
 use crate::device::Device;
-use crate::ffi::{Message, Profile};
+use crate::misc::Message;
+use crate::profile::Profile;
 
 use colored::Colorize;
 
-pub fn handle_arguments_listing(data: &Box<Data>, args: crate::ffi::Arguments) {
+pub fn handle_arguments_listing(data: &Data, args: &crate::Args) {
     // Check for invalid profiles
     for invalid_profile in data.invalid_profiles.iter() {
         print_warning(&format!("profile '{invalid_profile}' is invalid!"));
@@ -49,24 +50,20 @@ pub fn handle_arguments_listing(data: &Box<Data>, args: crate::ffi::Arguments) {
         let installed_pci_profiles = &data.installed_pci_profiles;
         if args.detail {
             print_installed_profiles("PCI", installed_pci_profiles);
+        } else if !installed_pci_profiles.is_empty() {
+            list_profiles(installed_pci_profiles, "Installed PCI configs:");
         } else {
-            if !installed_pci_profiles.is_empty() {
-                list_profiles(installed_pci_profiles, "Installed PCI configs:");
-            } else {
-                print_warning("No installed PCI configs!");
-            }
+            print_warning("No installed PCI configs!");
         }
     }
     if args.list_installed && args.show_usb {
         let installed_usb_profiles = &data.installed_usb_profiles;
         if args.detail {
             print_installed_profiles("USB", installed_usb_profiles);
+        } else if !installed_usb_profiles.is_empty() {
+            list_profiles(installed_usb_profiles, "Installed USB configs:");
         } else {
-            if !installed_usb_profiles.is_empty() {
-                list_profiles(installed_usb_profiles, "Installed USB configs:");
-            } else {
-                print_warning("No installed USB configs!");
-            }
+            print_warning("No installed USB configs!");
         }
     }
 
@@ -152,7 +149,7 @@ pub fn list_devices(devices: &Vec<Device>, type_of_device: &str) {
     println!("\n");
 }
 
-pub fn list_profiles(profiles: &Vec<Profile>, header_msg: &str) {
+pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
     print_status(header_msg);
     print_line();
     println!("{:>20}{:>10}{:>7}", "NAME", "NONFREE", "TYPE");
@@ -172,7 +169,7 @@ pub fn print_installed_profiles(device_type: &str, installed_profiles: &Vec<Prof
     for profile in installed_profiles.iter() {
         crate::profile::print_profile_details(profile);
     }
-    print!("\n");
+    println!();
 }
 
 pub fn print_message(msg_type: Message, msg_str: &str) {
@@ -181,7 +178,6 @@ pub fn print_message(msg_type: Message, msg_str: &str) {
         Message::InstallEnd => print_status(&format!("Successfully installed {msg_str}")),
         Message::RemoveStart => print_status(&format!("Removing {msg_str} ...")),
         Message::RemoveEnd => print_status(&format!("Successfully removed {msg_str}")),
-        _ => print_error("You shouldn't see this?! Unknown message type!"),
     }
 }
 
