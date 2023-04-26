@@ -53,16 +53,6 @@ local function split(str, sep)
     return t
 end
 
-local function recurse_table_search(table, keys, index)
-    index = index or 1
-    local found = table[keys[index]]
-    if index == #keys then
-        return found
-    elseif found then
-        return recurse_table_search(found, keys, index + 1)
-    end
-end
-
 local function get_opts(args)
     local options = {}
     local option_pattern="-%-?(.+)"
