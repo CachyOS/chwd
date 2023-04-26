@@ -10,9 +10,10 @@ toml = "0.7.3"
 libhd = { path = "libhd", version = "0.1.0" }
 subprocess = "0.2.9"
 colored = "2.0.0"
-clap = { features = ["derive"], version = "4.1.13" }
+clap = { features = ["std", "derive"], version = "4.1.13" , default-features = false }
 anyhow = "1"
-nix = "0.26.2"
+nix = { features = ["user"], default-features = false, version = "0.26.2" }
+comfy-table = { default-features = false, version = "6.1.4" }
 
 [profile.release]
 strip = "symbols"

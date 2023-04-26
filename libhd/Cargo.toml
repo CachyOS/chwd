@@ -12,7 +12,7 @@ categories = ["api-bindings"]
 
 [dependencies]
 libhd-sys = { path = "../libhd-sys", default-features = false, version = "0.1.0" }
-libc = "0.2.141"
+libc = { default-features = false, version = "0.2.141" }
 
 [features]
 default = []

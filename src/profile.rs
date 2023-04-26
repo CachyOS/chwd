@@ -15,6 +15,9 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use anyhow::Result;
+use comfy_table::modifiers::UTF8_ROUND_CORNERS;
+use comfy_table::presets::UTF8_FULL;
+use comfy_table::*;
 use std::fs;
 
 #[derive(Debug, Default, Clone)]
@@ -262,15 +265,18 @@ pub fn print_profile_details(profile: &Profile) {
 
     let desc_formatted = if profile.desc.is_empty() { "-" } else { &profile.desc };
 
-    println!(
-        "   NAME:\t{}\n   ATTACHED:\t{}\n   INFO:\t{}\n   PRIORITY:\t{}\n   NONFREE:\t{}\n   \
-         CLASSIDS:\t{}\n   VENDORIDS:\t{}\n",
-        profile.name,
-        profile.prof_type,
-        desc_formatted,
-        profile.priority,
-        profile.is_nonfree,
-        class_ids,
-        vendor_ids
-    );
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        .add_row(vec!["Name", &profile.name])
+        .add_row(vec!["Attached", &profile.prof_type])
+        .add_row(vec!["Desc", desc_formatted])
+        .add_row(vec!["Priority", &profile.priority.to_string()])
+        .add_row(vec!["NonFree", &profile.is_nonfree.to_string()])
+        .add_row(vec!["ClassIDS", &class_ids])
+        .add_row(vec!["VendorIDS", &vendor_ids]);
+
+    println!("{table}\n");
 }

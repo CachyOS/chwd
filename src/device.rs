@@ -67,13 +67,12 @@ pub fn print_available_profiles_in_detail(device_type: &str, devices: &[Device])
         }
         config_found = true;
 
-        console_writer::print_line();
         console_writer::print_status(&format!(
             "{} Device: {} ({}:{}:{})",
             device_type, device.sysfs_id, device.class_id, device.vendor_id, device.device_id
         ));
         println!("  {} {} {}", device.class_name, device.vendor_name, device.device_name);
-        console_writer::print_line();
+        println!("");
         if !installed_profiles.is_empty() {
             println!("  > INSTALLED:\n");
             for installed_profile in installed_profiles.iter() {

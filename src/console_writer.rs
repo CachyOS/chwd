@@ -15,11 +15,13 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::data::Data;
-use crate::device::Device;
 use crate::misc::Message;
 use crate::profile::Profile;
 
 use colored::Colorize;
+use comfy_table::modifiers::UTF8_ROUND_CORNERS;
+use comfy_table::presets::UTF8_FULL;
+use comfy_table::*;
 
 pub fn handle_arguments_listing(data: &Data, args: &crate::Args) {
     // Check for invalid profiles
@@ -123,41 +125,22 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::Args) {
     }
 }
 
-pub fn list_devices(devices: &Vec<Device>, type_of_device: &str) {
-    if devices.is_empty() {
-        print_warning(&format!("No {} devices found!", type_of_device));
-        return;
-    }
-    print_status(&format!("{} devices:", type_of_device));
-    print_line();
-    println!(
-        "{:>30}{:>15}{:>8}{:>8}{:>8}{:>10}",
-        "TYPE", "BUS", "CLASS", "VENDOR", "DEVICE", "PROFILES"
-    );
-    print_line();
-    for device in devices.iter() {
-        println!(
-            "{:>30}{:>15}{:>8}{:>8}{:>8}{:>10}",
-            device.class_name,
-            device.sysfs_busid,
-            device.class_id,
-            device.vendor_id,
-            device.device_id,
-            device.available_profiles.len()
-        );
-    }
-    println!("\n");
-}
-
 pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
     print_status(header_msg);
-    print_line();
-    println!("{:>20}{:>10}{:>7}", "NAME", "NONFREE", "TYPE");
-    print_line();
+    println!();
+
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        .set_header(vec!["Name", "NonFree", "Type"]);
+
     for profile in profiles.iter() {
-        println!("{:>20}{:>10}{:>7}", profile.name, profile.is_nonfree, profile.prof_type);
+        table.add_row(vec![&profile.name, &profile.is_nonfree.to_string(), &profile.prof_type]);
     }
-    println!("\n");
+
+    println!("{table}\n");
 }
 
 pub fn print_installed_profiles(device_type: &str, installed_profiles: &Vec<Profile>) {
@@ -179,10 +162,6 @@ pub fn print_message(msg_type: Message, msg_str: &str) {
         Message::RemoveStart => print_status(&format!("Removing {msg_str} ...")),
         Message::RemoveEnd => print_status(&format!("Successfully removed {msg_str}")),
     }
-}
-
-pub fn print_line() {
-    print!("{:->50}", "\n"); // use '-' as a fill char
 }
 
 pub fn print_warning(msg: &str) {
