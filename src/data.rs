@@ -24,28 +24,9 @@ use std::sync::Arc;
 pub type ListOfProfilesT = Vec<Profile>;
 pub type ListOfDevicesT = Vec<Device>;
 
-#[derive(Debug)]
-pub struct Environment {
-    pub sync_package_manager_database: bool,
-    pub pmcache_path: String,
-    pub pmconfig_path: String,
-    pub pmroot_path: String,
-}
-
-impl Default for Environment {
-    fn default() -> Environment {
-        Environment {
-            sync_package_manager_database: true,
-            pmcache_path: crate::consts::CHWD_PM_CACHE_DIR.to_owned(),
-            pmconfig_path: crate::consts::CHWD_PM_CONFIG.to_owned(),
-            pmroot_path: crate::consts::CHWD_PM_ROOT.to_owned(),
-        }
-    }
-}
-
 #[derive(Debug, Default)]
 pub struct Data {
-    pub environment: Environment,
+    pub sync_package_manager_database: bool,
     pub usb_devices: ListOfDevicesT,
     pub pci_devices: ListOfDevicesT,
     pub installed_usb_profiles: ListOfProfilesT,
@@ -60,6 +41,7 @@ impl Data {
         let mut res = Self {
             pci_devices: fill_devices(libhd::HWItem::Pci).expect("Failed to init"),
             usb_devices: fill_devices(libhd::HWItem::Usb).expect("Failed to init"),
+            sync_package_manager_database: true,
             ..Default::default()
         };
 
@@ -98,38 +80,6 @@ impl Data {
         } else {
             &self.pci_devices
         }
-    }
-
-    pub fn get_invalid_profiles(&self) -> &Vec<String> {
-        &self.invalid_profiles
-    }
-
-    pub fn get_all_pci_profiles(&self) -> &Vec<Profile> {
-        &self.all_pci_profiles
-    }
-
-    pub fn get_all_usb_profiles(&self) -> &Vec<Profile> {
-        &self.all_usb_profiles
-    }
-
-    pub fn get_installed_pci_profiles(&self) -> &Vec<Profile> {
-        &self.installed_pci_profiles
-    }
-
-    pub fn get_installed_usb_profiles(&self) -> &Vec<Profile> {
-        &self.installed_usb_profiles
-    }
-
-    pub fn get_pci_devices(&self) -> &Vec<Device> {
-        &self.pci_devices
-    }
-
-    pub fn get_usb_devices(&self) -> &Vec<Device> {
-        &self.usb_devices
-    }
-
-    pub fn get_env_mut(&mut self) -> &mut Environment {
-        &mut self.environment
     }
 
     fn fill_installed_profiles(&mut self, profile_type: &str) {

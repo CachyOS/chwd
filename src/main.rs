@@ -83,7 +83,7 @@ pub struct Args {
     #[arg(long, default_value_t = String::from("/var/cache/pacman/pkg"))]
     pmcachedir: String,
     #[arg(long, default_value_t = String::from("/etc/pacman.conf"))]
-    pmprofile: String,
+    pmconfig: String,
     #[arg(long, default_value_t = String::from("/"))]
     pmroot: String,
 }
@@ -165,10 +165,6 @@ fn main() -> anyhow::Result<()> {
     // 2) Initialize
     let mut data_obj = data::Data::new();
 
-    data_obj.environment.pmcache_path = argstruct.pmcachedir.clone();
-    data_obj.environment.pmconfig_path = argstruct.pmprofile.clone();
-    data_obj.environment.pmroot_path = argstruct.pmroot.clone();
-
     let missing_dirs = misc::check_environment();
     if !missing_dirs.is_empty() {
         console_writer::print_error("Following directories do not exist:");
@@ -219,6 +215,7 @@ fn main() -> anyhow::Result<()> {
 
             if !perform_transaction(
                 &mut data_obj,
+                &argstruct,
                 &working_profile.unwrap(),
                 Transaction::Install,
                 argstruct.force,
@@ -232,6 +229,7 @@ fn main() -> anyhow::Result<()> {
                 anyhow::bail!("Error occurred");
             } else if !perform_transaction(
                 &mut data_obj,
+                &argstruct,
                 working_profile.as_ref().unwrap(),
                 Transaction::Remove,
                 argstruct.force,
@@ -370,7 +368,12 @@ fn get_installed_profile(
     misc::find_profile(profile_name, installed_profiles)
 }
 
-pub fn run_script(data: &mut data::Data, profile: &Profile, transaction: Transaction) -> bool {
+pub fn run_script(
+    data: &mut data::Data,
+    args: &Args,
+    profile: &Profile,
+    transaction: Transaction,
+) -> bool {
     let mut cmd = format!("exec {}", consts::CHWD_SCRIPT_PATH);
 
     if Transaction::Remove == transaction {
@@ -379,14 +382,13 @@ pub fn run_script(data: &mut data::Data, profile: &Profile, transaction: Transac
         cmd.push_str(" --install");
     }
 
-    let environment = &data.environment;
-    if environment.sync_package_manager_database {
+    if data.sync_package_manager_database {
         cmd.push_str(" --sync");
     }
 
-    cmd.push_str(&format!(" --cachedir \"{}\"", environment.pmcache_path));
-    cmd.push_str(&format!(" --pmconfig \"{}\"", environment.pmconfig_path));
-    cmd.push_str(&format!(" --pmroot \"{}\"", environment.pmroot_path));
+    cmd.push_str(&format!(" --cachedir \"{}\"", args.pmcachedir));
+    cmd.push_str(&format!(" --pmconfig \"{}\"", args.pmconfig));
+    cmd.push_str(&format!(" --pmroot \"{}\"", args.pmroot));
     cmd.push_str(&format!(" --profile \"{}\"", profile.name));
     cmd.push_str(&format!(" --path \"{}\"", profile.prof_path));
 
@@ -433,18 +435,19 @@ pub fn run_script(data: &mut data::Data, profile: &Profile, transaction: Transac
 
     // Only one database sync is required
     if Transaction::Install == transaction {
-        data.environment.sync_package_manager_database = false;
+        data.sync_package_manager_database = false;
     }
     true
 }
 
 fn perform_transaction(
     data: &mut data::Data,
+    args: &Args,
     profile: &Arc<Profile>,
     transaction_type: Transaction,
     force: bool,
 ) -> bool {
-    let status = perform_transaction_type(data, profile, transaction_type, force);
+    let status = perform_transaction_type(data, args, profile, transaction_type, force);
 
     match status {
         misc::Status::ErrorNotInstalled => {
@@ -470,6 +473,7 @@ fn perform_transaction(
 
 fn perform_transaction_type(
     data_obj: &mut data::Data,
+    args: &Args,
     profile: &Arc<Profile>,
     transaction_type: Transaction,
     force: bool,
@@ -486,7 +490,7 @@ fn perform_transaction_type(
             misc::Message::RemoveStart,
             &installed_profile.as_ref().unwrap().name,
         );
-        status = remove_profile(data_obj, installed_profile.as_ref().unwrap());
+        status = remove_profile(data_obj, args, installed_profile.as_ref().unwrap());
         if misc::Status::Success != status {
             return status;
         }
@@ -502,7 +506,7 @@ fn perform_transaction_type(
             return misc::Status::ErrorAlreadyInstalled;
         }
         console_writer::print_message(misc::Message::InstallStart, &profile.name);
-        status = install_profile(data_obj, profile);
+        status = install_profile(data_obj, args, profile);
         if misc::Status::Success != status {
             return status;
         }
@@ -511,8 +515,8 @@ fn perform_transaction_type(
     status
 }
 
-fn install_profile(data: &mut data::Data, profile: &Profile) -> misc::Status {
-    if !run_script(data, profile, Transaction::Install) {
+fn install_profile(data: &mut data::Data, args: &Args, profile: &Profile) -> misc::Status {
+    if !run_script(data, args, profile, Transaction::Install) {
         return misc::Status::ErrorScriptFailed;
     }
 
@@ -539,7 +543,7 @@ fn install_profile(data: &mut data::Data, profile: &Profile) -> misc::Status {
     misc::Status::Success
 }
 
-fn remove_profile(data: &mut data::Data, profile: &Profile) -> misc::Status {
+fn remove_profile(data: &mut data::Data, args: &Args, profile: &Profile) -> misc::Status {
     let installed_profile = get_installed_profile(data, &profile.name, &profile.prof_type);
 
     // Check if installed
@@ -547,7 +551,7 @@ fn remove_profile(data: &mut data::Data, profile: &Profile) -> misc::Status {
         return misc::Status::ErrorNotInstalled;
     }
     // Run script
-    if !run_script(data, installed_profile.as_ref().unwrap(), Transaction::Remove) {
+    if !run_script(data, args, installed_profile.as_ref().unwrap(), Transaction::Remove) {
         return misc::Status::ErrorScriptFailed;
     }
 
