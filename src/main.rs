@@ -40,10 +40,6 @@ pub struct Args {
     #[arg(long = "pci")]
     show_pci: bool,
 
-    /// Show USB
-    #[arg(long = "usb")]
-    show_usb: bool,
-
     /// Install profile
     #[arg(short, long, number_of_values = 2, value_names = &["usb/pci", "profile"], conflicts_with("remove"))]
     install: Option<Vec<String>>,
@@ -157,8 +153,7 @@ fn main() -> anyhow::Result<()> {
     perceed_inst_rem(&argstruct.install, &mut operation, &mut working_profiles)?;
     perceed_inst_rem(&argstruct.remove, &mut operation, &mut working_profiles)?;
 
-    if !argstruct.show_pci && !argstruct.show_usb {
-        argstruct.show_usb = true;
+    if !argstruct.show_pci {
         argstruct.show_pci = true;
     }
 
@@ -181,7 +176,6 @@ fn main() -> anyhow::Result<()> {
     let mut prepared_profiles = prepare_autoconfigure(
         &data_obj,
         &mut argstruct,
-        &operation,
         &autoconf_class_id,
         autoconf_nonfree_driver,
     );
@@ -198,9 +192,9 @@ fn main() -> anyhow::Result<()> {
 
     for profile_name in working_profiles.iter() {
         if argstruct.install.is_some() {
-            let working_profile = get_available_profile(&mut data_obj, profile_name, &operation);
+            let working_profile = get_available_profile(&mut data_obj, profile_name);
             if working_profile.is_none() {
-                let working_profile = get_db_profile(&data_obj, profile_name, &operation);
+                let working_profile = get_db_profile(&data_obj, profile_name);
                 if working_profile.is_none() {
                     console_writer::print_error(&format!(
                         "profile '{profile_name}' does not exist!"
@@ -223,7 +217,7 @@ fn main() -> anyhow::Result<()> {
                 anyhow::bail!("Error occurred");
             }
         } else if argstruct.remove.is_some() {
-            let working_profile = get_installed_profile(&data_obj, profile_name, &operation);
+            let working_profile = get_installed_profile(&data_obj, profile_name);
             if working_profile.is_none() {
                 console_writer::print_error(&format!("profile '{profile_name}' is not installed!"));
                 anyhow::bail!("Error occurred");
@@ -245,7 +239,6 @@ fn main() -> anyhow::Result<()> {
 fn prepare_autoconfigure(
     data: &data::Data,
     args: &mut Args,
-    operation: &str,
     autoconf_class_id: &str,
     autoconf_nonfree_driver: bool,
 ) -> Vec<String> {
@@ -255,12 +248,8 @@ fn prepare_autoconfigure(
 
     let mut profiles_name = vec![];
 
-    let devices = if "USB" == operation { &data.usb_devices } else { &data.pci_devices };
-    let installed_profiles = if "USB" == operation {
-        &data.installed_usb_profiles
-    } else {
-        &data.installed_pci_profiles
-    };
+    let devices = &data.pci_devices;
+    let installed_profiles = &data.installed_pci_profiles;
 
     let mut found_device = false;
     for device in devices.iter() {
@@ -321,13 +310,9 @@ fn prepare_autoconfigure(
     profiles_name
 }
 
-fn get_available_profile(
-    data: &mut data::Data,
-    profile_name: &str,
-    profile_type: &str,
-) -> Option<Arc<Profile>> {
+fn get_available_profile(data: &mut data::Data, profile_name: &str) -> Option<Arc<Profile>> {
     // Get the right devices
-    let devices = if "USB" == profile_type { &mut data.usb_devices } else { &mut data.pci_devices };
+    let devices = &mut data.pci_devices;
 
     for device in devices.iter_mut() {
         let available_profiles = &mut device.available_profiles;
@@ -343,28 +328,15 @@ fn get_available_profile(
     None
 }
 
-fn get_db_profile(
-    data: &data::Data,
-    profile_name: &str,
-    profile_type: &str,
-) -> Option<Arc<Profile>> {
+fn get_db_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Profile>> {
     // Get the right profiles
-    let all_profiles =
-        if "USB" == profile_type { &data.all_usb_profiles } else { &data.all_pci_profiles };
+    let all_profiles = &data.all_pci_profiles;
     misc::find_profile(profile_name, all_profiles)
 }
 
-fn get_installed_profile(
-    data: &data::Data,
-    profile_name: &str,
-    profile_type: &str,
-) -> Option<Arc<Profile>> {
+fn get_installed_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Profile>> {
     // Get the right profiles
-    let installed_profiles = if "USB" == profile_type {
-        &data.installed_usb_profiles
-    } else {
-        &data.installed_pci_profiles
-    };
+    let installed_profiles = &data.installed_pci_profiles;
     misc::find_profile(profile_name, installed_profiles)
 }
 
@@ -393,9 +365,8 @@ pub fn run_script(
     cmd.push_str(&format!(" --path \"{}\"", profile.prof_path));
 
     // Set all profiles devices as argument
-    let devices = data.get_associated_devices_for_profile(profile);
-    let found_devices = data
-        .get_all_devices_of_profile(profile)
+    let devices = &data.pci_devices;
+    let found_devices = data::get_all_devices_of_profile(&data.pci_devices, profile)
         .into_iter()
         .map(|index| devices.get(index).unwrap().clone())
         .collect::<Vec<device::Device>>();
@@ -403,10 +374,6 @@ pub fn run_script(
     // Get only unique ones from found devices
     let devices = device::get_unique_devices(&found_devices);
     for dev in devices.iter() {
-        if "PCI" != profile.prof_type {
-            continue;
-        }
-
         let bus_id = dev.sysfs_busid.replace('.', ":");
         let split = bus_id.split(':').collect::<Vec<_>>();
         let split_size = split.len();
@@ -479,7 +446,7 @@ fn perform_transaction_type(
     force: bool,
 ) -> misc::Status {
     // Check if already installed
-    let installed_profile = get_installed_profile(data_obj, &profile.name, &profile.prof_type);
+    let installed_profile = get_installed_profile(data_obj, &profile.name);
     let mut status = misc::Status::Success;
 
     if (Transaction::Remove == transaction_type) || (installed_profile.is_some() && force) {
@@ -520,11 +487,7 @@ fn install_profile(data: &mut data::Data, args: &Args, profile: &Profile) -> mis
         return misc::Status::ErrorScriptFailed;
     }
 
-    let db_dir = if "USB" == profile.prof_type {
-        consts::CHWD_USB_DATABASE_DIR
-    } else {
-        consts::CHWD_PCI_DATABASE_DIR
-    };
+    let db_dir = consts::CHWD_PCI_DATABASE_DIR;
     let working_dir = format!(
         "{}/{}",
         db_dir,
@@ -544,7 +507,7 @@ fn install_profile(data: &mut data::Data, args: &Args, profile: &Profile) -> mis
 }
 
 fn remove_profile(data: &mut data::Data, args: &Args, profile: &Profile) -> misc::Status {
-    let installed_profile = get_installed_profile(data, &profile.name, &profile.prof_type);
+    let installed_profile = get_installed_profile(data, &profile.name);
 
     // Check if installed
     if installed_profile.is_none() {

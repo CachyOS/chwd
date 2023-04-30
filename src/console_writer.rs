@@ -38,14 +38,6 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::Args) {
             print_warning("No PCI profiles found!");
         }
     }
-    if args.list_all && args.show_usb {
-        let all_usb_profiles = &data.all_usb_profiles;
-        if !all_usb_profiles.is_empty() {
-            list_profiles(all_usb_profiles, "All USB profiles:");
-        } else {
-            print_warning("No USB profiles found!");
-        }
-    }
 
     // List installed profiles
     if args.list_installed && args.show_pci {
@@ -56,16 +48,6 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::Args) {
             list_profiles(installed_pci_profiles, "Installed PCI configs:");
         } else {
             print_warning("No installed PCI configs!");
-        }
-    }
-    if args.list_installed && args.show_usb {
-        let installed_usb_profiles = &data.installed_usb_profiles;
-        if args.detail {
-            print_installed_profiles("USB", installed_usb_profiles);
-        } else if !installed_usb_profiles.is_empty() {
-            list_profiles(installed_usb_profiles, "Installed USB configs:");
-        } else {
-            print_warning("No installed USB configs!");
         }
     }
 
@@ -96,33 +78,6 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::Args) {
             }
         }
     }
-
-    if args.list_available && args.show_usb {
-        let usb_devices = &data.usb_devices;
-        if args.detail {
-            crate::device::print_available_profiles_in_detail("USB", usb_devices);
-        } else {
-            for usb_device in usb_devices.iter() {
-                let available_profiles = &usb_device.get_available_profiles();
-                if available_profiles.is_empty() {
-                    continue;
-                }
-
-                list_profiles(
-                    available_profiles,
-                    &format!(
-                        "{} ({}:{}:{}) {} {}:",
-                        usb_device.sysfs_busid,
-                        usb_device.class_id,
-                        usb_device.vendor_id,
-                        usb_device.device_id,
-                        usb_device.class_name,
-                        usb_device.vendor_name
-                    ),
-                );
-            }
-        }
-    }
 }
 
 pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
@@ -134,10 +89,10 @@ pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
         .load_preset(UTF8_FULL)
         .apply_modifier(UTF8_ROUND_CORNERS)
         .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec!["Name", "NonFree", "Type"]);
+        .set_header(vec!["Name", "NonFree"]);
 
     for profile in profiles.iter() {
-        table.add_row(vec![&profile.name, &profile.is_nonfree.to_string(), &profile.prof_type]);
+        table.add_row(vec![&profile.name, &profile.is_nonfree.to_string()]);
     }
 
     println!("{table}\n");

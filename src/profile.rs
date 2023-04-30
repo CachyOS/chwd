@@ -35,7 +35,6 @@ pub struct Profile {
     pub is_nonfree: bool,
 
     pub prof_path: String,
-    pub prof_type: String,
     pub name: String,
     pub desc: String,
     pub priority: i32,
@@ -57,7 +56,6 @@ impl Profile {
         Self {
             is_nonfree: false,
             prof_path: "".to_owned(),
-            prof_type: "".to_owned(),
             name: "".to_owned(),
             desc: "".to_owned(),
             packages: "".to_owned(),
@@ -96,12 +94,10 @@ pub fn parse_profiles(file_path: &str, type_name: &str) -> Result<Vec<Profile>> 
                 continue;
             }
             let mut nested_profile = nested_profile?;
-            nested_profile.prof_type = type_name.to_owned();
             nested_profile.prof_path = file_path.to_owned();
             profiles.push(nested_profile);
         }
         let mut toplevel_profile = toplevel_profile?;
-        toplevel_profile.prof_type = type_name.to_owned();
         toplevel_profile.prof_path = file_path.to_owned();
         profiles.push(toplevel_profile);
     }
@@ -147,7 +143,6 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     let mut profile = Profile {
         is_nonfree: node.get("nonfree").and_then(|x| x.as_bool()).unwrap_or(false).to_owned(),
         prof_path: "".to_owned(),
-        prof_type: "".to_owned(),
         name: profile_name.to_owned(),
         packages: node.get("packages").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
         post_install: node.get("post_install").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
@@ -271,7 +266,6 @@ pub fn print_profile_details(profile: &Profile) {
         .apply_modifier(UTF8_ROUND_CORNERS)
         .set_content_arrangement(ContentArrangement::Dynamic)
         .add_row(vec!["Name", &profile.name])
-        .add_row(vec!["Attached", &profile.prof_type])
         .add_row(vec!["Desc", desc_formatted])
         .add_row(vec!["Priority", &profile.priority.to_string()])
         .add_row(vec!["NonFree", &profile.is_nonfree.to_string()])

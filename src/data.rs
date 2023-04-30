@@ -27,11 +27,8 @@ pub type ListOfDevicesT = Vec<Device>;
 #[derive(Debug, Default)]
 pub struct Data {
     pub sync_package_manager_database: bool,
-    pub usb_devices: ListOfDevicesT,
     pub pci_devices: ListOfDevicesT,
-    pub installed_usb_profiles: ListOfProfilesT,
     pub installed_pci_profiles: ListOfProfilesT,
-    pub all_usb_profiles: ListOfProfilesT,
     pub all_pci_profiles: ListOfProfilesT,
     pub invalid_profiles: Vec<String>,
 }
@@ -40,7 +37,6 @@ impl Data {
     pub fn new() -> Self {
         let mut res = Self {
             pci_devices: fill_devices(libhd::HWItem::Pci).expect("Failed to init"),
-            usb_devices: fill_devices(libhd::HWItem::Usb).expect("Failed to init"),
             sync_package_manager_database: true,
             ..Default::default()
         };
@@ -54,60 +50,25 @@ impl Data {
         for pci_device in self.pci_devices.iter_mut() {
             pci_device.installed_profiles.clear();
         }
-        for usb_device in self.usb_devices.iter_mut() {
-            usb_device.installed_profiles.clear();
-        }
 
         self.installed_pci_profiles.clear();
-        self.installed_usb_profiles.clear();
 
         // Refill data
         self.fill_installed_profiles("PCI");
-        self.fill_installed_profiles("USB");
 
         set_matching_profiles(&mut self.pci_devices, &mut self.installed_pci_profiles, true);
-        set_matching_profiles(&mut self.usb_devices, &mut self.installed_usb_profiles, true);
-    }
-
-    pub fn get_all_devices_of_profile(&self, profile: &Profile) -> Vec<usize> {
-        let devices = self.get_associated_devices_for_profile(profile);
-        get_all_devices_of_profile(devices, profile)
-    }
-
-    pub fn get_associated_devices_for_profile(&self, profile: &Profile) -> &Vec<Device> {
-        if "USB" == profile.prof_type {
-            &self.usb_devices
-        } else {
-            &self.pci_devices
-        }
     }
 
     fn fill_installed_profiles(&mut self, profile_type: &str) {
-        let conf_path = if "USB" == profile_type {
-            crate::consts::CHWD_USB_DATABASE_DIR
-        } else {
-            crate::consts::CHWD_PCI_DATABASE_DIR
-        };
-        let configs = if "USB" == profile_type {
-            &mut self.installed_usb_profiles
-        } else {
-            &mut self.installed_pci_profiles
-        };
+        let conf_path = crate::consts::CHWD_PCI_DATABASE_DIR;
+        let configs = &mut self.installed_pci_profiles;
 
         fill_profiles(profile_type, configs, &mut self.invalid_profiles, conf_path);
     }
 
     fn fill_all_profiles(&mut self, profile_type: &str) {
-        let conf_path = if "USB" == profile_type {
-            crate::consts::CHWD_USB_CONFIG_DIR
-        } else {
-            crate::consts::CHWD_PCI_CONFIG_DIR
-        };
-        let configs = if "USB" == profile_type {
-            &mut self.all_usb_profiles
-        } else {
-            &mut self.all_pci_profiles
-        };
+        let conf_path = crate::consts::CHWD_PCI_CONFIG_DIR;
+        let configs = &mut self.all_pci_profiles;
 
         fill_profiles(profile_type, configs, &mut self.invalid_profiles, conf_path);
     }
@@ -116,18 +77,12 @@ impl Data {
         for pci_device in self.pci_devices.iter_mut() {
             pci_device.available_profiles.clear();
         }
-        for usb_device in self.usb_devices.iter_mut() {
-            usb_device.available_profiles.clear();
-        }
 
         self.all_pci_profiles.clear();
-        self.all_usb_profiles.clear();
 
         self.fill_all_profiles("PCI");
-        self.fill_all_profiles("USB");
 
         set_matching_profiles(&mut self.pci_devices, &mut self.all_pci_profiles, false);
-        set_matching_profiles(&mut self.usb_devices, &mut self.all_usb_profiles, false);
 
         self.update_installed_profile_data();
     }
@@ -170,7 +125,7 @@ fn fill_devices(item: libhd::HWItem) -> Option<ListOfDevicesT> {
     let from_hex =
         |hex_number: u16, fill: usize| -> String { format!("{:01$X}", hex_number, fill) };
 
-    let dev_type = if item == libhd::HWItem::Usb { "USB".to_owned() } else { "PCI".to_owned() };
+    let dev_type = "PCI".to_owned();
 
     // Get the hardware devices
     let mut hd_data = libhd::HDData::new();
@@ -230,7 +185,7 @@ fn set_matching_profiles(
     }
 }
 
-fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -> Vec<usize> {
+pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -> Vec<usize> {
     let mut found_indices = vec![];
 
     for hwd_id in profile.hwd_ids.iter() {

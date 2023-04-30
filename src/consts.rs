@@ -15,9 +15,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 pub const CHWD_CONFIG_FILE: &str = "profiles.toml";
-pub const CHWD_USB_CONFIG_DIR: &str = "/var/lib/mhwd/db/usb/";
 pub const CHWD_PCI_CONFIG_DIR: &str = "/var/lib/mhwd/db/pci/";
-pub const CHWD_USB_DATABASE_DIR: &str = "/var/lib/mhwd/local/usb/";
 pub const CHWD_PCI_DATABASE_DIR: &str = "/var/lib/mhwd/local/pci/";
 pub const CHWD_SCRIPT_PATH: &str = "/var/lib/mhwd/scripts/chwd";
 
