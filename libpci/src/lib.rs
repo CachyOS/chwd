@@ -16,9 +16,9 @@ use libc::c_char;
 #[macro_use]
 extern crate alloc;
 
+use alloc::string::String;
 use core::marker::PhantomData;
 use core::{mem, ptr, str};
-use alloc::{vec::Vec, string::String};
 
 /// Returns the LIBHD version.
 ///
@@ -112,16 +112,7 @@ unsafe impl<'a> Send for PCIAccess<'a> {}
 unsafe impl<'a> Send for PCIDevice<'a> {}
 
 impl<'a> Drop for PCIDevice<'a> {
-    fn drop(&mut self) {
-        //if self.0.is_null() {
-        //    return;
-        //}
-        // Safety: Just FFI
-        //unsafe {
-        //    libhd_sys::hd_free_hd_data(self.0);
-        //    libc::free(self.0 as *mut libc::c_void);
-        //}
-    }
+    fn drop(&mut self) {}
 }
 
 impl<'a> Drop for PCIAccess<'a> {
@@ -136,26 +127,25 @@ impl<'a> Drop for PCIAccess<'a> {
     }
 }
 
-// impl Default for HDData<'_> {
-//     fn default() -> Self {
-//         HDData::new()
-//     }
-// }
-
 impl<'a> PCIAccess<'a> {
     /// Tries to create a new data.
     ///
     /// Safety: Just FFI
     ///
-    /// Returns `None` if libpci_sys::pci_alloc returns a NULL pointer - may happen if allocation fails.
+    /// Returns `None` if libpci_sys::pci_alloc returns a NULL pointer - may happen if allocation
+    /// fails.
     pub fn try_new(do_scan: bool) -> Option<Self> {
         let ptr: *mut libpci_sys::pci_access = unsafe { libpci_sys::pci_alloc() };
         if ptr.is_null() {
             None
         } else {
-            unsafe { libpci_sys::pci_init(ptr); }
+            unsafe {
+                libpci_sys::pci_init(ptr);
+            }
             if do_scan {
-                unsafe { libpci_sys::pci_scan_bus(ptr); }
+                unsafe {
+                    libpci_sys::pci_scan_bus(ptr);
+                }
             }
             Some(Self { handle: ptr, _phantom: PhantomData })
         }
@@ -174,7 +164,9 @@ impl<'a> PCIAccess<'a> {
     /// Scan to get the list of devices
     pub fn scan_bus(&mut self) {
         if !self.handle.is_null() {
-            unsafe { libpci_sys::pci_scan_bus(self.handle); }
+            unsafe {
+                libpci_sys::pci_scan_bus(self.handle);
+            }
         }
     }
 
@@ -183,20 +175,20 @@ impl<'a> PCIAccess<'a> {
         if self.handle.is_null() {
             None
         } else {
-            Some( unsafe { PCIDevice::from_raw((*self.handle).devices) } )
+            Some(unsafe { PCIDevice::from_raw((*self.handle).devices) })
         }
     }
 }
-
 
 impl<'a> PCIDevice<'a> {
     /// Tries to create a new data.
     ///
     /// Safety: Just FFI
     ///
-    /// Returns `None` if libpci_sys::pci_alloc returns a NULL pointer - may happen if allocation fails.
+    /// Returns `None` if libpci_sys::pci_alloc returns a NULL pointer - may happen if allocation
+    /// fails.
     pub fn try_new() -> Option<Self> {
-        Some(Self ( ptr::null_mut::<libpci_sys::pci_dev>(), PhantomData ))
+        Some(Self(ptr::null_mut::<libpci_sys::pci_dev>(), PhantomData))
     }
 
     /// Create a new data.
@@ -216,171 +208,17 @@ impl<'a> PCIDevice<'a> {
     /// the caller must guarantee that `self` is valid
     /// for a reference if it isn't null.
     pub unsafe fn from_raw(data: *mut libpci_sys::pci_dev) -> Self {
-        Self ( data, PhantomData )
+        Self(data, PhantomData)
     }
-
 
     /// Scan to get the list of devices
     pub fn fill_info(&mut self, fill: u32) {
         if !self.0.is_null() {
-            unsafe { libpci_sys::pci_fill_info(self.0, fill as _); }
+            unsafe {
+                libpci_sys::pci_fill_info(self.0, fill as _);
+            }
         }
     }
-
-//     /// Bus type (id and name).
-//     pub fn bus(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID { id: inner_obj.bus.id, name: unsafe { c_char_to_str(inner_obj.bus.name) } })
-//         }
-//     }
-
-//     /// Slot and bus number.
-//     /// Bits 0-7: slot number, 8-31 bus number.
-//     pub fn slot(&self) -> Option<u32> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(inner_obj.slot)
-//         }
-//     }
-
-//     /// (PCI) function.
-//     pub fn func(&self) -> Option<u32> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(inner_obj.func)
-//         }
-//     }
-
-//     /// Base class (id and name).
-//     pub fn base_class(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID {
-//                 id: inner_obj.base_class.id,
-//                 name: unsafe { c_char_to_str(inner_obj.base_class.name) },
-//             })
-//         }
-//     }
-
-//     /// Sub class (id and name).
-//     pub fn sub_class(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID {
-//                 id: inner_obj.sub_class.id,
-//                 name: unsafe { c_char_to_str(inner_obj.sub_class.name) },
-//             })
-//         }
-//     }
-
-//     /// (PCI) programming interface (id and name).
-//     pub fn prog_if(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID {
-//                 id: inner_obj.prog_if.id,
-//                 name: unsafe { c_char_to_str(inner_obj.prog_if.name) },
-//             })
-//         }
-//     }
-
-//     /// Vendor id and name.
-//     ///
-//     /// Id is actually a combination of some tag to differentiate the
-//     /// various id types and the real id.
-//     pub fn vendor(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID {
-//                 id: inner_obj.vendor.id,
-//                 name: unsafe { c_char_to_str(inner_obj.vendor.name) },
-//             })
-//         }
-//     }
-
-//     /// Device id and name.
-//     ///
-//     /// Id is actually a combination of some tag to differentiate the
-//     /// various id types and the real id.
-//     ///
-//     /// Note: If you're looking or something printable, you might want to use [`crate::HD::model`]
-//     /// instead.
-//     pub fn device(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID {
-//                 id: inner_obj.device.id,
-//                 name: unsafe { c_char_to_str(inner_obj.device.name) },
-//             })
-//         }
-//     }
-
-//     /// Subvendor id and name.
-//     ///
-//     /// Id is actually a combination of some tag to differentiate the
-//     /// various id types and the real id.
-//     pub fn sub_vendor(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID {
-//                 id: inner_obj.sub_vendor.id,
-//                 name: unsafe { c_char_to_str(inner_obj.sub_vendor.name) },
-//             })
-//         }
-//     }
-
-//     /// Subdevice id and name.
-//     ///
-//     /// Id is actually a combination of some tag to differentiate the
-//     /// various id types and the real id.
-//     pub fn sub_device(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID {
-//                 id: inner_obj.sub_device.id,
-//                 name: unsafe { c_char_to_str(inner_obj.sub_device.name) },
-//             })
-//         }
-//     }
-
-//     /// Revision id or string.
-//     ///
-//     /// Note:
-//     ///
-//     /// - If revision *is* numerical (e.g. PCI) [`crate::HDID::id`] is used.
-//     /// - If revision *is* some char data (e.g. disk drives) it is stored in [`crate::HDID::name`].
-//     pub fn revision(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID {
-//                 id: inner_obj.revision.id,
-//                 name: unsafe { c_char_to_str(inner_obj.revision.name) },
-//             })
-//         }
-//     }
 
     /// Get class str.
     pub fn class(&self) -> Option<String> {
@@ -390,7 +228,14 @@ impl<'a> PCIDevice<'a> {
             let mut class = vec![0 as u8; 1024];
             let size = (class.len() * mem::size_of::<u8>()) as usize;
 
-            unsafe { libpci_sys::pci_lookup_class_helper((*self.0).access, class.as_mut_ptr() as _, size, self.0); }
+            unsafe {
+                libpci_sys::pci_lookup_class_helper(
+                    (*self.0).access,
+                    class.as_mut_ptr() as _,
+                    size,
+                    self.0,
+                );
+            }
             Some(String::from(str::from_utf8(&class).ok()?))
         }
     }
@@ -403,7 +248,14 @@ impl<'a> PCIDevice<'a> {
             let mut vendor = vec![0 as u8; 256];
             let size = (vendor.len() * mem::size_of::<u8>()) as usize;
 
-            unsafe { libpci_sys::pci_lookup_vendor_helper((*self.0).access, vendor.as_mut_ptr() as _, size, self.0); }
+            unsafe {
+                libpci_sys::pci_lookup_vendor_helper(
+                    (*self.0).access,
+                    vendor.as_mut_ptr() as _,
+                    size,
+                    self.0,
+                );
+            }
             Some(String::from(str::from_utf8(&vendor).ok()?))
         }
     }
@@ -416,7 +268,14 @@ impl<'a> PCIDevice<'a> {
             let mut device = vec![0 as u8; 256];
             let size = (device.len() * mem::size_of::<u8>()) as usize;
 
-            unsafe { libpci_sys::pci_lookup_device_helper((*self.0).access, device.as_mut_ptr() as _, size, self.0); }
+            unsafe {
+                libpci_sys::pci_lookup_device_helper(
+                    (*self.0).access,
+                    device.as_mut_ptr() as _,
+                    size,
+                    self.0,
+                );
+            }
             Some(String::from(str::from_utf8(&device).ok()?))
         }
     }
@@ -444,7 +303,7 @@ impl<'a> PCIDevice<'a> {
     /// Device ID.
     pub fn device_id(&self) -> Option<u16> {
         if self.0.is_null() {
-                None
+            None
         } else {
             let inner_obj = unsafe { *self.0 };
             Some(inner_obj.device_id)
@@ -491,281 +350,19 @@ impl<'a> PCIDevice<'a> {
         }
     }
 
-//     /// Vendor id and name of some compatible hardware.
-//     ///
-//     /// Note: Used mainly for ISA-PnP devices.
-//     pub fn compat_vendor(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID {
-//                 id: inner_obj.compat_vendor.id,
-//                 name: unsafe { c_char_to_str(inner_obj.compat_vendor.name) },
-//             })
-//         }
-//     }
+    pub fn iter(&self) -> Iter<'_> {
+        Iter { ptr: self.0 as _, _phantom: PhantomData }
+    }
 
-//     /// Device id and name of some compatible hardware.
-//     ///
-//     /// Note: Used mainly for ISA-PnP devices.
-//     pub fn compat_device(&self) -> Option<HDID> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(HDID {
-//                 id: inner_obj.compat_device.id,
-//                 name: unsafe { c_char_to_str(inner_obj.compat_device.name) },
-//             })
-//         }
-//     }
-
-//     /// Hardware class.
-//     ///
-//     /// Note: Not to confuse with [`crate::HD::base_class`]!
-//     pub fn hw_class(&self) -> Option<u32> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(inner_obj.hw_class)
-//         }
-//     }
-
-//     /// Model name.
-//     ///
-//     /// Note: This is a combination of vendor and device names. Some heuristics is used
-//     /// to make it more presentable. Use this instead of [`crate::HD::vendor`] and
-//     /// [`crate::HD::device`].
-//     pub fn model(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.model) })
-//         }
-//     }
-
-//     /// Device this hardware is attached to.
-//     ///
-//     /// Note: Link to some 'parent' %device. Use \ref hd_get_device_by_idx() to get
-//     /// the corresponding hardware entry.
-//     pub fn attached_to(&self) -> Option<u32> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(inner_obj.attached_to)
-//         }
-//     }
-
-//     /// sysfs entry for this hardware, if any.
-//     pub fn sysfs_id(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.sysfs_id) })
-//         }
-//     }
-
-//     /// sysfs bus id for this hardware, if any.
-//     pub fn sysfs_bus_id(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.sysfs_bus_id) })
-//         }
-//     }
-
-//     /// sysfs device link.
-//     pub fn sysfs_device_link(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.sysfs_device_link) })
-//         }
-//     }
-
-//     /// Special %device file.
-//     ///
-//     /// Note: Device file name to access this hardware.
-//     pub fn unix_dev_name(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.unix_dev_name) })
-//         }
-//     }
-
-//     /// Special %device file.
-//     ///
-//     /// Note: Device file name to access this hardware.
-//     pub fn unix_dev_name2(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.unix_dev_name2) })
-//         }
-//     }
-
-//     /// BIOS/PROM id.
-//     ///
-//     /// Note: Where appropriate, this is a special BIOS/PROM id (e.g. "0x80" for
-//     /// the first harddisk on Intel-PCs).
-//     /// CHPID for s390.
-//     pub fn rom_id(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.rom_id) })
-//         }
-//     }
-
-//     /// HAL udi.
-//     pub fn udi(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.udi) })
-//         }
-//     }
-
-//     /// [`crate::HD::udi`] of parent ([`crate::HD::attached_to`])
-//     pub fn parent_udi(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.parent_udi) })
-//         }
-//     }
-
-//     /// Unique id for this hardware.
-//     ///
-//     /// Note: A unique string identifying this hardware. The string consists
-//     /// of two parts separated by a dot ("."). The part before the dot
-//     /// describes the location (where the hardware is attached in the system).
-//     /// The part after the dot identifies the hardware itself. The string
-//     /// must not contain slashes ("/") because we're going to create files
-//     /// with this id as name. Apart from this there are no restrictions on
-//     /// the form of this string.
-//     pub fn unique_id(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.unique_id) })
-//         }
-//     }
-
-//     /// Currently active driver.
-//     pub fn driver(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.driver) })
-//         }
-//     }
-
-//     /// Currently active driver module (if any).
-//     pub fn driver_module(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.driver_module) })
-//         }
-//     }
-
-//     /// [`crate::HD::unique_id`] of parent ([`crate::HD::attached_to`])
-//     pub fn parent_id(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.parent_id) })
-//         }
-//     }
-
-//     /// USB Global Unique Identifier.
-//     ///
-//     /// Note: Available for USB devices. This may even be set if [`crate::HD::bus`] is not
-//     /// bus_usb (e.g. USB storage devices will have [`crate::HD::bus`] set to
-//     /// bus_scsi due to SCSI emulation).
-//     pub fn usb_guid(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.usb_guid) })
-//         }
-//     }
-
-//     /// module alias
-//     pub fn modalias(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.modalias) })
-//         }
-//     }
-
-//     /// Consistent Device Name (CDN), pci firmware spec 3.1, chapter 4.6.7
-//     pub fn label(&self) -> Option<&'static str> {
-//         if self.handle.is_null() {
-//             None
-//         } else {
-//             let inner_obj = unsafe { *self.handle };
-//             Some(unsafe { c_char_to_str(inner_obj.label) })
-//         }
-//     }
-
-//     pub fn list(
-//         data: &mut HDData,
-//         item: HWItem,
-//         rescan: i32,
-//         hd_old: Option<&mut Self>,
-//     ) -> Option<Self> {
-//         let hd_old_cov = if hd_old.is_none() { ptr::null_mut() } else { hd_old.unwrap().handle };
-//         Some(HD {
-//             handle: unsafe { libhd_sys::hd_list(data.0, item as u32, rescan, hd_old_cov) },
-//             is_list: true,
-//             do_drop: false,
-//             _phantom: PhantomData,
-//         })
-//     }
-
-//     pub fn dump_entry(data: &mut HDData, hd: &mut Self) {
-//         unsafe { libhd_sys::hd_dump_entry(data.0, hd.handle, libhd_sys::get_stdout_ptr()) }
-//     }
-
-//     pub fn len(hd: &Self) -> usize {
-//         unsafe { libhd_sys::hd_get_len(hd.handle) }
-//     }
-
-//     pub fn iter(&self) -> Iter<'_> {
-//         Iter { ptr: self.handle as _, _phantom: PhantomData }
-//     }
-
-     pub fn iter_mut(&self) -> IterMut<'_> {
-         IterMut { ptr: self.0 as _, _phantom: PhantomData }
-     }
+    pub fn iter_mut(&self) -> IterMut<'_> {
+        IterMut { ptr: self.0 as _, _phantom: PhantomData }
+    }
 }
 
-// pub struct Iter<'a> {
-//     ptr: *const libhd_sys::hd_t,
-//     _phantom: PhantomData<&'a ()>,
-// }
+pub struct Iter<'a> {
+    ptr: *const libpci_sys::pci_dev,
+    _phantom: PhantomData<&'a ()>,
+}
 
 pub struct IterMut<'a> {
     ptr: *mut libpci_sys::pci_dev,
