@@ -87,7 +87,7 @@ dependencies = [
  "clap",
  "colored",
  "comfy-table",
- "libhd",
+ "libpci",
  "nix",
  "subprocess",
  "toml",
@@ -222,23 +222,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6a987beff54b60ffa6d51982e1aa1146bc42f19bd26be28b0586f252fccf5317"
 
 [[package]]
-name = "libhd"
-version = "0.1.0"
-dependencies = [
- "libc",
- "libhd-sys",
-]
-
-[[package]]
-name = "libhd-sys"
-version = "0.1.0"
-dependencies = [
- "bindgen",
- "cc",
- "libc",
-]
-
-[[package]]
 name = "libloading"
 version = "0.7.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -246,6 +229,23 @@ checksum = "b67380fd3b2fbe7527a606e18729d21c6f3951633d0500574c4dc22d2d638b9f"
 dependencies = [
  "cfg-if",
  "winapi",
+]
+
+[[package]]
+name = "libpci"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "libpci-sys",
+]
+
+[[package]]
+name = "libpci-sys"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cc",
+ "libc",
 ]
 
 [[package]]

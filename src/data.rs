@@ -36,7 +36,7 @@ pub struct Data {
 impl Data {
     pub fn new() -> Self {
         let mut res = Self {
-            pci_devices: fill_devices(libhd::HWItem::Pci).expect("Failed to init"),
+            pci_devices: fill_devices().expect("Failed to init"),
             sync_package_manager_database: true,
             ..Default::default()
         };
@@ -121,37 +121,45 @@ fn fill_profiles(
     configs.sort_by(|lhs, rhs| rhs.priority.cmp(&lhs.priority));
 }
 
-fn fill_devices(item: libhd::HWItem) -> Option<ListOfDevicesT> {
+fn fill_devices() -> Option<ListOfDevicesT> {
     let from_hex =
-        |hex_number: u16, fill: usize| -> String { format!("{:01$X}", hex_number, fill) };
+        |hex_number: u32, fill: usize| -> String { format!("{:01$x}", hex_number, fill) };
 
     let dev_type = "PCI".to_owned();
 
-    // Get the hardware devices
-    let mut hd_data = libhd::HDData::new();
-    let hd = libhd::HD::list(&mut hd_data, item, 1, None)?;
+    // Initialize
+    let mut pacc = libpci::PCIAccess::new(true);
+
+    // Get hardware devices
+    let pci_devices = pacc.devices().expect("Failed");
     let mut devices = vec![];
 
-    for iter in hd.iter_mut() {
-        let item_base_class = &iter.base_class().unwrap();
-        let item_sub_class = &iter.sub_class().unwrap();
-        let item_vendor = &iter.vendor().unwrap();
-        let item_device = &iter.device().unwrap();
+    for mut iter in pci_devices.iter_mut() {
+        // fill in header info we need
+        iter.fill_info(libpci::Fill::IDENT as u32 | libpci::Fill::CLASS as u32);
+
+        // let item_base_class = &iter.base_class().unwrap();
+        // let item_sub_class = &iter.sub_class().unwrap();
+        let item_class = iter.class().unwrap();
+        let item_vendor = iter.vendor().unwrap();
+        let item_device = iter.device().unwrap();
 
         devices.push(Device {
             dev_type: dev_type.clone(),
-            class_name: item_base_class.name.to_owned(),
-            device_name: item_device.name.to_owned(),
-            vendor_name: item_vendor.name.to_owned(),
-            class_id: format!(
-                "{}{}",
-                from_hex(item_base_class.id as u16, 2),
-                &from_hex(item_sub_class.id as u16, 2).to_lowercase()
+            class_name: item_class,
+            device_name: item_device,
+            vendor_name: item_vendor,
+            class_id: format!("{}", from_hex(iter.class_id().unwrap() as _, 4)),
+            device_id: format!("{}", from_hex(iter.device_id().unwrap() as _, 4)),
+            vendor_id: format!("{}", from_hex(iter.vendor_id().unwrap() as _, 4)),
+            sysfs_busid: format!(
+                "{}:{}:{}.{}",
+                from_hex(iter.domain().unwrap() as _, 4),
+                from_hex(iter.bus().unwrap() as _, 2),
+                from_hex(iter.dev().unwrap() as _, 2),
+                iter.func().unwrap(),
             ),
-            device_id: from_hex(item_device.id as u16, 4).to_lowercase(),
-            vendor_id: from_hex(item_vendor.id as u16, 4).to_lowercase(),
-            sysfs_busid: iter.sysfs_bus_id().unwrap().to_owned(),
-            sysfs_id: iter.sysfs_id().unwrap().to_owned(),
+            sysfs_id: "".to_owned(),
             available_profiles: vec![],
             installed_profiles: vec![],
         });
