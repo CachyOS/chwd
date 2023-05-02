@@ -236,7 +236,7 @@ impl<'a> PCIDevice<'a> {
                     self.0,
                 );
             }
-            Some(String::from(str::from_utf8(&class).ok()?))
+            Some(String::from(unsafe { c_char_to_str(class.as_ptr() as _) }))
         }
     }
 
@@ -256,7 +256,7 @@ impl<'a> PCIDevice<'a> {
                     self.0,
                 );
             }
-            Some(String::from(str::from_utf8(&vendor).ok()?))
+            Some(String::from(unsafe { c_char_to_str(vendor.as_ptr() as _) }))
         }
     }
 
@@ -276,7 +276,7 @@ impl<'a> PCIDevice<'a> {
                     self.0,
                 );
             }
-            Some(String::from(str::from_utf8(&device).ok()?))
+            Some(String::from(unsafe { c_char_to_str(device.as_ptr() as _) }))
         }
     }
 
