@@ -54,5 +54,5 @@ fn compile_helper_lib() {
         .flag_if_supported("-fdata-sections")
         .flag_if_supported("-fmerge-all-constants")
         // Compile!
-        .compile("libhd_utils.a");
+        .compile("libpci_utils.a");
 }
