@@ -20,10 +20,7 @@ use alloc::string::String;
 use core::marker::PhantomData;
 use core::{mem, ptr, str};
 
-/// Returns the LIBHD version.
-///
-/// Returns `major * 10_000 + minor`.
-/// So 22.2 would be returned as `22_002`.
+/// Returns the LIBPCI version.
 pub fn version_number() -> u32 {
     libpci_sys::PCI_LIB_VERSION as u32
 }
@@ -87,25 +84,15 @@ impl From<u32> for AccessType {
     }
 }
 
-/// Individual hardware item.
+/// PCI access structure.
 ///
-/// Note: Every hardware component gets an \ref hd_t entry. A list of all hardware
-/// items is in \ref hd_data_t::hd.
 #[derive(Clone, Debug)]
 pub struct PCIAccess<'a> {
     handle: *mut libpci_sys::pci_access,
     _phantom: PhantomData<&'a ()>,
 }
 
-// /// Holds ID + name pairs.
-// ///
-// /// Note: Used for bus, class, vendor, %device and such.
-// pub struct HDID {
-//     pub id: u32,
-//     pub name: &'static str,
-// }
-
-/// Holds all data accumulated during hardware probing.
+/// Holds device data found on this bus.
 pub struct PCIDevice<'a>(*mut libpci_sys::pci_dev, PhantomData<&'a ()>);
 
 unsafe impl<'a> Send for PCIAccess<'a> {}
@@ -181,24 +168,10 @@ impl<'a> PCIAccess<'a> {
 }
 
 impl<'a> PCIDevice<'a> {
-    /// Tries to create a new data.
-    ///
-    /// Safety: Just FFI
-    ///
-    /// Returns `None` if libpci_sys::pci_alloc returns a NULL pointer - may happen if allocation
-    /// fails.
-    pub fn try_new() -> Option<Self> {
-        Some(Self(ptr::null_mut::<libpci_sys::pci_dev>(), PhantomData))
-    }
-
     /// Create a new data.
-    ///
-    /// # Panics
-    ///
-    /// Panics if failed to allocate required memory.
     pub fn new() -> Self {
         // Safety: Just FFI
-        Self::try_new().expect("returned null pointer when allocating memory")
+        Self(ptr::null_mut::<libpci_sys::pci_dev>(), PhantomData)
     }
 
     /// Constructs from raw C type
@@ -350,18 +323,9 @@ impl<'a> PCIDevice<'a> {
         }
     }
 
-    pub fn iter(&self) -> Iter<'_> {
-        Iter { ptr: self.0 as _, _phantom: PhantomData }
-    }
-
     pub fn iter_mut(&self) -> IterMut<'_> {
         IterMut { ptr: self.0 as _, _phantom: PhantomData }
     }
-}
-
-pub struct Iter<'a> {
-    ptr: *const libpci_sys::pci_dev,
-    _phantom: PhantomData<&'a ()>,
 }
 
 pub struct IterMut<'a> {
