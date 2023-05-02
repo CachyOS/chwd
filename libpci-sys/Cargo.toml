@@ -11,7 +11,7 @@ repository = "https://github.com/CachyOS/mhwd-cachyos"
 categories = ["api-bindings"]
 
 [dependencies]
-libc = { default-features = false, version = "0.2.141" }
+libc = { default-features = false, version = "0.2.142" }
 
 [build-dependencies]
 bindgen = { version = "0.65.1", default-features = false, features = ["runtime"] }

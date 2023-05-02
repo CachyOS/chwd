@@ -10,7 +10,7 @@ toml = "0.7.3"
 libpci = { path = "libpci", version = "0.1.0" }
 subprocess = "0.2.9"
 colored = "2.0.0"
-clap = { features = ["std", "derive"], version = "4.1.13" , default-features = false }
+clap = { features = ["std", "derive"], version = "4.2.4", default-features = false }
 anyhow = "1"
 nix = { features = ["user"], default-features = false, version = "0.26.2" }
 comfy-table = { default-features = false, version = "6.1.4" }
