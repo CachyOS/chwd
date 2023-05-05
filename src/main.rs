@@ -129,7 +129,9 @@ fn perceed_autoconf(
 fn main() -> anyhow::Result<()> {
     let args: Vec<String> = std::env::args().collect();
     if misc::get_current_cmdname(args[0].as_str()) == "mhwd" {
-        console_writer::print_warning("'mhwd' is deprecated and will be removed in future. Please use 'chwd'");
+        console_writer::print_warning(
+            "'mhwd' is deprecated and will be removed in future. Please use 'chwd'",
+        );
     }
 
     // 1) Process arguments
