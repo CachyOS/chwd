@@ -1,0 +1,52 @@
+name: Build
+
+on:
+  push:
+    paths-ignore:
+      - 'LICENSE'
+      - '*.md'
+      - '*.sh'
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    name: rust fmt
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
+
+      - name: install deps
+        run: |
+          sudo apt update
+          sudo apt install libpci-dev
+        shell: bash
+
+      - name: Build
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+
+      - name: Clippy
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all-targets -- -D warnings
+
+      - name: Fmt
+      - uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
