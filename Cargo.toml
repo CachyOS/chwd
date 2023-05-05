@@ -15,6 +15,10 @@ anyhow = "1"
 nix = { features = ["user"], default-features = false, version = "0.26.2" }
 comfy-table = { default-features = false, version = "6.1.4" }
 
+[build-dependencies]
+clap = { features = ["derive"], version = "4.2.4" }
+clap_complete = "4.2.1"
+
 [profile.release]
 strip = "symbols"
 panic = "abort"

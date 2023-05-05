@@ -16,6 +16,7 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+pub mod args;
 pub mod console_writer;
 pub mod consts;
 pub mod data;
@@ -25,64 +26,14 @@ pub mod profile;
 
 use misc::Transaction;
 use profile::Profile;
+
 use std::fs;
+use std::path::Path;
+use std::sync::Arc;
 
 use clap::Parser;
 use nix::unistd::Uid;
-use std::path::Path;
-use std::sync::Arc;
 use subprocess::Exec;
-
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
-pub struct Args {
-    /// Show PCI
-    #[arg(long = "pci")]
-    show_pci: bool,
-
-    /// Install profile
-    #[arg(short, long, number_of_values = 2, value_names = &["usb/pci", "profile"], conflicts_with("remove"))]
-    install: Option<Vec<String>>,
-
-    /// Remove profile
-    #[arg(short, long, number_of_values = 2, value_names = &["usb/pci", "profile"], conflicts_with("install"))]
-    remove: Option<Vec<String>>,
-
-    /// Show detailed info for listings
-    #[arg(short, long)]
-    detail: bool,
-
-    /// Force reinstall
-    #[arg(short, long)]
-    force: bool,
-
-    /// List installed kernels
-    #[arg(long)]
-    list_installed: bool,
-
-    /// List available profiles for all devices
-    #[arg(long = "list")]
-    list_available: bool,
-
-    /// List all profiles
-    #[arg(long)]
-    list_all: bool,
-
-    /// Autoconfigure
-    #[arg(short, long, number_of_values = 3, value_names = &["usb/pci", "free/nonfree", "classid"], conflicts_with_all(["install", "remove"]))]
-    autoconfigure: Option<Vec<String>>,
-
-    /// Print if nvidia card found
-    #[arg(long = "is_nvidia_card")]
-    is_nvidia_card: bool,
-
-    #[arg(long, default_value_t = String::from("/var/cache/pacman/pkg"))]
-    pmcachedir: String,
-    #[arg(long, default_value_t = String::from("/etc/pacman.conf"))]
-    pmconfig: String,
-    #[arg(long, default_value_t = String::from("/"))]
-    pmroot: String,
-}
 
 fn perceed_inst_rem(
     args: &Option<Vec<String>>,
@@ -136,7 +87,7 @@ fn main() -> anyhow::Result<()> {
 
     // 1) Process arguments
 
-    let mut argstruct = Args::parse();
+    let mut argstruct = args::Args::parse();
     if args.len() <= 1 {
         argstruct.list_available = true;
     }
@@ -245,7 +196,7 @@ fn main() -> anyhow::Result<()> {
 
 fn prepare_autoconfigure(
     data: &data::Data,
-    args: &mut Args,
+    args: &mut args::Args,
     autoconf_class_id: &str,
     autoconf_nonfree_driver: bool,
 ) -> Vec<String> {
@@ -349,7 +300,7 @@ fn get_installed_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Pr
 
 pub fn run_script(
     data: &mut data::Data,
-    args: &Args,
+    args: &args::Args,
     profile: &Profile,
     transaction: Transaction,
 ) -> bool {
@@ -416,7 +367,7 @@ pub fn run_script(
 
 fn perform_transaction(
     data: &mut data::Data,
-    args: &Args,
+    args: &args::Args,
     profile: &Arc<Profile>,
     transaction_type: Transaction,
     force: bool,
@@ -447,7 +398,7 @@ fn perform_transaction(
 
 fn perform_transaction_type(
     data_obj: &mut data::Data,
-    args: &Args,
+    args: &args::Args,
     profile: &Arc<Profile>,
     transaction_type: Transaction,
     force: bool,
@@ -489,7 +440,7 @@ fn perform_transaction_type(
     status
 }
 
-fn install_profile(data: &mut data::Data, args: &Args, profile: &Profile) -> misc::Status {
+fn install_profile(data: &mut data::Data, args: &args::Args, profile: &Profile) -> misc::Status {
     if !run_script(data, args, profile, Transaction::Install) {
         return misc::Status::ErrorScriptFailed;
     }
@@ -513,7 +464,7 @@ fn install_profile(data: &mut data::Data, args: &Args, profile: &Profile) -> mis
     misc::Status::Success
 }
 
-fn remove_profile(data: &mut data::Data, args: &Args, profile: &Profile) -> misc::Status {
+fn remove_profile(data: &mut data::Data, args: &args::Args, profile: &Profile) -> misc::Status {
     let installed_profile = get_installed_profile(data, &profile.name);
 
     // Check if installed

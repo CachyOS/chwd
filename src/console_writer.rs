@@ -23,7 +23,7 @@ use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::*;
 
-pub fn handle_arguments_listing(data: &Data, args: &crate::Args) {
+pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     // Check for invalid profiles
     for invalid_profile in data.invalid_profiles.iter() {
         print_warning(&format!("profile '{invalid_profile}' is invalid!"));
