@@ -85,7 +85,6 @@ impl From<u32> for AccessType {
 }
 
 /// PCI access structure.
-///
 #[derive(Clone, Debug)]
 pub struct PCIAccess<'a> {
     handle: *mut libpci_sys::pci_access,

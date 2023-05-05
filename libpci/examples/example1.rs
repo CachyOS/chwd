@@ -10,7 +10,10 @@ fn main() {
         let item_class = item.class().unwrap();
         let item_vendor = item.vendor().unwrap();
         let item_device = item.device().unwrap();
-        println!("class := '{}', vendor := '{}', device := '{}'", item_class, item_vendor, item_device);
+        println!(
+            "class := '{}', vendor := '{}', device := '{}'",
+            item_class, item_vendor, item_device
+        );
         i += 1;
     }
     println!("i := '{i}'");
