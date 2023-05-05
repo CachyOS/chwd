@@ -16,8 +16,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  fmt:
-    name: rust fmt
+  build:
+    name: CI
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
