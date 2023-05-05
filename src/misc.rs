@@ -46,6 +46,14 @@ pub enum Message {
     RemoveEnd,
 }
 
+#[inline]
+pub fn get_current_cmdname(cmd_line: &str) -> &str {
+    if let Some(trim_pos) = cmd_line.rfind('/') {
+        return cmd_line.get((trim_pos + 1)..).unwrap();
+    }
+    cmd_line
+}
+
 pub fn find_profile(profile_name: &str, profiles: &[Profile]) -> Option<Arc<Profile>> {
     let found_profile = profiles.iter().find(|x| x.name == profile_name);
     if let Some(found_profile) = found_profile {
