@@ -54,23 +54,23 @@ impl Data {
         self.installed_pci_profiles.clear();
 
         // Refill data
-        self.fill_installed_profiles("PCI");
+        self.fill_installed_profiles();
 
         set_matching_profiles(&mut self.pci_devices, &mut self.installed_pci_profiles, true);
     }
 
-    fn fill_installed_profiles(&mut self, profile_type: &str) {
+    fn fill_installed_profiles(&mut self) {
         let conf_path = crate::consts::CHWD_PCI_DATABASE_DIR;
         let configs = &mut self.installed_pci_profiles;
 
-        fill_profiles(profile_type, configs, &mut self.invalid_profiles, conf_path);
+        fill_profiles(configs, &mut self.invalid_profiles, conf_path);
     }
 
-    fn fill_all_profiles(&mut self, profile_type: &str) {
+    fn fill_all_profiles(&mut self) {
         let conf_path = crate::consts::CHWD_PCI_CONFIG_DIR;
         let configs = &mut self.all_pci_profiles;
 
-        fill_profiles(profile_type, configs, &mut self.invalid_profiles, conf_path);
+        fill_profiles(configs, &mut self.invalid_profiles, conf_path);
     }
 
     fn update_profiles_data(&mut self) {
@@ -80,7 +80,7 @@ impl Data {
 
         self.all_pci_profiles.clear();
 
-        self.fill_all_profiles("PCI");
+        self.fill_all_profiles();
 
         set_matching_profiles(&mut self.pci_devices, &mut self.all_pci_profiles, false);
 
@@ -89,7 +89,6 @@ impl Data {
 }
 
 fn fill_profiles(
-    profile_type: &str,
     configs: &mut ListOfProfilesT,
     invalid_profiles: &mut Vec<String>,
     conf_path: &str,
@@ -103,7 +102,7 @@ fn fill_profiles(
         if !Path::new(&config_file_path).exists() {
             continue;
         }
-        if let Ok(profiles) = crate::profile::parse_profiles(&config_file_path, profile_type) {
+        if let Ok(profiles) = crate::profile::parse_profiles(&config_file_path) {
             for profile in profiles.into_iter() {
                 if profile.packages.is_empty() {
                     continue;

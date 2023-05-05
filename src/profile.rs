@@ -67,7 +67,7 @@ impl Profile {
     }
 }
 
-pub fn parse_profiles(file_path: &str, type_name: &str) -> Result<Vec<Profile>> {
+pub fn parse_profiles(file_path: &str) -> Result<Vec<Profile>> {
     let mut profiles = vec![];
     let file_content = fs::read_to_string(file_path)?;
     let toml_table = file_content.parse::<toml::Table>()?;
