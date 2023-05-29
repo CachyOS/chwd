@@ -13,7 +13,7 @@ colored = "2.0.0"
 clap = { features = ["derive"], version = "4.3.0" }
 anyhow = "1"
 nix = { features = ["user"], default-features = false, version = "0.26.2" }
-comfy-table = { default-features = false, version = "6.1.4" }
+comfy-table = { default-features = false, version = "6.2.0" }
 
 [build-dependencies]
 clap = { features = ["derive"], version = "4.3.0" }
