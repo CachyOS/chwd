@@ -10,13 +10,13 @@ toml = "0.7.4"
 libpci = { path = "libpci", version = "0.1.0" }
 subprocess = "0.2.9"
 colored = "2.0.0"
-clap = { features = ["derive"], version = "4.3.0" }
+clap = { features = ["derive"], version = "4.3.2" }
 anyhow = "1"
 nix = { features = ["user"], default-features = false, version = "0.26.2" }
 comfy-table = { default-features = false, version = "6.2.0" }
 
 [build-dependencies]
-clap = { features = ["derive"], version = "4.3.0" }
+clap = { features = ["derive"], version = "4.3.2" }
 clap_complete = "4.3.0"
 
 [profile.release]
