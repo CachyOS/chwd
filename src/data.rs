@@ -21,6 +21,8 @@ use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 
+use regex::Regex;
+
 pub type ListOfProfilesT = Vec<Profile>;
 pub type ListOfDevicesT = Vec<Device>;
 
@@ -195,6 +197,12 @@ fn set_matching_profiles(
 pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -> Vec<usize> {
     let mut found_indices = vec![];
 
+    let re: Option<Regex> = if let Some(dev_pattern) = &profile.device_name_pattern {
+        Some(Regex::new(dev_pattern).expect("Failed to initialize regex"))
+    } else {
+        None
+    };
+
     for hwd_id in profile.hwd_ids.iter() {
         let mut found_device = false;
 
@@ -226,9 +234,14 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
                             .any(|x| x.to_lowercase() == i_device.vendor_id.to_lowercase());
                         if !found {
                             // Check device ids
-                            found = hwd_id.device_ids.iter().any(|x| {
-                                x == "*" || x.to_lowercase() == i_device.device_id.to_lowercase()
-                            });
+                            found = if let Some(re) = &re {
+                                re.is_match(&i_device.device_name)
+                            } else {
+                                hwd_id.device_ids.iter().any(|x| {
+                                    x == "*"
+                                        || x.to_lowercase() == i_device.device_id.to_lowercase()
+                                })
+                            };
                             if found {
                                 // Check blacklisted device ids
                                 found = hwd_id
