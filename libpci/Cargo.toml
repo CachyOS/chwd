@@ -6,8 +6,8 @@ authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
 license = "GPLv3"
 
 description = "Rust bindings for libpci"
-homepage = "https://github.com/CachyOS/mhwd-cachyos"
-repository = "https://github.com/CachyOS/mhwd-cachyos"
+homepage = "https://github.com/CachyOS/chwd"
+repository = "https://github.com/CachyOS/chwd"
 categories = ["api-bindings"]
 
 [dependencies]
