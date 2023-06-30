@@ -191,7 +191,7 @@ local function main()
     pmconfig = get_opt_argument(options, "pmconfig", "/etc/pacman.conf")
     pacman = table.concat({"pacman --noconfirm", "--cachedir", cachedir, "-r", pmroot, "--config", pmconfig}, " ")
     local profile_name = get_opt_argument(options, "profile")
-    local path = get_opt_argument(options, "path", "/var/lib/mhwd/db/profiles.toml")
+    local path = get_opt_argument(options, "path", "/var/lib/chwd/db/profiles.toml")
 
     if options.sync then
         sync = true
