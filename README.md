@@ -1,3 +1,3 @@
-## mhwd-cachyos
+## chwd
 
-mhwd for CachyOS and Arch Linux.
+chwd for CachyOS and Arch Linux.
