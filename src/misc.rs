@@ -63,18 +63,15 @@ pub fn find_profile(profile_name: &str, profiles: &[Profile]) -> Option<Arc<Prof
 }
 
 pub fn check_nvidia_card() {
-    if !Path::new("/var/lib/mhwd/ids/pci/nvidia.ids").exists() {
-        println!("No nvidia ids found!");
-        return;
-    }
-
     let data = data::Data::new();
     for pci_device in data.pci_devices.iter() {
         if pci_device.available_profiles.is_empty() {
             continue;
         }
 
-        if pci_device.vendor_id == "10de" {
+        if pci_device.vendor_id == "10de"
+            && pci_device.available_profiles.iter().any(|x| x.is_nonfree)
+        {
             println!("NVIDIA card found!");
             return;
         }
