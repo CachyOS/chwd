@@ -41,6 +41,7 @@ pub struct Profile {
     pub packages: String,
     pub post_install: String,
     pub post_remove: String,
+    pub device_name_pattern: Option<String>,
 
     pub hwd_ids: Vec<HardwareID>,
 }
@@ -63,6 +64,7 @@ impl Profile {
             post_remove: "".to_owned(),
             priority: 0,
             hwd_ids: Vec::from([Default::default()]),
+            device_name_pattern: None,
         }
     }
 }
@@ -150,6 +152,9 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         desc: node.get("desc").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
         priority: node.get("priority").and_then(|x| x.as_integer()).unwrap_or(0) as i32,
         hwd_ids: Vec::from([Default::default()]),
+        device_name_pattern: node
+            .get("device_name_pattern")
+            .and_then(|x| x.as_str().map(str::to_string)),
     };
 
     let conf_devids = node.get("device_ids").and_then(|x| x.as_str()).unwrap_or("");
@@ -237,6 +242,9 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     }
     if !profile.post_remove.is_empty() {
         table.insert("post_remove".to_owned(), profile.post_remove.clone().into());
+    }
+    if let Some(dev_name_pattern) = &profile.device_name_pattern {
+        table.insert("device_name_pattern".to_owned(), dev_name_pattern.clone().into());
     }
 
     let device_ids = profile.hwd_ids.last().unwrap().device_ids.clone();

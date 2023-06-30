@@ -14,6 +14,7 @@ clap = { features = ["derive"], version = "4.3.9" }
 anyhow = "1"
 nix = { features = ["user"], default-features = false, version = "0.26.2" }
 comfy-table = { default-features = false, version = "7.0.1" }
+regex = "1.8.4"
 
 [build-dependencies]
 clap = { features = ["derive"], version = "4.3.9" }
