@@ -18,7 +18,7 @@ regex = "1.8.4"
 
 [build-dependencies]
 clap = { features = ["derive"], version = "4.3.9" }
-clap_complete = "4.3.1"
+clap_complete = "4.3.2"
 
 [profile.release]
 strip = "symbols"
