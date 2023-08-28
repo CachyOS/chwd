@@ -6,7 +6,7 @@ license = "GPLv3"
 edition = "2021"
 
 [dependencies]
-toml = "0.7.5"
+toml = "0.7.6"
 libpci = { path = "libpci", version = "0.1.0" }
 subprocess = "0.2.9"
 colored = "2.0.4"
