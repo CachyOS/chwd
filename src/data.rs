@@ -197,7 +197,10 @@ fn set_matching_profiles(
 pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -> Vec<usize> {
     let mut found_indices = vec![];
 
-    let re: Option<Regex> = profile.device_name_pattern.as_ref().map(|dev_pattern| Regex::new(dev_pattern).expect("Failed to initialize regex"));
+    let re: Option<Regex> = profile
+        .device_name_pattern
+        .as_ref()
+        .map(|dev_pattern| Regex::new(dev_pattern).expect("Failed to initialize regex"));
 
     for hwd_id in profile.hwd_ids.iter() {
         let mut found_device = false;
