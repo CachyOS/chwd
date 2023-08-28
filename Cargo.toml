@@ -9,7 +9,7 @@ edition = "2021"
 toml = "0.7.5"
 libpci = { path = "libpci", version = "0.1.0" }
 subprocess = "0.2.9"
-colored = "2.0.0"
+colored = "2.0.4"
 clap = { features = ["derive"], version = "4.3.9" }
 anyhow = "1"
 nix = { features = ["user"], default-features = false, version = "0.26.2" }
