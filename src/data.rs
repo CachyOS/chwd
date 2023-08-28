@@ -150,9 +150,9 @@ fn fill_devices() -> Option<ListOfDevicesT> {
             class_name: item_class,
             device_name: item_device,
             vendor_name: item_vendor,
-            class_id: format!("{}", from_hex(iter.class_id().unwrap() as _, 4)),
-            device_id: format!("{}", from_hex(iter.device_id().unwrap() as _, 4)),
-            vendor_id: format!("{}", from_hex(iter.vendor_id().unwrap() as _, 4)),
+            class_id: from_hex(iter.class_id().unwrap() as _, 4).to_string(),
+            device_id: from_hex(iter.device_id().unwrap() as _, 4).to_string(),
+            vendor_id: from_hex(iter.vendor_id().unwrap() as _, 4).to_string(),
             sysfs_busid: format!(
                 "{}:{}:{}.{}",
                 from_hex(iter.domain().unwrap() as _, 4),
@@ -197,11 +197,7 @@ fn set_matching_profiles(
 pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -> Vec<usize> {
     let mut found_indices = vec![];
 
-    let re: Option<Regex> = if let Some(dev_pattern) = &profile.device_name_pattern {
-        Some(Regex::new(dev_pattern).expect("Failed to initialize regex"))
-    } else {
-        None
-    };
+    let re: Option<Regex> = profile.device_name_pattern.as_ref().map(|dev_pattern| Regex::new(dev_pattern).expect("Failed to initialize regex"));
 
     for hwd_id in profile.hwd_ids.iter() {
         let mut found_device = false;
