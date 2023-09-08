@@ -186,7 +186,7 @@ fn set_matching_profile(profile: &Profile, devices: &mut ListOfDevicesT, set_as_
 
 fn set_matching_profiles(
     devices: &mut ListOfDevicesT,
-    profiles: &mut ListOfProfilesT,
+    profiles: &ListOfProfilesT,
     set_as_installed: bool,
 ) {
     for profile in profiles.iter() {
