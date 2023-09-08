@@ -12,7 +12,7 @@ subprocess = "0.2"
 colored = "2"
 clap = { features = ["derive"], version = "4" }
 anyhow = "1"
-nix = { features = ["user"], default-features = false, version = "0.26.2" }
+nix = { features = ["user"], default-features = false, version = "0.26" }
 comfy-table = { default-features = false, version = "7" }
 regex = "1"
 
