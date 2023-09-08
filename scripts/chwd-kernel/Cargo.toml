@@ -11,7 +11,7 @@ alpm-utils = { features = ["conf"], default-features = false, version = "2" }
 pacmanconf = "2"
 
 subprocess = "0.2"
-once_cell = { default-features = false, version = "1" }
+once_cell = { features = ["std"], default-features = false, version = "1" }
 clap = { features = ["derive"], version = "4" }
 nix = { features = ["user"], default-features = false, version = "0.26" }
 dialoguer = { default-features = false, version = "0.10" }
