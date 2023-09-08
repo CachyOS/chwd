@@ -6,15 +6,15 @@ license = "GPLv3"
 edition = "2021"
 
 [dependencies]
-alpm = { default-features = false, version = "2.2.1" }
-alpm-utils = { features = ["conf"], default-features = false, version = "2.0.0" }
-pacmanconf = "2.0.0"
+alpm = { default-features = false, version = "2" }
+alpm-utils = { features = ["conf"], default-features = false, version = "2" }
+pacmanconf = "2"
 
-subprocess = "0.2.9"
-once_cell = { default-features = false, version = "1.17.1" }
-clap = { features = ["derive"], version = "4.2.4" }
-nix = { features = ["user"], default-features = false, version = "0.26.2" }
-dialoguer = { default-features = false, version = "0.10.4" }
+subprocess = "0.2"
+once_cell = { default-features = false, version = "1" }
+clap = { features = ["derive"], version = "4" }
+nix = { features = ["user"], default-features = false, version = "0.26" }
+dialoguer = { default-features = false, version = "0.10" }
 
 [profile.release]
 strip = "symbols"
