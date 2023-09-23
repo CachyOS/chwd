@@ -58,7 +58,7 @@ impl Data {
         // Refill data
         self.fill_installed_profiles();
 
-        set_matching_profiles(&mut self.pci_devices, &mut self.installed_pci_profiles, true);
+        set_matching_profiles(&mut self.pci_devices, &self.installed_pci_profiles, true);
     }
 
     fn fill_installed_profiles(&mut self) {
@@ -84,7 +84,7 @@ impl Data {
 
         self.fill_all_profiles();
 
-        set_matching_profiles(&mut self.pci_devices, &mut self.all_pci_profiles, false);
+        set_matching_profiles(&mut self.pci_devices, &self.all_pci_profiles, false);
 
         self.update_installed_profile_data();
     }

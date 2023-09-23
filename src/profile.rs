@@ -211,12 +211,16 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
 }
 
 fn parse_ids_file(file_path: &str) -> Result<String> {
+    use std::fmt::Write;
+
     let file_content = fs::read_to_string(file_path)?;
     let parsed_ids = file_content
         .lines()
         .filter(|x| !x.trim().is_empty() && x.trim().as_bytes()[0] != b'#')
-        .map(|x| format!(" {}", x.trim()))
-        .collect::<String>();
+        .fold(String::new(), |mut output, x| {
+            let _ = write!(output, " {}", x.trim());
+            output
+        });
 
     Ok(parsed_ids.split_ascii_whitespace().collect::<Vec<_>>().join(" "))
 }
