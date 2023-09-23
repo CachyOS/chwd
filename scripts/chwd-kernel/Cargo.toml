@@ -13,8 +13,8 @@ pacmanconf = "2"
 subprocess = "0.2"
 once_cell = { features = ["std"], default-features = false, version = "1" }
 clap = { features = ["derive"], version = "4" }
-nix = { features = ["user"], default-features = false, version = "0.26" }
-dialoguer = { default-features = false, version = "0.10" }
+nix = { features = ["user"], default-features = false, version = "0.27" }
+dialoguer = { default-features = false, version = "0.11" }
 
 [profile.release]
 strip = "symbols"
