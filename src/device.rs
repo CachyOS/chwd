@@ -15,7 +15,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::profile::Profile;
-use crate::{console_writer, profile, fl};
+use crate::{console_writer, fl, profile};
 
 use std::sync::Arc;
 
@@ -69,7 +69,12 @@ pub fn print_available_profiles_in_detail(device_type: &str, devices: &[Device])
 
         console_writer::print_status(&format!(
             "{} {}: {} ({}:{}:{})",
-            device_type, fl!("device"), device.sysfs_id, device.class_id, device.vendor_id, device.device_id
+            device_type,
+            fl!("device"),
+            device.sysfs_id,
+            device.class_id,
+            device.vendor_id,
+            device.device_id
         ));
         println!("  {} {} {}", device.class_name, device.vendor_name, device.device_name);
         println!();

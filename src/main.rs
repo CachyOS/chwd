@@ -185,7 +185,10 @@ fn main() -> anyhow::Result<()> {
         } else if argstruct.remove.is_some() {
             let working_profile = get_installed_profile(&data_obj, profile_name);
             if working_profile.is_none() {
-                console_writer::print_error(&fl!("profile-not-installed", profile_name = profile_name.as_str()));
+                console_writer::print_error(&fl!(
+                    "profile-not-installed",
+                    profile_name = profile_name.as_str()
+                ));
                 anyhow::bail!("Error occurred");
             } else if !perform_transaction(
                 &mut data_obj,
@@ -383,9 +386,10 @@ fn perform_transaction(
     let status = perform_transaction_type(data, args, profile, transaction_type, force);
 
     match status {
-        misc::Status::ErrorNotInstalled => {
-            console_writer::print_error(&fl!("profile-not-installed", profile_name = profile.name.as_str()))
-        },
+        misc::Status::ErrorNotInstalled => console_writer::print_error(&fl!(
+            "profile-not-installed",
+            profile_name = profile.name.as_str()
+        )),
         misc::Status::ErrorAlreadyInstalled => console_writer::print_warning(&format!(
             "a version of profile '{}' is already installed!\nUse -f/--force to force \
              installation...",
