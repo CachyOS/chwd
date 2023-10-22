@@ -21,17 +21,19 @@ pub mod console_writer;
 pub mod consts;
 pub mod data;
 pub mod device;
+pub mod localization;
 pub mod misc;
 pub mod profile;
 
 use misc::Transaction;
 use profile::Profile;
 
-use std::fs;
 use std::path::Path;
 use std::sync::Arc;
+use std::{fs, str};
 
 use clap::Parser;
+use i18n_embed::DesktopLanguageRequester;
 use nix::unistd::Uid;
 use subprocess::Exec;
 
@@ -78,11 +80,15 @@ fn perceed_autoconf(
 }
 
 fn main() -> anyhow::Result<()> {
+    let requested_languages = DesktopLanguageRequester::requested_languages();
+    let localizer = crate::localization::localizer();
+    if let Err(error) = localizer.select(&requested_languages) {
+        eprintln!("Error while loading languages for library_fluent {}", error);
+    }
+
     let args: Vec<String> = std::env::args().collect();
     if misc::get_current_cmdname(args[0].as_str()) == "mhwd" {
-        console_writer::print_warning(
-            "'mhwd' is deprecated and will be removed in future. Please use 'chwd'",
-        );
+        console_writer::print_warning(&fl!("mhwd-deprecated"));
     }
 
     // 1) Process arguments
@@ -144,7 +150,7 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
     if !Uid::effective().is_root() {
-        console_writer::print_error("You cannot perform this operation unless you are root!");
+        console_writer::print_error(&fl!("root-operation"));
         anyhow::bail!("Error occurred");
     }
 
@@ -154,13 +160,15 @@ fn main() -> anyhow::Result<()> {
             if working_profile.is_none() {
                 let working_profile = get_db_profile(&data_obj, profile_name);
                 if working_profile.is_none() {
-                    console_writer::print_error(&format!(
-                        "profile '{profile_name}' does not exist!"
+                    console_writer::print_error(&fl!(
+                        "profile-not-exist",
+                        profile_name = profile_name.as_str()
                     ));
                     anyhow::bail!("Error occurred");
                 }
-                console_writer::print_error(&format!(
-                    "no matching device for profile '{profile_name}' found!"
+                console_writer::print_error(&fl!(
+                    "no-matching-device",
+                    profile_name = profile_name.as_str()
                 ));
                 anyhow::bail!("Error occurred");
             }
@@ -177,7 +185,7 @@ fn main() -> anyhow::Result<()> {
         } else if argstruct.remove.is_some() {
             let working_profile = get_installed_profile(&data_obj, profile_name);
             if working_profile.is_none() {
-                console_writer::print_error(&format!("profile '{profile_name}' is not installed!"));
+                console_writer::print_error(&fl!("profile-not-installed", profile_name = profile_name.as_str()));
                 anyhow::bail!("Error occurred");
             } else if !perform_transaction(
                 &mut data_obj,
@@ -376,7 +384,7 @@ fn perform_transaction(
 
     match status {
         misc::Status::ErrorNotInstalled => {
-            console_writer::print_error(&format!("profile '{}' is not installed!", &profile.name))
+            console_writer::print_error(&fl!("profile-not-installed", profile_name = profile.name.as_str()))
         },
         misc::Status::ErrorAlreadyInstalled => console_writer::print_warning(&format!(
             "a version of profile '{}' is already installed!\nUse -f/--force to force \

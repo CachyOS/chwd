@@ -14,6 +14,7 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+use crate::fl;
 use anyhow::Result;
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
@@ -277,12 +278,12 @@ pub fn print_profile_details(profile: &Profile) {
         .load_preset(UTF8_FULL)
         .apply_modifier(UTF8_ROUND_CORNERS)
         .set_content_arrangement(ContentArrangement::Dynamic)
-        .add_row(vec!["Name", &profile.name])
-        .add_row(vec!["Desc", desc_formatted])
-        .add_row(vec!["Priority", &profile.priority.to_string()])
-        .add_row(vec!["NonFree", &profile.is_nonfree.to_string()])
-        .add_row(vec!["ClassIDS", &class_ids])
-        .add_row(vec!["VendorIDS", &vendor_ids]);
+        .add_row(vec![&fl!("name-header"), &profile.name])
+        .add_row(vec![&fl!("desc-header"), desc_formatted])
+        .add_row(vec![&fl!("priority-header"), &profile.priority.to_string()])
+        .add_row(vec![&fl!("nonfree-header"), &profile.is_nonfree.to_string()])
+        .add_row(vec![&fl!("classids-header"), &class_ids])
+        .add_row(vec![&fl!("vendorids-header"), &vendor_ids]);
 
     println!("{table}\n");
 }

@@ -15,6 +15,10 @@ anyhow = "1"
 nix = { features = ["user"], default-features = false, version = "0.27" }
 comfy-table = { default-features = false, version = "7" }
 regex = "1"
+once_cell = { features = ["std"], default-features = false, version = "1" }
+i18n-embed = { version = "0.14", features = ["fluent-system", "desktop-requester"] }
+i18n-embed-fl = "0.7"
+rust-embed = { version = "8", features = ["debug-embed", "include-exclude"] }
 
 [build-dependencies]
 clap = { features = ["derive"], version = "4" }

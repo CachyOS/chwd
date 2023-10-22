@@ -15,6 +15,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::data::Data;
+use crate::fl;
 use crate::misc::Message;
 use crate::profile::Profile;
 
@@ -26,16 +27,16 @@ use comfy_table::*;
 pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     // Check for invalid profiles
     for invalid_profile in data.invalid_profiles.iter() {
-        print_warning(&format!("profile '{invalid_profile}' is invalid!"));
+        print_warning(&fl!("invalid-profile", invalid_profile = invalid_profile.as_str()));
     }
 
     // List all profiles
     if args.list_all && args.show_pci {
         let all_pci_profiles = &data.all_pci_profiles;
         if !all_pci_profiles.is_empty() {
-            list_profiles(all_pci_profiles, "All PCI profiles:");
+            list_profiles(all_pci_profiles, &fl!("all-pci-profiles"));
         } else {
-            print_warning("No PCI profiles found!");
+            print_warning(&fl!("pci-profiles-not-found"));
         }
     }
 
@@ -45,9 +46,9 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
         if args.detail {
             print_installed_profiles("PCI", installed_pci_profiles);
         } else if !installed_pci_profiles.is_empty() {
-            list_profiles(installed_pci_profiles, "Installed PCI configs:");
+            list_profiles(installed_pci_profiles, &fl!("installed-pci-profiles"));
         } else {
-            print_warning("No installed PCI configs!");
+            print_warning(&fl!("no-installed-pci-profiles"));
         }
     }
 
@@ -89,7 +90,7 @@ pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
         .load_preset(UTF8_FULL)
         .apply_modifier(UTF8_ROUND_CORNERS)
         .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec!["Name", "NonFree"]);
+        .set_header(vec![&fl!("name-header"), &fl!("nonfree-header")]);
 
     for profile in profiles.iter() {
         table.add_row(vec![&profile.name, &profile.is_nonfree.to_string()]);
@@ -100,7 +101,7 @@ pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
 
 pub fn print_installed_profiles(device_type: &str, installed_profiles: &Vec<Profile>) {
     if installed_profiles.is_empty() {
-        print_warning(&format!("no installed profile for {device_type} devices found!"));
+        print_warning(&fl!("no-installed-profile-device", device_type = device_type));
         return;
     }
 

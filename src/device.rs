@@ -15,7 +15,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::profile::Profile;
-use crate::{console_writer, profile};
+use crate::{console_writer, profile, fl};
 
 use std::sync::Arc;
 
@@ -68,20 +68,20 @@ pub fn print_available_profiles_in_detail(device_type: &str, devices: &[Device])
         config_found = true;
 
         console_writer::print_status(&format!(
-            "{} Device: {} ({}:{}:{})",
-            device_type, device.sysfs_id, device.class_id, device.vendor_id, device.device_id
+            "{} {}: {} ({}:{}:{})",
+            device_type, fl!("device"), device.sysfs_id, device.class_id, device.vendor_id, device.device_id
         ));
         println!("  {} {} {}", device.class_name, device.vendor_name, device.device_name);
         println!();
         if !installed_profiles.is_empty() {
-            println!("  > INSTALLED:\n");
+            println!("  > {}:\n", fl!("installed"));
             for installed_profile in installed_profiles.iter() {
                 profile::print_profile_details(installed_profile);
             }
             println!("\n");
         }
         if !available_profiles.is_empty() {
-            println!("  > AVAILABLE:\n");
+            println!("  > {}:\n", fl!("available"));
             for available_profile in available_profiles.iter() {
                 profile::print_profile_details(available_profile);
             }
@@ -90,6 +90,6 @@ pub fn print_available_profiles_in_detail(device_type: &str, devices: &[Device])
     }
 
     if !config_found {
-        console_writer::print_warning(&format!("no profiles for {} devices found!", device_type));
+        console_writer::print_warning(&fl!("no-profile-device", device_type = device_type));
     }
 }
