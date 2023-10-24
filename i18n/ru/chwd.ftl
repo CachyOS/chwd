@@ -14,6 +14,9 @@ root-operation = вы не сможете выполнить эту операц
 profile-not-exist = профиль '{$profile_name}' не существует!
 no-matching-device = не найдено ни одного подходящего устройства для профиля '{$profile_name}'!
 profile-not-installed = профиль '{$profile_name}' не установлен!
+script-failed = скрипт не сработал!
+failed-set-db = не удалось задать БД!
+pass-profile-no-match-install = переданный профиль не совпадает с установленным профилем!
 
 # device
 available = ДОСТУПНО

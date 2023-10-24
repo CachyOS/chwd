@@ -396,10 +396,10 @@ fn perform_transaction(
             &profile.name
         )),
         misc::Status::ErrorNoMatchLocalConfig => {
-            console_writer::print_error("passed profile does not match with installed profile!")
+            console_writer::print_error(&fl!("pass-profile-no-match-install"))
         },
-        misc::Status::ErrorScriptFailed => console_writer::print_error("script failed!"),
-        misc::Status::ErrorSetDatabase => console_writer::print_error("failed to set database!"),
+        misc::Status::ErrorScriptFailed => console_writer::print_error(&fl!("script-failed")),
+        misc::Status::ErrorSetDatabase => console_writer::print_error(&fl!("failed-set-db")),
         _ => (),
     }
 
