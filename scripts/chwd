@@ -107,7 +107,17 @@ end
 
 local function exec_hook(hook)
     if hook ~= "" then
-        os.execute(hook)
+        local file = io.popen(("/bin/bash -c '%s'"):format(hook), "r")
+
+        if file then
+            local output = file:read('*all')
+            file:close()
+            return output
+        else
+            print("ERROR: Unkown shell invocation error", hook)
+        end
+    else
+        print("WARNING: An unknown hook is being called", hook)
     end
 end
 
@@ -123,7 +133,8 @@ local function get_profile(name, path)
         ["pre_install"] = "",
         ["post_install"] = "",
         ["post_remove"] = "",
-        ["pre_remove"] = ""
+        ["pre_remove"] = "",
+        ["conditional_packages"] = ""
     }
 
     for line in io.lines(path) do
@@ -209,10 +220,24 @@ local function main()
 
     if options.install then
         exec_hook(hooks["pre_install"])
+
+        local conditional_packages = exec_hook(hooks["conditional_packages"])
+
+        if conditional_packages then
+            packages = packages .. " " .. conditional_packages
+        end
+
         install(packages)
         exec_hook(hooks["post_install"])
     elseif options.remove then
         exec_hook(hooks["pre_remove"])
+
+        local conditional_packages = exec_hook(hooks["conditional_packages"])
+
+        if conditional_packages then
+            packages = packages .. " " .. conditional_packages
+        end
+
         remove(packages)
         exec_hook(hooks["post_remove"])
     else
