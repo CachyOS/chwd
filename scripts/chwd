@@ -117,7 +117,7 @@ local function exec_hook(hook)
             print("ERROR: Unkown shell invocation error", hook)
         end
     else
-        print("WARNING: An unknown hook is being called", hook)
+        print("WARNING: An unknown hook is being called")
     end
 end
 
