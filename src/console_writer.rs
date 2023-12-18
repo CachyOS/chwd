@@ -99,7 +99,7 @@ pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
     println!("{table}\n");
 }
 
-pub fn print_installed_profiles(device_type: &str, installed_profiles: &Vec<Profile>) {
+pub fn print_installed_profiles(device_type: &str, installed_profiles: &[Profile]) {
     if installed_profiles.is_empty() {
         print_warning(&fl!("no-installed-profile-device", device_type = device_type));
         return;
