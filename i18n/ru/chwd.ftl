@@ -6,9 +6,6 @@ nonfree-header = Несвободный
 classids-header = IDS класса
 vendorids-header = IDS вендора
 
-# notice
-mhwd-deprecated = 'mhwd' устарел и будет удален в будущем. Пожалуйста, используйте 'chwd'
-
 # main
 root-operation = вы не сможете выполнить эту операцию, если не являетесь пользователем root!
 profile-not-exist = профиль '{$profile_name}' не существует!

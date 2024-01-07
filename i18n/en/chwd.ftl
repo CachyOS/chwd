@@ -6,9 +6,6 @@ nonfree-header = NonFree
 classids-header = ClassIDS
 vendorids-header = VendorIDS
 
-# notice
-mhwd-deprecated = 'mhwd' is deprecated and will be removed in future. Please use 'chwd'
-
 # main
 root-operation = You cannot perform this operation unless you are root!
 profile-not-exist = profile '{$profile_name}' does not exist!
