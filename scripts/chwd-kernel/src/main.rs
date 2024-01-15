@@ -1,4 +1,4 @@
-// Copyright (C) 2022-2023 Vladislav Nepogodin
+// Copyright (C) 2022-2024 Vladislav Nepogodin
 //
 // This file is part of CachyOS chwd.
 //
