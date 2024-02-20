@@ -17,7 +17,7 @@ comfy-table = { default-features = false, version = "7" }
 regex = "1"
 once_cell = { features = ["std"], default-features = false, version = "1" }
 i18n-embed = { version = "0.14", features = ["fluent-system", "desktop-requester"] }
-i18n-embed-fl = "0.7"
+i18n-embed-fl = "0.8"
 rust-embed = { version = "8", features = ["debug-embed", "include-exclude"] }
 
 [build-dependencies]
