@@ -91,6 +91,37 @@ conditional_packages = """
 
     echo "$modules"
 """
+post_install = """
+    source /etc/mkinitcpio.conf
+    sed -i "s/MODULES=.*/MODULES=(${MODULES[@]} nvidia nvidia_modeset nvidia_uvm nvidia_drm)/g" /etc/mkinitcpio.conf
+    mkinitcpio -P
+"""
+post_remove = """
+    source /etc/mkinitcpio.conf
+
+    _modules=()
+    _xx=""
+    for _xx in "${MODULES[@]}"; do
+        [[ "$_xx" = *"nvidia"* ]] && continue
+        _modules+=("$_xx")
+    done
+    _final="MODULES=("${_modules[@]}")"
+
+awk -v updated_modules="$_final" '
+    $0 ~"^[[:blank:]]*MODULES(_[^=]+)?\\+?=", $0 ~ "\\)[[:blank:]]*(#.*)?$" {
+        if (!w) {
+            print updated_modules
+            w++
+        }
+        next
+    }
+
+    1
+    END { if (!w) print updated_modules }
+' /etc/mkinitcpio.conf > /etc/mkinitcpio.conf
+
+    mkinitcpio -P
+"""
 device_ids = '*'
 
 [nvidia-dkms.470xx]
