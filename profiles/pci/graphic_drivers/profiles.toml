@@ -142,7 +142,7 @@ nonfree = false
 class_ids = "0300 0302"
 vendor_ids = "10de"
 priority = 0
-packages = 'mesa lib32-mesa libva-mesa-driver mesa-vdpau opencl-clover-mesa lib32-opencl-clover-mesa opencl-rusticl-mesa lib32-opencl-rusticl-mesa lib32-libva-mesa-driver libva-vdpau-driver lib32-libva-vdpau-driver'
+packages = 'mesa lib32-mesa libva-mesa-driver mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa lib32-libva-mesa-driver libva-vdpau-driver lib32-libva-vdpau-driver'
 
 [intel]
 desc = "Mesa open source driver for Intel"
@@ -151,7 +151,7 @@ class_ids = "0300 0302"
 vendor_ids = "8086"
 device_ids = "*"
 priority = 4
-packages = 'mesa lib32-mesa libva-intel-driver lib32-libva-intel-driver opencl-clover-mesa lib32-opencl-clover-mesa opencl-rusticl-mesa lib32-opencl-rusticl-mesa vulkan-intel lib32-vulkan-intel intel-media-driver mesa-vdpau lib32-mesa-vdpau'
+packages = 'mesa lib32-mesa libva-intel-driver lib32-libva-intel-driver opencl-rusticl-mesa lib32-opencl-rusticl-mesa vulkan-intel lib32-vulkan-intel intel-media-driver mesa-vdpau lib32-mesa-vdpau'
 
 [amd]
 desc = "Mesa open source driver for AMD"
@@ -160,7 +160,7 @@ class_ids = "0300 0302"
 vendor_ids = "1002"
 device_ids = "*"
 priority = 4
-packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-clover-mesa lib32-opencl-clover-mesa opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
+packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
 
 [fallback]
 desc = 'Fallback profile'
