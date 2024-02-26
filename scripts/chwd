@@ -92,7 +92,7 @@ local function remove(packages)
 
     local pkgs = ""
     for _, pkg in ipairs(packages) do
-        if is_installed(pkg) then
+        if is_installed(pkg) and (pkg ~= "mesa" or pkg ~= "lib32-mesa") then
             pkgs = pkgs .. " " .. pkg
         end
     end
