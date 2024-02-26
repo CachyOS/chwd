@@ -44,10 +44,9 @@ local function check_on_multilib()
     end
 end
 
--- https://stackoverflow.com/questions/1426954/split-string-in-lua
-local function split(str, sep)
+local function split(str)
     local t = {}
-    for found in str:gmatch("([^".. sep .."]+)") do
+    for found in str:gmatch("([^%s]+)") do
         t[#t+1] = found
     end
     return t
@@ -89,7 +88,7 @@ local function install(packages)
 end
 
 local function remove(packages)
-    packages = split(packages, " ")
+    packages = split(packages)
 
     local pkgs = ""
     for _, pkg in ipairs(packages) do
