@@ -171,8 +171,9 @@ local function get_profile(name, path)
         end
     end
 
+    print(packages)
     if not check_on_multilib() and packages then
-        packages:gsub("%s?(lib32-.+)%s?", "")
+        packages:gsub("%s?(lib32-[A-Za-z0-9-]+)", "")
     end
 
     return packages, hooks
