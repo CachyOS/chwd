@@ -42,7 +42,7 @@ EOF
     mkinitcpio -P
 """
 post_remove = """
-    rm /etc/mkinitcpio.conf.d/10-chwd.conf || true
+    rm -f /etc/mkinitcpio.conf.d/10-chwd.conf || true
     mkinitcpio -P
 """
 device_name_pattern = '(AD)\w+'
@@ -79,7 +79,7 @@ EOF
     mkinitcpio -P
 """
 post_remove = """
-    rm /etc/mkinitcpio.conf.d/10-chwd.conf || true
+    rm -f /etc/mkinitcpio.conf.d/10-chwd.conf || true
     mkinitcpio -P
 """
 device_ids = '*'
@@ -171,6 +171,6 @@ post_remove = """
         # Vmware detected
         systemctl disable --now vmtoolsd.service
     else
-        rm /etc/mkinitcpio.conf.d/10-chwd.conf || true
+        rm -f /etc/mkinitcpio.conf.d/10-chwd.conf || true
         mkinitcpio -P
     fi"""
