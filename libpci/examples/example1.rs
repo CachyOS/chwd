@@ -1,5 +1,3 @@
-use libpci;
-
 fn main() {
     let mut pacc = libpci::PCIAccess::new(true);
 

@@ -54,25 +54,25 @@ pub enum Fill {
 #[repr(u32)]
 #[derive(Clone, PartialEq)]
 pub enum AccessType {
-    Auto = libpci_sys::pci_access_type_PCI_ACCESS_AUTO as u32,
-    SysBusPci = libpci_sys::pci_access_type_PCI_ACCESS_SYS_BUS_PCI as u32,
-    ProcBusPci = libpci_sys::pci_access_type_PCI_ACCESS_PROC_BUS_PCI as u32,
-    I386Type1 = libpci_sys::pci_access_type_PCI_ACCESS_I386_TYPE1 as u32,
-    I386Type2 = libpci_sys::pci_access_type_PCI_ACCESS_I386_TYPE2 as u32,
-    FbsdDevice = libpci_sys::pci_access_type_PCI_ACCESS_FBSD_DEVICE as u32,
-    AixDevice = libpci_sys::pci_access_type_PCI_ACCESS_AIX_DEVICE as u32,
-    NbsdLibpci = libpci_sys::pci_access_type_PCI_ACCESS_NBSD_LIBPCI as u32,
-    ObsdDevice = libpci_sys::pci_access_type_PCI_ACCESS_OBSD_DEVICE as u32,
-    Dump = libpci_sys::pci_access_type_PCI_ACCESS_DUMP as u32,
-    Darwin = libpci_sys::pci_access_type_PCI_ACCESS_DARWIN as u32,
-    SylixosDevice = libpci_sys::pci_access_type_PCI_ACCESS_SYLIXOS_DEVICE as u32,
-    HURD = libpci_sys::pci_access_type_PCI_ACCESS_HURD as u32,
-    Win32Cfgmgr32 = libpci_sys::pci_access_type_PCI_ACCESS_WIN32_CFGMGR32 as u32,
-    Win32Kldbg = libpci_sys::pci_access_type_PCI_ACCESS_WIN32_KLDBG as u32,
-    Win32Sysdbg = libpci_sys::pci_access_type_PCI_ACCESS_WIN32_SYSDBG as u32,
-    MmioType1 = libpci_sys::pci_access_type_PCI_ACCESS_MMIO_TYPE1 as u32,
-    Type1Ext = libpci_sys::pci_access_type_PCI_ACCESS_MMIO_TYPE1_EXT as u32,
-    Max = libpci_sys::pci_access_type_PCI_ACCESS_MAX as u32,
+    Auto = libpci_sys::pci_access_type_PCI_ACCESS_AUTO,
+    SysBusPci = libpci_sys::pci_access_type_PCI_ACCESS_SYS_BUS_PCI,
+    ProcBusPci = libpci_sys::pci_access_type_PCI_ACCESS_PROC_BUS_PCI,
+    I386Type1 = libpci_sys::pci_access_type_PCI_ACCESS_I386_TYPE1,
+    I386Type2 = libpci_sys::pci_access_type_PCI_ACCESS_I386_TYPE2,
+    FbsdDevice = libpci_sys::pci_access_type_PCI_ACCESS_FBSD_DEVICE,
+    AixDevice = libpci_sys::pci_access_type_PCI_ACCESS_AIX_DEVICE,
+    NbsdLibpci = libpci_sys::pci_access_type_PCI_ACCESS_NBSD_LIBPCI,
+    ObsdDevice = libpci_sys::pci_access_type_PCI_ACCESS_OBSD_DEVICE,
+    Dump = libpci_sys::pci_access_type_PCI_ACCESS_DUMP,
+    Darwin = libpci_sys::pci_access_type_PCI_ACCESS_DARWIN,
+    SylixosDevice = libpci_sys::pci_access_type_PCI_ACCESS_SYLIXOS_DEVICE,
+    HURD = libpci_sys::pci_access_type_PCI_ACCESS_HURD,
+    Win32Cfgmgr32 = libpci_sys::pci_access_type_PCI_ACCESS_WIN32_CFGMGR32,
+    Win32Kldbg = libpci_sys::pci_access_type_PCI_ACCESS_WIN32_KLDBG,
+    Win32Sysdbg = libpci_sys::pci_access_type_PCI_ACCESS_WIN32_SYSDBG,
+    MmioType1 = libpci_sys::pci_access_type_PCI_ACCESS_MMIO_TYPE1,
+    Type1Ext = libpci_sys::pci_access_type_PCI_ACCESS_MMIO_TYPE1_EXT,
+    Max = libpci_sys::pci_access_type_PCI_ACCESS_MAX,
 }
 
 impl From<u32> for AccessType {
@@ -166,6 +166,12 @@ impl<'a> PCIAccess<'a> {
     }
 }
 
+impl<'a> Default for PCIDevice<'a> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a> PCIDevice<'a> {
     /// Create a new data.
     pub fn new() -> Self {
@@ -197,7 +203,7 @@ impl<'a> PCIDevice<'a> {
         if self.0.is_null() {
             None
         } else {
-            let mut class = vec![0 as u8; 1024];
+            let mut class = vec![0_u8; 1024];
             let size = (class.len() * mem::size_of::<u8>()) as usize;
 
             unsafe {
@@ -217,7 +223,7 @@ impl<'a> PCIDevice<'a> {
         if self.0.is_null() {
             None
         } else {
-            let mut vendor = vec![0 as u8; 256];
+            let mut vendor = vec![0_u8; 256];
             let size = (vendor.len() * mem::size_of::<u8>()) as usize;
 
             unsafe {
@@ -237,7 +243,7 @@ impl<'a> PCIDevice<'a> {
         if self.0.is_null() {
             None
         } else {
-            let mut device = vec![0 as u8; 256];
+            let mut device = vec![0_u8; 256];
             let size = (device.len() * mem::size_of::<u8>()) as usize;
 
             unsafe {

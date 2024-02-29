@@ -11,6 +11,11 @@ extern crate std;
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
+/// This function returns either ptr to next element or null if data is null.
+///
+/// # Safety
+///
+/// The caller must take care of null ptr.
 pub unsafe fn pci_get_next_device(data: *const pci_dev) -> *const pci_dev {
     if data.is_null() {
         data
@@ -19,6 +24,11 @@ pub unsafe fn pci_get_next_device(data: *const pci_dev) -> *const pci_dev {
     }
 }
 
+/// This function returns either ptr to next element or null if data is null.
+///
+/// # Safety
+///
+/// The caller must take care of null ptr.
 pub unsafe fn pci_get_next_device_mut(data: *mut pci_dev) -> *mut pci_dev {
     if data.is_null() {
         data
