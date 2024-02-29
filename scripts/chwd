@@ -38,10 +38,9 @@ local function check_on_multilib()
     for line in io.lines(pmconfig) do
         if line:match(multilib_pattern) then
             return true
-        else
-            return false
         end
     end
+    return false
 end
 
 local function split(str)
@@ -172,7 +171,7 @@ local function get_profile(name, path)
     end
 
     if not check_on_multilib() and packages then
-        packages:gsub("%s?(lib32-.+)%s?", "")
+        packages, _ = packages:gsub("%s?(lib32-[A-Za-z0-9-]+)", "")
     end
 
     return packages, hooks
