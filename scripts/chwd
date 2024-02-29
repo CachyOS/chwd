@@ -38,10 +38,9 @@ local function check_on_multilib()
     for line in io.lines(pmconfig) do
         if line:match(multilib_pattern) then
             return true
-        else
-            return false
         end
     end
+    return false
 end
 
 -- https://stackoverflow.com/questions/1426954/split-string-in-lua
