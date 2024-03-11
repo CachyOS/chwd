@@ -20,8 +20,6 @@ mod kernel;
 
 use clap::Parser;
 use dialoguer::Confirm;
-use once_cell::sync::Lazy;
-use std::sync::{Arc, Mutex};
 use subprocess::{Exec, Redirection};
 
 #[derive(Parser, Debug)]
@@ -181,25 +179,23 @@ fn kernel_remove(available_kernels: &[kernel::Kernel], kernel_names: &[String]) 
     exit_status.success()
 }
 
-static ALPM_HANDLE: Lazy<Arc<Mutex<alpm::Alpm>>> = Lazy::new(|| {
-    let alpm_handle = new_alpm().expect("Unable to initialize Alpm");
-
-    Arc::new(Mutex::new(alpm_handle))
-});
+fn init_alpm_handle() -> alpm::Alpm {
+    new_alpm().expect("Unable to initialize Alpm")
+}
 
 fn main() {
     let args = Args::parse();
 
     if args.list {
-        let alpm_handle = &*ALPM_HANDLE.lock().unwrap();
-        let kernels = kernel::get_kernels(alpm_handle);
+        let alpm_handle = init_alpm_handle();
+        let kernels = kernel::get_kernels(&alpm_handle);
         show_available_kernels(&kernels);
         return;
     }
 
     if args.list_installed {
-        let alpm_handle = &*ALPM_HANDLE.lock().unwrap();
-        let kernels = kernel::get_kernels(alpm_handle);
+        let alpm_handle = init_alpm_handle();
+        let kernels = kernel::get_kernels(&alpm_handle);
         show_installed_kernels(&kernels);
         return;
     }
@@ -221,15 +217,15 @@ fn main() {
         Some(WorkingMode::KernelInstall) => {
             root_check();
 
-            let alpm_handle = &*ALPM_HANDLE.lock().unwrap();
-            let kernels = kernel::get_kernels(alpm_handle);
+            let alpm_handle = init_alpm_handle();
+            let kernels = kernel::get_kernels(&alpm_handle);
             kernel_install(&kernels, &args.install_kernels);
         },
         Some(WorkingMode::KernelRemove) => {
             root_check();
 
-            let alpm_handle = &*ALPM_HANDLE.lock().unwrap();
-            let kernels = kernel::get_kernels(alpm_handle);
+            let alpm_handle = init_alpm_handle();
+            let kernels = kernel::get_kernels(&alpm_handle);
             kernel_remove(&kernels, &args.remove_kernels);
         },
         _ => occur_err("Invalid argument (use -h for help)."),

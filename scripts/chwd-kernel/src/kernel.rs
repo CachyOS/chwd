@@ -25,7 +25,7 @@ pub struct Kernel<'a> {
     pub name: String,
     pub repo: String,
     pub raw: String,
-    alpm_pkg: Option<alpm::Package<'a>>,
+    alpm_pkg: Option<&'a alpm::Package>,
     alpm_handle: Option<&'a alpm::Alpm>,
 }
 
