@@ -97,11 +97,11 @@ pub fn parse_profiles(file_path: &str) -> Result<Vec<Profile>> {
                 continue;
             }
             let mut nested_profile = nested_profile?;
-            nested_profile.prof_path = file_path.to_owned();
+            file_path.clone_into(&mut nested_profile.prof_path);
             profiles.push(nested_profile);
         }
         let mut toplevel_profile = toplevel_profile?;
-        toplevel_profile.prof_path = file_path.to_owned();
+        file_path.clone_into(&mut toplevel_profile.prof_path);
         profiles.push(toplevel_profile);
     }
 
