@@ -1,0 +1,21 @@
+# VENDOR AMD=1002 INTEL=8086 NVIDIA=10de
+# CLASSID 03=Display controller
+# 00=VGA compatible controller 02=3D controller 80=Display controller
+
+# NVIDIA cards
+#CLASSIDS="0300 0302"
+#VENDORIDS="10de"
+#DEVICEIDS=">/var/lib/mhwd/ids/pci/nvidia.ids"
+
+[nvidia-ai-sdk]
+desc = 'NVIDIA AI SDK and related tools'
+nonfree = true
+ai_sdk = true
+class_ids = "*"
+#class_ids = "0300 0380 0302"
+vendor_ids = "10de"
+priority = 9
+packages = 'cuda pytorch-cuda ollama-cuda'
+#device_name_pattern = '(AD)\w+'
+device_ids = '*'
+

@@ -29,6 +29,7 @@ pub type ListOfDevicesT = Vec<Device>;
 #[derive(Debug, Default)]
 pub struct Data {
     pub sync_package_manager_database: bool,
+    pub is_ai_sdk_target: bool,
     pub pci_devices: ListOfDevicesT,
     pub installed_pci_profiles: ListOfProfilesT,
     pub all_pci_profiles: ListOfProfilesT,
@@ -36,10 +37,11 @@ pub struct Data {
 }
 
 impl Data {
-    pub fn new() -> Self {
+    pub fn new(is_ai_sdk: bool) -> Self {
         let mut res = Self {
             pci_devices: fill_devices().expect("Failed to init"),
             sync_package_manager_database: true,
+            is_ai_sdk_target: is_ai_sdk,
             ..Default::default()
         };
 
@@ -65,14 +67,14 @@ impl Data {
         let conf_path = crate::consts::CHWD_PCI_DATABASE_DIR;
         let configs = &mut self.installed_pci_profiles;
 
-        fill_profiles(configs, &mut self.invalid_profiles, conf_path);
+        fill_profiles(configs, &mut self.invalid_profiles, conf_path, self.is_ai_sdk_target);
     }
 
     fn fill_all_profiles(&mut self) {
         let conf_path = crate::consts::CHWD_PCI_CONFIG_DIR;
         let configs = &mut self.all_pci_profiles;
 
-        fill_profiles(configs, &mut self.invalid_profiles, conf_path);
+        fill_profiles(configs, &mut self.invalid_profiles, conf_path, self.is_ai_sdk_target);
     }
 
     fn update_profiles_data(&mut self) {
@@ -94,6 +96,7 @@ fn fill_profiles(
     configs: &mut ListOfProfilesT,
     invalid_profiles: &mut Vec<String>,
     conf_path: &str,
+    is_ai_sdk: bool,
 ) {
     for entry in fs::read_dir(conf_path).expect("Failed to read directory!") {
         let config_file_path = format!(
@@ -107,6 +110,16 @@ fn fill_profiles(
         if let Ok(profiles) = crate::profile::parse_profiles(&config_file_path) {
             for profile in profiles.into_iter() {
                 if profile.packages.is_empty() {
+                    continue;
+                }
+                // if we dont target ai sdk,
+                // skip profile marked as ai sdk.
+                if !is_ai_sdk && profile.is_ai_sdk {
+                    continue;
+                }
+                // if we target ai sdk,
+                // skip profile which isn't marked as ai sdk.
+                if is_ai_sdk && !profile.is_ai_sdk {
                     continue;
                 }
                 configs.push(profile);

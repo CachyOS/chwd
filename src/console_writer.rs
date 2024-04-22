@@ -82,6 +82,9 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
 }
 
 pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
+    //if profiles.iter().all(|x| x.is_ai_sdk) {
+    //    return;
+    //}
     print_status(header_msg);
     println!();
 
@@ -93,6 +96,9 @@ pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
         .set_header(vec![&fl!("name-header"), &fl!("nonfree-header")]);
 
     for profile in profiles.iter() {
+        //if profile.is_ai_sdk {
+        //    continue;
+        //}
         table.add_row(vec![&profile.name, &profile.is_nonfree.to_string()]);
     }
 

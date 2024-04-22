@@ -63,7 +63,7 @@ pub fn find_profile(profile_name: &str, profiles: &[Profile]) -> Option<Arc<Prof
 }
 
 pub fn check_nvidia_card() {
-    let data = data::Data::new();
+    let data = data::Data::new(false);
     for pci_device in data.pci_devices.iter() {
         if pci_device.available_profiles.is_empty() {
             continue;

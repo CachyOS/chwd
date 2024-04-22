@@ -35,6 +35,8 @@ pub struct HardwareID {
 pub struct Profile {
     pub is_nonfree: bool,
 
+    pub is_ai_sdk: bool,
+
     pub prof_path: String,
     pub name: String,
     pub desc: String,
@@ -57,6 +59,7 @@ impl Profile {
     pub fn new() -> Self {
         Self {
             is_nonfree: false,
+            is_ai_sdk: false,
             prof_path: "".to_owned(),
             name: "".to_owned(),
             desc: "".to_owned(),
@@ -145,6 +148,7 @@ pub fn get_invalid_profiles(file_path: &str) -> Result<Vec<String>> {
 fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     let mut profile = Profile {
         is_nonfree: node.get("nonfree").and_then(|x| x.as_bool()).unwrap_or(false).to_owned(),
+        is_ai_sdk: node.get("ai_sdk").and_then(|x| x.as_bool()).unwrap_or(false).to_owned(),
         prof_path: "".to_owned(),
         name: profile_name.to_owned(),
         packages: node.get("packages").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
@@ -238,6 +242,7 @@ fn merge_table_left(lhs: &mut toml::Table, rhs: &toml::Table) {
 pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     let mut table = toml::Table::new();
     table.insert("nonfree".to_owned(), profile.is_nonfree.into());
+    table.insert("ai_sdk".to_owned(), profile.is_ai_sdk.into());
     table.insert("desc".to_owned(), profile.desc.clone().into());
     table.insert("packages".to_owned(), profile.packages.clone().into());
     table.insert("priority".to_owned(), profile.priority.into());
