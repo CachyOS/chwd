@@ -243,9 +243,11 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
         table.insert("device_name_pattern".to_owned(), dev_name_pattern.clone().into());
     }
 
-    let device_ids = profile.hwd_ids.last().unwrap().device_ids.clone();
-    let vendor_ids = profile.hwd_ids.last().unwrap().vendor_ids.clone();
-    let class_ids = profile.hwd_ids.last().unwrap().class_ids.clone();
+    let last_hwd_id = profile.hwd_ids.last().unwrap();
+
+    let device_ids = &last_hwd_id.device_ids;
+    let vendor_ids = &last_hwd_id.vendor_ids;
+    let class_ids = &last_hwd_id.class_ids;
     table.insert("device_ids".to_owned(), device_ids.join(" ").into());
     table.insert("vendor_ids".to_owned(), vendor_ids.join(" ").into());
     table.insert("class_ids".to_owned(), class_ids.join(" ").into());
