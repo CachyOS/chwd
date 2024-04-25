@@ -93,8 +93,7 @@ pub fn check_environment() -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
-    use crate::misc;
-    use crate::profile;
+    use crate::{misc, profile};
 
     #[test]
     fn cmdline() {
@@ -108,8 +107,8 @@ mod tests {
         let prof_path = "graphic_drivers-profiles-test.toml";
         let profiles = profile::parse_profiles(prof_path).expect("failed");
 
-        assert_eq!(misc::find_profile("nvidia-dkms", &profiles).is_some(), true);
-        assert_eq!(misc::find_profile("nvidia-dkm", &profiles).is_some(), false);
-        assert_eq!(misc::find_profile("nvidia-dkms.40xxcards", &profiles).is_some(), true);
+        assert!(misc::find_profile("nvidia-dkms", &profiles).is_some());
+        assert!(misc::find_profile("nvidia-dkm", &profiles).is_none());
+        assert!(misc::find_profile("nvidia-dkms.40xxcards", &profiles).is_some());
     }
 }

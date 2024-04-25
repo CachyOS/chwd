@@ -283,8 +283,7 @@ pub fn print_profile_details(profile: &Profile) {
 
 #[cfg(test)]
 mod tests {
-    use crate::profile::HardwareID;
-    use crate::profile::parse_profiles;
+    use crate::profile::{parse_profiles, HardwareID};
 
     #[test]
     fn graphics_profiles_correct() {
@@ -292,28 +291,46 @@ mod tests {
         let parsed_profiles = parse_profiles(prof_path);
         assert!(parsed_profiles.is_ok());
 
-        let hwd_ids = vec![HardwareID { class_ids: vec!["0300".to_owned(), "0380".to_owned(), "0302".to_owned()], vendor_ids: vec!["10de".to_owned()], device_ids: vec!["*".to_owned()], blacklisted_class_ids: vec![], blacklisted_vendor_ids: vec![], blacklisted_device_ids: vec![] }];
+        let hwd_ids = vec![HardwareID {
+            class_ids: vec!["0300".to_owned(), "0380".to_owned(), "0302".to_owned()],
+            vendor_ids: vec!["10de".to_owned()],
+            device_ids: vec!["*".to_owned()],
+            blacklisted_class_ids: vec![],
+            blacklisted_vendor_ids: vec![],
+            blacklisted_device_ids: vec![],
+        }];
 
         let parsed_profiles = parsed_profiles.unwrap();
-        assert_eq!(parsed_profiles[0].is_nonfree, true);
+        assert!(parsed_profiles[0].is_nonfree);
         assert_eq!(parsed_profiles[0].prof_path, prof_path);
         assert_eq!(parsed_profiles[0].name, "nvidia-dkms.40xxcards");
-        assert_eq!(parsed_profiles[0].desc, "Closed source NVIDIA drivers(40xx series) for Linux (Latest)");
+        assert_eq!(
+            parsed_profiles[0].desc,
+            "Closed source NVIDIA drivers(40xx series) for Linux (Latest)"
+        );
         assert_eq!(parsed_profiles[0].priority, 9);
-        assert_eq!(parsed_profiles[0].packages, "nvidia-utils egl-wayland nvidia-settings opencl-nvidia lib32-opencl-nvidia lib32-nvidia-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader");
+        assert_eq!(
+            parsed_profiles[0].packages,
+            "nvidia-utils egl-wayland nvidia-settings opencl-nvidia lib32-opencl-nvidia \
+             lib32-nvidia-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader"
+        );
         assert_eq!(parsed_profiles[0].device_name_pattern, Some("(AD)\\w+".to_owned()));
         assert_eq!(parsed_profiles[0].hwd_ids, hwd_ids);
-        assert_eq!(parsed_profiles[0].post_install.is_empty(), false);
-        assert_eq!(parsed_profiles[0].post_remove.is_empty(), false);
+        assert!(!parsed_profiles[0].post_install.is_empty());
+        assert!(!parsed_profiles[0].post_remove.is_empty());
 
-        assert_eq!(parsed_profiles[1].is_nonfree, true);
+        assert!(parsed_profiles[1].is_nonfree);
         assert_eq!(parsed_profiles[1].prof_path, prof_path);
         assert_eq!(parsed_profiles[1].name, "nvidia-dkms");
         assert_eq!(parsed_profiles[1].priority, 8);
-        assert_eq!(parsed_profiles[1].packages, "nvidia-utils egl-wayland nvidia-settings opencl-nvidia lib32-opencl-nvidia lib32-nvidia-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader");
+        assert_eq!(
+            parsed_profiles[1].packages,
+            "nvidia-utils egl-wayland nvidia-settings opencl-nvidia lib32-opencl-nvidia \
+             lib32-nvidia-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader"
+        );
         assert_eq!(parsed_profiles[1].device_name_pattern, None);
         assert_eq!(parsed_profiles[1].hwd_ids, hwd_ids);
-        assert_eq!(parsed_profiles[1].post_install.is_empty(), false);
-        assert_eq!(parsed_profiles[1].post_remove.is_empty(), false);
+        assert!(!parsed_profiles[1].post_install.is_empty());
+        assert!(!parsed_profiles[1].post_remove.is_empty());
     }
 }
