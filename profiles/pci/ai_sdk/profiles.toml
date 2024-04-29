@@ -16,6 +16,6 @@ class_ids = "*"
 vendor_ids = "10de"
 priority = 9
 packages = 'cuda cudnn nccl python-pytorch-opt-cuda ollama-cuda tensorflow-opt-cuda python-tensorflow-opt-cuda'
-#device_name_pattern = '(AD)\w+'
-device_ids = '*'
+device_name_pattern = '(AD|GV|TU|GA|GH|GM|GP)\w+'
+#device_ids = '*'
 
