@@ -145,7 +145,7 @@ fn fill_devices() -> Option<ListOfDevicesT> {
     let mut pacc = libpci::PCIAccess::new(true);
 
     // Get hardware devices
-    let pci_devices = pacc.devices().expect("Failed");
+    let pci_devices = pacc.devices()?;
     let mut devices = vec![];
 
     for mut iter in pci_devices.iter_mut() {
@@ -154,24 +154,24 @@ fn fill_devices() -> Option<ListOfDevicesT> {
 
         // let item_base_class = &iter.base_class().unwrap();
         // let item_sub_class = &iter.sub_class().unwrap();
-        let item_class = iter.class().unwrap();
-        let item_vendor = iter.vendor().unwrap();
-        let item_device = iter.device().unwrap();
+        let item_class = iter.class()?;
+        let item_vendor = iter.vendor()?;
+        let item_device = iter.device()?;
 
         devices.push(Device {
             dev_type: dev_type.clone(),
             class_name: item_class,
             device_name: item_device,
             vendor_name: item_vendor,
-            class_id: from_hex(iter.class_id().unwrap() as _, 4).to_string(),
-            device_id: from_hex(iter.device_id().unwrap() as _, 4).to_string(),
-            vendor_id: from_hex(iter.vendor_id().unwrap() as _, 4).to_string(),
+            class_id: from_hex(iter.class_id()? as _, 4),
+            device_id: from_hex(iter.device_id()? as _, 4),
+            vendor_id: from_hex(iter.vendor_id()? as _, 4),
             sysfs_busid: format!(
                 "{}:{}:{}.{}",
-                from_hex(iter.domain().unwrap() as _, 4),
-                from_hex(iter.bus().unwrap() as _, 2),
-                from_hex(iter.dev().unwrap() as _, 2),
-                iter.func().unwrap(),
+                from_hex(iter.domain()? as _, 4),
+                from_hex(iter.bus()? as _, 2),
+                from_hex(iter.dev()? as _, 2),
+                iter.func()?,
             ),
             sysfs_id: "".to_owned(),
             available_profiles: vec![],
@@ -281,8 +281,7 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
 }
 
 fn add_profile_sorted(profiles: &mut Vec<Arc<Profile>>, new_profile: &Profile) {
-    let found = profiles.iter().any(|x| new_profile.name == x.name);
-    if found {
+    if profiles.iter().any(|x| new_profile.name == x.name) {
         return;
     }
 

@@ -43,7 +43,7 @@ fn perceed_inst_rem(
     working_profiles: &mut Vec<String>,
 ) -> anyhow::Result<()> {
     if let Some(values) = args {
-        let device_type = values[0].clone();
+        let device_type = &values[0];
         let profile = values[1].to_lowercase();
 
         if "pci" != device_type && "usb" != device_type {
@@ -63,8 +63,8 @@ fn perceed_autoconf(
     is_nonfree: &mut bool,
 ) -> anyhow::Result<()> {
     if let Some(values) = args {
-        let device_type = values[0].clone();
-        let driver_type = values[1].clone();
+        let device_type = &values[0];
+        let driver_type = &values[1];
         *is_nonfree = "nonfree" == driver_type;
         *autoconf_class_id = values[2].to_lowercase();
 
@@ -243,10 +243,7 @@ fn prepare_autoconfigure(
         let profile = profile.unwrap();
 
         // If force is not set, then we skip found profile
-        let mut skip = false;
-        if !args.force {
-            skip = installed_profiles.iter().any(|x| x.name == profile.name);
-        }
+        let skip = !args.force && installed_profiles.iter().any(|x| x.name == profile.name);
 
         // Print found profile
         if skip {

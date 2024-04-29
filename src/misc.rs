@@ -90,3 +90,25 @@ pub fn check_environment() -> Vec<String> {
 
     missing_dirs
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{misc, profile};
+
+    #[test]
+    fn cmdline() {
+        assert_eq!(misc::get_current_cmdname("../../../testchwd"), "testchwd");
+        assert_eq!(misc::get_current_cmdname("/usr/bin/testchwd"), "testchwd");
+        assert_eq!(misc::get_current_cmdname("testchwd"), "testchwd");
+    }
+
+    #[test]
+    fn profile_find() {
+        let prof_path = "graphic_drivers-profiles-test.toml";
+        let profiles = profile::parse_profiles(prof_path).expect("failed");
+
+        assert!(misc::find_profile("nvidia-dkms", &profiles).is_some());
+        assert!(misc::find_profile("nvidia-dkm", &profiles).is_none());
+        assert!(misc::find_profile("nvidia-dkms.40xxcards", &profiles).is_some());
+    }
+}
