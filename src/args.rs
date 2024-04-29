@@ -61,6 +61,10 @@ pub struct Args {
     #[arg(long = "is_nvidia_card")]
     pub is_nvidia_card: bool,
 
+    /// Toggle AI SDK profiles
+    #[arg(long = "ai_sdk")]
+    pub is_ai_sdk: bool,
+
     #[arg(long, default_value_t = String::from("/var/cache/pacman/pkg"))]
     pub pmcachedir: String,
     #[arg(long, default_value_t = String::from("/etc/pacman.conf"))]

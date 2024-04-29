@@ -119,7 +119,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     // 2) Initialize
-    let mut data_obj = data::Data::new();
+    let mut data_obj = data::Data::new(argstruct.is_ai_sdk);
 
     let missing_dirs = misc::check_environment();
     if !missing_dirs.is_empty() {
