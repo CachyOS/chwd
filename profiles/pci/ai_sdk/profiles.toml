@@ -11,8 +11,8 @@
 desc = 'NVIDIA AI SDK and related tools'
 nonfree = true
 ai_sdk = true
-class_ids = "*"
-#class_ids = "0300 0380 0302"
+#class_ids = "*"
+class_ids = "0300 0302"
 vendor_ids = "10de"
 priority = 9
 packages = 'cuda cudnn nccl python-pytorch-opt-cuda ollama-cuda tensorflow-opt-cuda python-tensorflow-opt-cuda'
