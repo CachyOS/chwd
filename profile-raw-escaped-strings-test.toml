@@ -1,0 +1,33 @@
+[test-profile]
+ai_sdk = false
+class_ids = "0300"
+desc = "Test profile"
+device_ids = "1435 163f"
+nonfree = false
+packages = "opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime"
+post_install = """
+    echo "Steam Deck chwd installing..."
+    username=$(id -nu 1000)
+    services=("steam-powerbuttond")
+    kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
+    echo "Enabling services..."
+    for service in ${services[@]}; do
+        systemctl enable --now "${service}.service"
+    done
+    echo "Adding required kernel parameters..."
+    sed -i "s/LINUX_OPTIONS="[^"]*/& ${kernelparams}/" /etc/sdboot-manage.conf
+"""
+post_remove = """
+    echo "Steam deck chwd removing..."
+    username=$(id -nu 1000)
+    services=("steam-powerbuttond")
+    kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
+    echo "Disabling services..."
+    for service in ${services[@]}; do
+        systemctl disable "${service}.service"
+    done
+    echo "Removing kernel parameters..."
+    sed -i "s/${kernelparams}//" /etc/sdboot-manage.conf
+"""
+priority = 6
+vendor_ids = "1002"

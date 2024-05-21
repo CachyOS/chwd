@@ -256,7 +256,12 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     table.insert("vendor_ids".to_owned(), vendor_ids.join(" ").into());
     table.insert("class_ids".to_owned(), class_ids.join(" ").into());
 
-    let toml_string = format!("[{}]\n{}", profile.name, toml::to_string(&table).unwrap());
+    let toml_string = format!(
+        "[{}]\n{}",
+        profile.name,
+        // NOTE: workaround toml escaping multiline raw strings
+        toml::to_string_pretty(&table).unwrap().replace("\\\"", "\"")
+    );
     fs::write(file_path, toml_string).is_ok()
 }
 
@@ -287,6 +292,8 @@ pub fn print_profile_details(profile: &Profile) {
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use crate::profile::{parse_profiles, HardwareID};
 
     #[test]
@@ -336,5 +343,44 @@ mod tests {
         assert_eq!(parsed_profiles[1].hwd_ids, hwd_ids);
         assert!(!parsed_profiles[1].post_install.is_empty());
         assert!(!parsed_profiles[1].post_remove.is_empty());
+    }
+
+    #[test]
+    fn profile_write_test() {
+        let prof_path = "profile-raw-escaped-strings-test.toml";
+        let parsed_profiles = parse_profiles(prof_path);
+        assert!(parsed_profiles.is_ok());
+        let parsed_profiles = parsed_profiles.unwrap();
+        let parsed_profile = &parsed_profiles[0];
+
+        const K_POST_INSTALL_TEST_DATA: &str = r#"    echo "Steam Deck chwd installing..."
+    username=$(id -nu 1000)
+    services=("steam-powerbuttond")
+    kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
+    echo "Enabling services..."
+    for service in ${services[@]}; do
+        systemctl enable --now "${service}.service"
+    done
+    echo "Adding required kernel parameters..."
+    sed -i "s/LINUX_OPTIONS="[^"]*/& ${kernelparams}/" /etc/sdboot-manage.conf
+"#;
+        assert_eq!(parsed_profile.post_install, K_POST_INSTALL_TEST_DATA);
+
+        // empty file
+        let filepath = {
+            use std::env;
+
+            let tmp_dir = env::temp_dir();
+            format!("{}/.tempfile-chwd-test-{}", tmp_dir.to_string_lossy(), "123451231231")
+        };
+
+        std::fs::File::create(&filepath).unwrap();
+        assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profile));
+        let orig_content = fs::read_to_string(&filepath).unwrap();
+
+        // cleanup
+        assert!(fs::remove_file(&filepath).is_ok());
+
+        assert_eq!(orig_content, fs::read_to_string(&prof_path).unwrap());
     }
 }
