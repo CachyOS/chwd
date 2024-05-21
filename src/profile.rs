@@ -374,7 +374,7 @@ mod tests {
             format!("{}/.tempfile-chwd-test-{}", tmp_dir.to_string_lossy(), "123451231231")
         };
 
-        std::fs::File::create(&filepath).unwrap();
+        assert!(!std::path::Path::new(&filepath).exists());
         assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profile));
         let orig_content = fs::read_to_string(&filepath).unwrap();
 
