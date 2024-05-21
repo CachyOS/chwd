@@ -375,12 +375,12 @@ mod tests {
         };
 
         assert!(!std::path::Path::new(&filepath).exists());
-        assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profile));
+        assert!(crate::profile::write_profile_to_file(&filepath, parsed_profile));
         let orig_content = fs::read_to_string(&filepath).unwrap();
 
         // cleanup
         assert!(fs::remove_file(&filepath).is_ok());
 
-        assert_eq!(orig_content, fs::read_to_string(&prof_path).unwrap());
+        assert_eq!(orig_content, fs::read_to_string(prof_path).unwrap());
     }
 }
