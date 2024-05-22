@@ -3,6 +3,7 @@ ai_sdk = false
 class_ids = "0300"
 desc = "Test profile"
 device_ids = "1435 163f"
+device_name_pattern = '(AD)\w+'
 nonfree = false
 packages = "opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime"
 post_install = """

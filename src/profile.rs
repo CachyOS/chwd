@@ -305,7 +305,7 @@ mod tests {
         let hwd_ids = vec![HardwareID {
             class_ids: vec!["0300".to_owned(), "0380".to_owned(), "0302".to_owned()],
             vendor_ids: vec!["10de".to_owned()],
-            device_ids: vec!["*".to_owned()],
+            device_ids: vec!["12".to_owned(), "23".to_owned(), "53".to_owned(), "33".to_owned()],
             blacklisted_class_ids: vec![],
             blacklisted_vendor_ids: vec![],
             blacklisted_device_ids: vec![],
@@ -343,6 +343,17 @@ mod tests {
         assert_eq!(parsed_profiles[1].hwd_ids, hwd_ids);
         assert!(!parsed_profiles[1].post_install.is_empty());
         assert!(!parsed_profiles[1].post_remove.is_empty());
+    }
+
+    #[test]
+    fn graphics_profiles_invalid() {
+        let prof_path = "graphic_drivers-invalid-profiles-test.toml";
+        let parsed_profiles = crate::profile::get_invalid_profiles(prof_path);
+        assert!(parsed_profiles.is_ok());
+        let parsed_profiles = parsed_profiles.unwrap();
+
+        assert_eq!(parsed_profiles.len(), 1);
+        assert_eq!(parsed_profiles[0], "nvidia-dkms".to_owned());
     }
 
     #[test]
