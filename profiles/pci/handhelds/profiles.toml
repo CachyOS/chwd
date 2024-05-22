@@ -59,7 +59,7 @@ post_install = """
     echo "Ally and Legion chwd installing..."
     username=$(id -nu 1000)
     services=("steam-powerbuttond" "hhd@${username}")
-    maskservices=("jupiter-bios-update" "jupiter-controller-update")
+    maskservices=("jupiter-biosupdate" "jupiter-controller-update")
     echo "Enabling services..."
     for service in ${services[@]}; do
         systemctl enable --now "${service}.service"
@@ -73,7 +73,7 @@ post_remove = """
     echo "Ally and Legion chwd removing..."
     username=$(id -nu 1000)
     services=("steam-powerbuttond" "hhd@${username}")
-    maskservices=("jupiter-bios-update" "jupiter-controller-update")
+    maskservices=("jupiter-biosupdate" "jupiter-controller-update")
     echo "Disabling services..."
     for service in ${services[@]}; do
         systemctl disable "${service}.service"
