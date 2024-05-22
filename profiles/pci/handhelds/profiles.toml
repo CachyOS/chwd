@@ -54,7 +54,7 @@ class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "15bf"
 priority = 6
-packages = 'hhd hhd-ui jupiter-hw-support steam-powerbuttond mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
+packages = 'hhd hhd-ui jupiter-hw-support steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
 post_install = """
     echo "Ally and Legion chwd installing..."
     username=$(id -nu 1000)
