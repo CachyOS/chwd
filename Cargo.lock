@@ -158,7 +158,7 @@ checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 
 [[package]]
 name = "chwd"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "anyhow",
  "clap",
