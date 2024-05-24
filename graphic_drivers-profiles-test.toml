@@ -68,3 +68,4 @@ post_remove = """
     mkinitcpio -P
 """
 device_ids = '>nvidia-test-ids.ids'
+hwd_product_name_pattern = '(Ally)\w+'
