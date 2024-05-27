@@ -210,10 +210,23 @@ fn set_matching_profiles(
 pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -> Vec<usize> {
     let mut found_indices = vec![];
 
-    let re: Option<Regex> = profile
+    let dev_name_re: Option<Regex> = profile
         .device_name_pattern
         .as_ref()
         .map(|dev_pattern| Regex::new(dev_pattern).expect("Failed to initialize regex"));
+
+    let product_name_re: Option<Regex> = profile
+        .hwd_product_name_pattern
+        .as_ref()
+        .map(|product_pattern| Regex::new(product_pattern).expect("Failed to initialize regex"));
+
+    if let Some(product_name_re) = &product_name_re {
+        let product_name = fs::read_to_string("/sys/devices/virtual/dmi/id/product_name")
+            .expect("Failed to read product name");
+        if !product_name_re.is_match(&product_name) {
+            return vec![];
+        }
+    }
 
     for hwd_id in profile.hwd_ids.iter() {
         let mut found_device = false;
@@ -246,8 +259,8 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
                             .any(|x| x.to_lowercase() == i_device.vendor_id.to_lowercase());
                         if !found {
                             // Check device ids
-                            found = if let Some(re) = &re {
-                                re.is_match(&i_device.device_name)
+                            found = if let Some(dev_name_re) = &dev_name_re {
+                                dev_name_re.is_match(&i_device.device_name)
                             } else {
                                 hwd_id.device_ids.iter().any(|x| {
                                     x == "*"

@@ -45,6 +45,7 @@ pub struct Profile {
     pub post_install: String,
     pub post_remove: String,
     pub device_name_pattern: Option<String>,
+    pub hwd_product_name_pattern: Option<String>,
 
     pub hwd_ids: Vec<HardwareID>,
 }
@@ -150,6 +151,9 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         device_name_pattern: node
             .get("device_name_pattern")
             .and_then(|x| x.as_str().map(str::to_string)),
+        hwd_product_name_pattern: node
+            .get("hwd_product_name_pattern")
+            .and_then(|x| x.as_str().map(str::to_string)),
     };
 
     let conf_devids = node.get("device_ids").and_then(|x| x.as_str()).unwrap_or("");
@@ -246,6 +250,9 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     if let Some(dev_name_pattern) = &profile.device_name_pattern {
         table.insert("device_name_pattern".to_owned(), dev_name_pattern.clone().into());
     }
+    if let Some(product_name_pattern) = &profile.hwd_product_name_pattern {
+        table.insert("hwd_product_name_pattern".to_owned(), product_name_pattern.clone().into());
+    }
 
     let last_hwd_id = profile.hwd_ids.last().unwrap();
 
@@ -340,6 +347,7 @@ mod tests {
              lib32-nvidia-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader"
         );
         assert_eq!(parsed_profiles[1].device_name_pattern, None);
+        assert_eq!(parsed_profiles[1].hwd_product_name_pattern, Some("(Ally)\\w+".to_owned()));
         assert_eq!(parsed_profiles[1].hwd_ids, hwd_ids);
         assert!(!parsed_profiles[1].post_install.is_empty());
         assert!(!parsed_profiles[1].post_remove.is_empty());

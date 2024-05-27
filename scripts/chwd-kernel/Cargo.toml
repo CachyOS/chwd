@@ -12,7 +12,7 @@ pacmanconf = "2"
 
 subprocess = "0.2"
 clap = { features = ["derive"], version = "4" }
-nix = { features = ["user"], default-features = false, version = "0.28" }
+nix = { features = ["user"], default-features = false, version = "0.29" }
 dialoguer = { default-features = false, version = "0.11" }
 
 [profile.release]
