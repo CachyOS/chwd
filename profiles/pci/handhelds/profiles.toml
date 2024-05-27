@@ -1,17 +1,21 @@
-#Steam Deck APUS
+#Steam Deck's
 #CLASSIDS=0300
 #VENDORIDS=1002
 #DEVICEIDS=1435 (oled), 163f (lcd)
+#Galileo (OLED)
+#Jupiter (LCD)
 
-#ASUS Rog Ally APU
+#ASUS Rog Ally
 #CLASSIDS=0300
 #VENDORIDS=1002
 #DEVICEIDS=15bf
+#ROG Ally RC71L
 
 #Lenovo Legion GO APU
 #CLASSIDS=0300
 #VENDORIDS=1002
 #DEVICEIDS=15bf
+#83E1
 
 [steam-deck]
 desc = 'Valve Steam Deck'
@@ -19,6 +23,7 @@ nonfree = false
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "1435 163f"
+hwd_product_name_pattern = '(Galileo)|(Jupiter)'
 priority = 6
 packages = 'powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
 #fbcon=vc:2-6 is not added here because it is added for all devices using calamares.
@@ -53,6 +58,7 @@ nonfree = false
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "15bf"
+hwd_product_name_pattern = '(ROG Ally).*|(83E1)'
 priority = 6
 packages = 'hhd hhd-ui jupiter-hw-support steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
 post_install = """
