@@ -16,31 +16,3 @@ post_install = """
     modprobe -r brcmsmac
     modprobe -r bcma
     modprobe wl"""
-
-[r8168]
-# modinfo r8168
-#alias:          pci:v00001186d00004300sv00001186sd00004B10bc*sc*i*
-#alias:          pci:v000010ECd00002600sv*sd*bc*sc*i*
-#alias:          pci:v000010ECd00002502sv*sd*bc*sc*i*
-#alias:          pci:v000010ECd00008161sv*sd*bc*sc*i*
-#alias:          pci:v000010ECd00008168sv*sd*bc*sc*i*
-desc = 'RealTek RTL-8168 Gigabit Ethernet driver'
-nonfree = false
-class_ids = "0200"
-vendor_ids = "1186 10EC"
-device_ids = "4300 2600 2502 8161 8168"
-priority = 1
-packages = 'r8168-dkms'
-post_install = """
-    export MODULESBLACKLIST="/etc/modprobe.d/r8169_blacklist.conf"
-    echo "blacklist r8169" > "${MODULESBLACKLIST}"
-    modprobe -r r8169
-    modprobe r8168"""
-post_remove = """
-    export MODULESBLACKLIST="/etc/modprobe.d/r8169_blacklist.conf"
-    if [ -e "${MODULESBLACKLIST}" ]; then
-        rm "${MODULESBLACKLIST}"
-    fi
-
-    modprobe -r r8168
-    modprobe r8169"""
