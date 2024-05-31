@@ -30,19 +30,19 @@ packages = 'powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp st
 post_install = """
     echo "Steam Deck chwd installing..."
     username=$(id -nu 1000)
-    #services=("steam-powerbuttond")
+    services=("jupiter-fan-control")
     kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
-    #echo "Enabling services..."
-    #for service in ${services[@]}; do
-    #    systemctl enable --now "${service}.service"
-    #done
+    echo "Enabling services..."
+    for service in ${services[@]}; do
+        systemctl enable --now "${service}.service"
+    done
     echo "Adding required kernel parameters..."
     sed -i "s/LINUX_OPTIONS=\"[^\"]*/& ${kernelparams}/" /etc/sdboot-manage.conf
 """
 post_remove = """
     echo "Steam deck chwd removing..."
     username=$(id -nu 1000)
-    services=("steam-powerbuttond")
+    services=("jupiter-fan-control")
     kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
     echo "Disabling services..."
     for service in ${services[@]}; do
@@ -60,12 +60,12 @@ vendor_ids = "1002"
 device_ids = "15bf"
 hwd_product_name_pattern = '(ROG Ally).*|(83E1)'
 priority = 6
-packages = 'hhd hhd-ui adjustor jupiter-hw-support jupiter-fan-control steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
+packages = 'hhd hhd-ui adjustor jupiter-hw-support steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
 post_install = """
     echo "Ally and Legion chwd installing..."
     username=$(id -nu 1000)
     services=("hhd@${username}")
-    maskservices=("jupiter-biosupdate" "jupiter-controller-update")
+    maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
     echo "Enabling services..."
     for service in ${services[@]}; do
         systemctl enable --now "${service}.service"
@@ -79,7 +79,7 @@ post_remove = """
     echo "Ally and Legion chwd removing..."
     username=$(id -nu 1000)
     services=("hhd@${username}")
-    maskservices=("jupiter-biosupdate" "jupiter-controller-update")
+    maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
     echo "Disabling services..."
     for service in ${services[@]}; do
         systemctl disable "${service}.service"
