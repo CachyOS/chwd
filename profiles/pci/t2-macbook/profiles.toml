@@ -5,6 +5,7 @@ desc = 'Packages and device configuration for the T2 Macbook'
 priority = 9
 class_ids = "0000"
 vendor_ids = "106b"
+device_ids = "1801 1802"
 packages = 'apple-t2-audi-config tiny-dfr t2fandrd'
 post_install = """
     cat <<EOF >/etc/mkinitcpio.conf.d/10-chwd.conf
@@ -13,7 +14,7 @@ MODULES+=(apple-bce)
 EOF
     mkinitcpio -P
 
-    echo apple-bce | sudo tee /etc/modules-load.d/t2.conf
+    echo apple-bce | tee /etc/modules-load.d/t2.conf
     kernelparams="intel_iommu=on iommu=pt pcie_ports=compat"
     echo "Adding required kernel parameters..."
 
@@ -25,7 +26,7 @@ EOF
     then
         echo "GRUB is installed. Generating the GRUB configuration file..."
         sed -i "s/GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*/& ${kernelparams}/" /etc/defaut/grub
-        sudo grub-mkconfig -o /boot/grub/grub.cfg
+        grub-mkconfig -o /boot/grub/grub.cfg
     fi
     
     
