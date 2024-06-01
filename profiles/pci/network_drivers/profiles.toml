@@ -7,12 +7,20 @@ device_ids = "4311 4312 4315 4727 4328 4329 432A 432B 432C 432D 0576 4353 4357 4
 priority = 1
 packages = 'broadcom-wl-dkms'
 post_install = """
-    modprobe -r b43
-    modprobe -r b43legacy
-    modprobe -r ssb
-    modprobe -r bcm43xx
-    modprobe -r brcm80211
-    modprobe -r brcmfmac
-    modprobe -r brcmsmac
-    modprobe -r bcma
-    modprobe wl"""
+    cat <<EOF >/etc/modprobe.d/01-chwd-net-blacklist.conf
+# Do not load modules on boot.
+blacklist b43
+blacklist b43legacy
+blacklist ssb
+blacklist bcm43xx
+blacklist brcm80211
+blacklist brcmfmac
+blacklist brcmsmac
+blacklist bcma
+EOF
+    mkinitcpio -P
+"""
+post_remove = """
+    rm -f /etc/modprobe.d/01-chwd-net-blacklist.conf
+    mkinitcpio -P
+"""
