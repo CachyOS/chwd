@@ -91,6 +91,34 @@ pub fn check_environment() -> Vec<String> {
     missing_dirs
 }
 
+pub fn get_gc_version() -> Option<String> {
+    use std::fs;
+
+    // NOTE: we should return a Vec of GC versions with some device id, but currently it's not
+    // possible until then return first GC version. so only single GPU/APU will match
+    let ip_match_path = glob::glob("/sys/bus/pci/drivers/amdgpu/*/ip_discovery/die/*/GC/*/")
+        .expect("Failed to read glob pattern")
+        .next();
+    if let Ok(ip_match_path) = ip_match_path? {
+        let ip_match_path = ip_match_path.to_str().unwrap();
+        let major = fs::read_to_string(&format!("{ip_match_path}/major"))
+            .expect("failed to read file")
+            .trim()
+            .to_string();
+        let minor = fs::read_to_string(&format!("{ip_match_path}/minor"))
+            .expect("failed to read file")
+            .trim()
+            .to_string();
+        let revision = fs::read_to_string(&format!("{ip_match_path}/revision"))
+            .expect("failed to read file")
+            .trim()
+            .to_string();
+
+        return Some(format!("{major}.{minor}.{revision}"));
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{misc, profile};

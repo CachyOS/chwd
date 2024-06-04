@@ -228,6 +228,14 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
         }
     }
 
+    if let Some(gc_versions) = &profile.gc_versions {
+        if let Some(gc_version) = crate::misc::get_gc_version() {
+            if !gc_versions.iter().any(|x| x == &gc_version) {
+                return vec![];
+            }
+        }
+    }
+
     for hwd_id in profile.hwd_ids.iter() {
         let mut found_device = false;
 
