@@ -1,3 +1,21 @@
+# chwd has a sequential search for the desired profile. First it goes through
+# all class_ids that indicate a device type, like GPU or network adapter. Then
+# the profile specifies which manufacturer's driver we need via vendor_id,
+# after which chwd select specific device in device_id or device_pattern, which
+# is how much wider and includes devices of the same generation. For example:
+#
+# Searched for 3D controllers
+# class_ids = "0302"
+#
+# Filters only NVIDIA GPUs
+# vendor_ids = "10de"
+#
+# A certain device or set of ids:
+# device_ids = "25a2"
+#
+# Or set of devices depending on the generation:
+# device_name_pattern = '(AD)\w+'
+
 [nvidia-dkms.40xxcards]
 desc = 'Closed source NVIDIA drivers(40xx series) for Linux (Latest)'
 priority = 9
