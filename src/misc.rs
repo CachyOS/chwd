@@ -91,32 +91,43 @@ pub fn check_environment() -> Vec<String> {
     missing_dirs
 }
 
-pub fn get_gc_version() -> Option<String> {
+pub fn get_sysfs_busid_from_amdgpu_path(amdgpu_path: &str) -> &str {
+    amdgpu_path.split('/')
+        // Extract the 7th element (amdgpu id)
+        .nth(6)
+        .unwrap_or_default()
+}
+
+// returns Vec of ( sysfs busid, formatted GC version )
+pub fn get_gc_versions() -> Option<Vec<(String, String)>> {
     use std::fs;
 
-    // NOTE: we should return a Vec of GC versions with some device id, but currently it's not
-    // possible until then return first GC version. so only single GPU/APU will match
-    let ip_match_path = glob::glob("/sys/bus/pci/drivers/amdgpu/*/ip_discovery/die/*/GC/*/")
-        .expect("Failed to read glob pattern")
-        .next();
-    if let Ok(ip_match_path) = ip_match_path? {
-        let ip_match_path = ip_match_path.to_str().unwrap();
-        let major = fs::read_to_string(&format!("{ip_match_path}/major"))
-            .expect("failed to read file")
-            .trim()
-            .to_string();
-        let minor = fs::read_to_string(&format!("{ip_match_path}/minor"))
-            .expect("failed to read file")
-            .trim()
-            .to_string();
-        let revision = fs::read_to_string(&format!("{ip_match_path}/revision"))
-            .expect("failed to read file")
-            .trim()
-            .to_string();
+    let ip_match_paths = glob::glob("/sys/bus/pci/drivers/amdgpu/*/ip_discovery/die/*/GC/*/")
+        .expect("Failed to read glob pattern");
 
-        return Some(format!("{major}.{minor}.{revision}"));
+    let gc_versions = ip_match_paths
+        .filter_map(Result::ok)
+        .filter_map(|path| path.to_str().map(|s| s.to_owned()))
+        .filter_map(|ip_match_path| {
+            let sysfs_busid = get_sysfs_busid_from_amdgpu_path(&ip_match_path).to_owned();
+
+            let major =
+                fs::read_to_string(format!("{ip_match_path}/major")).ok()?.trim().to_owned();
+            let minor =
+                fs::read_to_string(format!("{ip_match_path}/minor")).ok()?.trim().to_owned();
+            let revision =
+                fs::read_to_string(format!("{ip_match_path}/revision")).ok()?.trim().to_owned();
+
+            Some((sysfs_busid, format!("{major}.{minor}.{revision}")))
+        })
+        .collect::<Vec<_>>();
+
+    // Correctly check for empty Vec:
+    if gc_versions.is_empty() {
+        None
+    } else {
+        Some(gc_versions)
     }
-    None
 }
 
 #[cfg(test)]
@@ -138,5 +149,59 @@ mod tests {
         assert!(misc::find_profile("nvidia-dkms", &profiles).is_some());
         assert!(misc::find_profile("nvidia-dkm", &profiles).is_none());
         assert!(misc::find_profile("nvidia-dkms.40xxcards", &profiles).is_some());
+    }
+
+    #[test]
+    fn gpu_from_amdgpu_path() {
+        assert_eq!(
+            misc::get_sysfs_busid_from_amdgpu_path(
+                "/sys/bus/pci/drivers/amdgpu/0000:c2:00.0/ip_discovery/die/0/GC/0/"
+            ),
+            "0000:c2:00.0"
+        );
+        assert_eq!(
+            misc::get_sysfs_busid_from_amdgpu_path(
+                "/sys/bus/pci/drivers/amdgpu/0000:c2:00.0/ip_discovery/die//"
+            ),
+            "0000:c2:00.0"
+        );
+        assert_eq!(
+            misc::get_sysfs_busid_from_amdgpu_path("/sys/bus/pci/drivers/amdgpu/0000:c2:00.0/"),
+            "0000:c2:00.0"
+        );
+        assert_eq!(
+            misc::get_sysfs_busid_from_amdgpu_path(
+                "/sys/bus/pci/drivers/amdgpu/0000:30:00.0/ip_discovery/die/0/GC/0"
+            ),
+            "0000:30:00.0"
+        );
+        assert_eq!(
+            misc::get_sysfs_busid_from_amdgpu_path(
+                "/sys/bus/pci/drivers/amdgpu/0000:30:00.0/ip_discovery/die//"
+            ),
+            "0000:30:00.0"
+        );
+        assert_eq!(
+            misc::get_sysfs_busid_from_amdgpu_path("/sys/bus/pci/drivers/amdgpu/0000:30:00.0/"),
+            "0000:30:00.0"
+        );
+        assert_eq!(
+            misc::get_sysfs_busid_from_amdgpu_path(
+                "/sys/bus/pci/drivers/amdgpu/0000:04:00.0/ip_discovery/die/0/GC/0"
+            ),
+            "0000:04:00.0"
+        );
+        assert_eq!(
+            misc::get_sysfs_busid_from_amdgpu_path(
+                "/sys/bus/pci/drivers/amdgpu/0000:04:00.0/ip_discovery/die//"
+            ),
+            "0000:04:00.0"
+        );
+        assert_eq!(
+            misc::get_sysfs_busid_from_amdgpu_path("/sys/bus/pci/drivers/amdgpu/0000:04:00.0/"),
+            "0000:04:00.0"
+        );
+
+        assert_eq!(misc::get_sysfs_busid_from_amdgpu_path("/sys/bus/pci/drivers/amdgpu/"), "");
     }
 }
