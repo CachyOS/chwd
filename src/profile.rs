@@ -46,6 +46,7 @@ pub struct Profile {
     pub post_remove: String,
     pub device_name_pattern: Option<String>,
     pub hwd_product_name_pattern: Option<String>,
+    pub gc_versions: Option<Vec<String>>,
 
     pub hwd_ids: Vec<HardwareID>,
 }
@@ -154,6 +155,11 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         hwd_product_name_pattern: node
             .get("hwd_product_name_pattern")
             .and_then(|x| x.as_str().map(str::to_string)),
+        gc_versions: node.get("gc_versions").and_then(|x| {
+            x.as_str()
+                .map(str::split_ascii_whitespace)
+                .map(|x| x.map(str::to_string).collect::<Vec<_>>())
+        }),
     };
 
     let conf_devids = node.get("device_ids").and_then(|x| x.as_str()).unwrap_or("");
@@ -253,6 +259,9 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     if let Some(product_name_pattern) = &profile.hwd_product_name_pattern {
         table.insert("hwd_product_name_pattern".to_owned(), product_name_pattern.clone().into());
     }
+    if let Some(gc_versions) = &profile.gc_versions {
+        table.insert("gc_versions".to_owned(), gc_versions.clone().into());
+    }
 
     let last_hwd_id = profile.hwd_ids.last().unwrap();
 
@@ -349,6 +358,7 @@ mod tests {
         assert_eq!(parsed_profiles[1].device_name_pattern, None);
         assert_eq!(parsed_profiles[1].hwd_product_name_pattern, Some("(Ally)\\w+".to_owned()));
         assert_eq!(parsed_profiles[1].hwd_ids, hwd_ids);
+        assert_eq!(parsed_profiles[1].gc_versions, None);
         assert!(!parsed_profiles[1].post_install.is_empty());
         assert!(!parsed_profiles[1].post_remove.is_empty());
     }
