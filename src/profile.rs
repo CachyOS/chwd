@@ -272,12 +272,7 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     table.insert("vendor_ids".to_owned(), vendor_ids.join(" ").into());
     table.insert("class_ids".to_owned(), class_ids.join(" ").into());
 
-    let toml_string = format!(
-        "[{}]\n{}",
-        profile.name,
-        // NOTE: workaround toml escaping multiline raw strings
-        toml::to_string_pretty(&table).unwrap().replace("\\\"", "\"")
-    );
+    let toml_string = format!("[{}]\n{}", profile.name, toml::to_string_pretty(&table).unwrap());
     fs::write(file_path, toml_string).is_ok()
 }
 

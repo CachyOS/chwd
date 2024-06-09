@@ -7,7 +7,7 @@ device_name_pattern = '(AD)\w+'
 hwd_product_name_pattern = '(Ally)\w+'
 nonfree = false
 packages = "opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime"
-post_install = """
+post_install = '''
     echo "Steam Deck chwd installing..."
     username=$(id -nu 1000)
     services=("steam-powerbuttond")
@@ -18,8 +18,8 @@ post_install = """
     done
     echo "Adding required kernel parameters..."
     sed -i "s/LINUX_OPTIONS="[^"]*/& ${kernelparams}/" /etc/sdboot-manage.conf
-"""
-post_remove = """
+'''
+post_remove = '''
     echo "Steam deck chwd removing..."
     username=$(id -nu 1000)
     services=("steam-powerbuttond")
@@ -30,6 +30,6 @@ post_remove = """
     done
     echo "Removing kernel parameters..."
     sed -i "s/${kernelparams}//" /etc/sdboot-manage.conf
-"""
+'''
 priority = 6
 vendor_ids = "1002"
