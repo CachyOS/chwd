@@ -207,6 +207,25 @@ fn set_matching_profiles(
     }
 }
 
+fn get_all_devices_from_gc_versions(
+    devices: &ListOfDevicesT,
+    hwd_gc_versions: &[(String, String)],
+    profile_gc_versions: &[String],
+) -> Vec<usize> {
+    let mut found_indices = vec![];
+    for (sysfs_busid, gc_version) in hwd_gc_versions {
+        if !profile_gc_versions.iter().any(|x| x == gc_version) {
+            continue;
+        }
+        if let Some(device_index) =
+            devices.iter().position(|device| &device.sysfs_busid == sysfs_busid)
+        {
+            found_indices.push(device_index);
+        }
+    }
+    found_indices
+}
+
 pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -> Vec<usize> {
     let mut found_indices = vec![];
 
@@ -230,18 +249,9 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
 
     if let Some(gc_versions) = &profile.gc_versions {
         if let Some(hwd_gc_versions) = crate::misc::get_gc_versions() {
-            for (sysfs_busid, gc_version) in &hwd_gc_versions {
-                if !gc_versions.iter().any(|x| x == gc_version) {
-                    continue;
-                }
-                if let Some(device_index) =
-                    devices.iter().position(|device| &device.sysfs_busid == sysfs_busid)
-                {
-                    found_indices.push(device_index);
-                }
-            }
+            return get_all_devices_from_gc_versions(devices, &hwd_gc_versions, &gc_versions);
         }
-        return found_indices;
+        return vec![];
     }
 
     for hwd_id in profile.hwd_ids.iter() {
@@ -316,4 +326,504 @@ fn add_profile_sorted(profiles: &mut Vec<Arc<Profile>>, new_profile: &Profile) {
 
     profiles.push(Arc::new(new_profile.clone()));
     profiles.sort_by(|lhs, rhs| rhs.priority.cmp(&lhs.priority));
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::data;
+    use crate::device::Device;
+
+    fn test_data() -> Vec<Device> {
+        vec![
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Cezanne Data Fabric; Function 5".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "166f".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:18.5".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Audio device".to_string(),
+                device_name: "Family 17h/19h HD Audio Controller".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0403".to_string(),
+                device_id: "15e3".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:08:00.6".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "SMBus".to_string(),
+                device_name: "FCH SMBus Controller".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0c05".to_string(),
+                device_id: "790b".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:14.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Cezanne Data Fabric; Function 7".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "1671".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:18.7".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Renoir PCIe Dummy Host Bridge".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "1632".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:02.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Ethernet controller".to_string(),
+                device_name: "RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller"
+                    .to_string(),
+                vendor_name: "Realtek Semiconductor Co., Ltd.".to_string(),
+                class_id: "0200".to_string(),
+                device_id: "8168".to_string(),
+                vendor_id: "10ec".to_string(),
+                sysfs_busid: "0000:04:00.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "PCI bridge".to_string(),
+                device_name: "Renoir/Cezanne PCIe GPP Bridge".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0604".to_string(),
+                device_id: "1634".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:02.2".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Cezanne Data Fabric; Function 0".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "166a".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:18.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Network controller".to_string(),
+                device_name: "RTL8852AE 802.11ax PCIe Wireless Network Adapter".to_string(),
+                vendor_name: "Realtek Semiconductor Co., Ltd.".to_string(),
+                class_id: "0280".to_string(),
+                device_id: "8852".to_string(),
+                vendor_id: "10ec".to_string(),
+                sysfs_busid: "0000:05:00.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Audio device".to_string(),
+                device_name: "Renoir Radeon High Definition Audio Controller".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
+                class_id: "0403".to_string(),
+                device_id: "1637".to_string(),
+                vendor_id: "1002".to_string(),
+                sysfs_busid: "0000:08:00.1".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "PCI bridge".to_string(),
+                device_name: "Renoir PCIe GPP Bridge".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0604".to_string(),
+                device_id: "1633".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:01.1".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Cezanne Data Fabric; Function 2".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "166c".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:18.2".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "USB controller".to_string(),
+                device_name: "Renoir/Cezanne USB 3.1".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0c03".to_string(),
+                device_id: "1639".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:08:00.3".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "SD Host controller".to_string(),
+                device_name: "GL9750 SD Host Controller".to_string(),
+                vendor_name: "Genesys Logic, Inc".to_string(),
+                class_id: "0805".to_string(),
+                device_id: "9750".to_string(),
+                vendor_id: "17a0".to_string(),
+                sysfs_busid: "0000:06:00.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Cezanne Data Fabric; Function 4".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "166e".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:18.4".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "PCI bridge".to_string(),
+                device_name: "Renoir Internal PCIe GPP Bridge to Bus".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0604".to_string(),
+                device_id: "1635".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:08.1".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Multimedia controller".to_string(),
+                device_name: "ACP/ACP3X/ACP6x Audio Coprocessor".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0480".to_string(),
+                device_id: "15e2".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:08:00.5".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Renoir/Cezanne Root Complex".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "1630".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:00.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Audio device".to_string(),
+                device_name: "Navi 10 HDMI Audio".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
+                class_id: "0403".to_string(),
+                device_id: "ab38".to_string(),
+                vendor_id: "1002".to_string(),
+                sysfs_busid: "0000:03:00.1".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Cezanne Data Fabric; Function 6".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "1670".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:18.6".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "IOMMU".to_string(),
+                device_name: "Renoir/Cezanne IOMMU".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0806".to_string(),
+                device_id: "1631".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:00.2".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Non-Volatile memory controller".to_string(),
+                device_name: "3400 NVMe SSD [Hendrix]".to_string(),
+                vendor_name: "Micron Technology Inc".to_string(),
+                class_id: "0108".to_string(),
+                device_id: "5407".to_string(),
+                vendor_id: "1344".to_string(),
+                sysfs_busid: "0000:07:00.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "PCI bridge".to_string(),
+                device_name: "Renoir/Cezanne PCIe GPP Bridge".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0604".to_string(),
+                device_id: "1634".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:02.1".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "PCI bridge".to_string(),
+                device_name: "Navi 10 XL Upstream Port of PCI Express Switch".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
+                class_id: "0604".to_string(),
+                device_id: "1478".to_string(),
+                vendor_id: "1002".to_string(),
+                sysfs_busid: "0000:01:00.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "ISA bridge".to_string(),
+                device_name: "FCH LPC Bridge".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0601".to_string(),
+                device_id: "790e".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:14.3".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "PCI bridge".to_string(),
+                device_name: "Renoir/Cezanne PCIe GPP Bridge".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0604".to_string(),
+                device_id: "1634".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:02.3".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "VGA compatible controller".to_string(),
+                device_name: "Cezanne [Radeon Vega Series / Radeon Vega Mobile Series]".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
+                class_id: "0300".to_string(),
+                device_id: "1638".to_string(),
+                vendor_id: "1002".to_string(),
+                sysfs_busid: "0000:08:00.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Renoir PCIe Dummy Host Bridge".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "1632".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:01.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "PCI bridge".to_string(),
+                device_name: "Navi 10 XL Downstream Port of PCI Express Switch".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
+                class_id: "0604".to_string(),
+                device_id: "1479".to_string(),
+                vendor_id: "1002".to_string(),
+                sysfs_busid: "0000:02:00.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Cezanne Data Fabric; Function 1".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "166b".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:18.1".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Encryption controller".to_string(),
+                device_name: "Family 17h (Models 10h-1fh) Platform Security Processor".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "1080".to_string(),
+                device_id: "15df".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:08:00.2".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "PCI bridge".to_string(),
+                device_name: "Renoir/Cezanne PCIe GPP Bridge".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0604".to_string(),
+                device_id: "1634".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:01.2".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Cezanne Data Fabric; Function 3".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "166d".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:18.3".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Host bridge".to_string(),
+                device_name: "Renoir PCIe Dummy Host Bridge".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0600".to_string(),
+                device_id: "1632".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:00:08.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "USB controller".to_string(),
+                device_name: "Renoir/Cezanne USB 3.1".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
+                class_id: "0c03".to_string(),
+                device_id: "1639".to_string(),
+                vendor_id: "1022".to_string(),
+                sysfs_busid: "0000:08:00.4".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+            Device {
+                dev_type: "PCI".to_string(),
+                class_name: "Display controller".to_string(),
+                device_name: "Navi 14 [Radeon RX 5500/5500M / Pro 5500M]".to_string(),
+                vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
+                class_id: "0380".to_string(),
+                device_id: "7340".to_string(),
+                vendor_id: "1002".to_string(),
+                sysfs_busid: "0000:03:00.0".to_string(),
+                sysfs_id: "".to_string(),
+                available_profiles: vec![],
+                installed_profiles: vec![],
+            },
+        ]
+    }
+
+    #[test]
+    fn get_devices_from_gc_versions() {
+        let devices = test_data();
+        let hwd_gc_versions = vec![
+            ("0000:03:00.0".to_owned(), "10.1.1".to_owned()),
+            ("0000:08:00.0".to_owned(), "9.3.0".to_owned()),
+        ];
+        let profile_gc_versions =
+            vec!["10.1.1".to_owned(), "9.3.0".to_owned(), "10.3.1".to_owned(), "11.0.0".to_owned()];
+
+        assert_eq!(
+            data::get_all_devices_from_gc_versions(
+                &devices,
+                &hwd_gc_versions,
+                &profile_gc_versions
+            ),
+            vec![35, 26]
+        );
+    }
 }
