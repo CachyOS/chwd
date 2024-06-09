@@ -230,13 +230,18 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
 
     if let Some(gc_versions) = &profile.gc_versions {
         if let Some(hwd_gc_versions) = crate::misc::get_gc_versions() {
-            // NOTE: we should match each device with ID by GPU ID returned, but currently we do
-            // not do that (for now). so only single GPU/APU will match
-            let (_, gc_version) = hwd_gc_versions.first().unwrap();
-            if !gc_versions.iter().any(|x| x == gc_version) {
-                return vec![];
+            for (sysfs_busid, gc_version) in &hwd_gc_versions {
+                if !gc_versions.iter().any(|x| x == gc_version) {
+                    continue;
+                }
+                if let Some(device_index) =
+                    devices.iter().position(|device| &device.sysfs_busid == sysfs_busid)
+                {
+                    found_indices.push(device_index);
+                }
             }
         }
+        return found_indices;
     }
 
     for hwd_id in profile.hwd_ids.iter() {
