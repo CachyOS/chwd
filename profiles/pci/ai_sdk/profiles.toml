@@ -19,3 +19,14 @@ packages = 'cuda cudnn nccl python-pytorch-opt-cuda ollama-cuda tensorflow-opt-c
 device_name_pattern = '(AD|GV|TU|GA|GH|GM|GP)\w+'
 #device_ids = '*'
 
+[rocm-ai-sdk]
+desc = 'AMD AI SDK and related tools'
+nonfree = true
+ai_sdk = true
+class_ids = "*"
+vendor_ids = "1002"
+device_ids = '*'
+priority = 9
+packages = 'rocm-hip-sdk python-pytorch-opt-rocm ollama-rocm tensorflow-opt python-tensorflow-opt'
+# https://docs.kernel.org/gpu/amdgpu/driver-misc.html
+gc_versions = '11.0.0 11.0.3 10.3.0 9.4.1 9.4.2 9.4.3'
