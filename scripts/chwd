@@ -46,16 +46,16 @@ end
 local function split(str)
     local t = {}
     for found in str:gmatch("([^%s]+)") do
-        t[#t+1] = found
+        t[#t + 1] = found
     end
     return t
 end
 
 local function get_opts(args)
     local options = {}
-    local option_pattern="-%-?(.+)"
+    local option_pattern = "-%-?(.+)"
 
-    for i = 1,#args do
+    for i = 1, #args do
         local option = args[i]
         local match = option:match(option_pattern)
 
@@ -72,10 +72,10 @@ local function is_installed(package_name)
 end
 
 local function pacman_handle(action, pkgs)
-    local cmd = table.concat({pacman, action, pkgs}, " ")
+    local cmd = table.concat({ pacman, action, pkgs }, " ")
     local _, _, code = os.execute(cmd)
     if code ~= 0 then
-       die("ERROR: Pacman command was failed! Exit code: %s", code)
+        die("ERROR: Pacman command was failed! Exit code: %s", code)
     end
 end
 
@@ -126,51 +126,93 @@ local function escape_pattern(text)
     return text:gsub("([^%w])", "%%%1")
 end
 
-local function get_profile(name, path)
-    local profile_name_pattern = "^%[([A-Za-z0-9-. ]+)%]"
-    local packages_pattern  = "^packages%s*=%s*'?\"?([A-Za-z0-9- ]+)'?\"?"
-    local packages, profile, last_hook
-    local hooks = {
-        ["pre_install"] = "",
-        ["post_install"] = "",
-        ["post_remove"] = "",
-        ["pre_remove"] = "",
-        ["conditional_packages"] = ""
-    }
+local function parse_profiles(path)
+    local profile_name_pattern      = "^%[([A-Za-z0-9-. ]+)%]"
+    local packages_pattern          = "^packages%s*=%s*'?\"?([A-Za-z0-9- ]+)'?\"?"
+    local profiles                  = {}
+    local profile, captured_hook
 
     for line in io.lines(path) do
-        if profile == nil then
-            profile = line:match(profile_name_pattern)
-            if profile ~= name then
-                profile = nil
-            end
-        elseif packages == nil then
-            packages = line:match(packages_pattern)
-        else
-            if line:match(profile_name_pattern) then
-                break
-            end
+        local profile_found = line:match(profile_name_pattern)
 
-            if last_hook == nil then
-                for hook in pairs(hooks) do
-                    local hook_pattern  = '^' .. escape_pattern(hook) .. '%s*=%s*"""'
-                    if line:match(hook_pattern) then
-                        last_hook = hook
-                    end
-                end
-            else
-                local hook_end = line:match('(.*)"""')
-                if hook_end then
-                    hooks[last_hook] = hooks[last_hook] .. hook_end
-                    last_hook = nil
+        if profile_found then
+            profile = profile_found
+            profiles[profile] = {
+                ["packages"] = nil,
+                ["hooks"] = {
+                    ["pre_install"] = "",
+                    ["post_install"] = "",
+                    ["post_remove"] = "",
+                    ["pre_remove"] = "",
+                    ["conditional_packages"] = ""
+                }
+            }
+            captured_hook = nil
+        else
+            if profile then
+                if not profiles[profile].packages then
+                    profiles[profile].packages = line:match(packages_pattern)
                 else
-                    hooks[last_hook] = hooks[last_hook] .. line .. "\n"
+                    local hooks = profiles[profile]["hooks"]
+                    if captured_hook == nil then
+                        for hook in pairs(hooks) do
+                            local hook_pattern = '^' .. escape_pattern(hook) .. '%s*=%s*"""'
+                            if line:match(hook_pattern) then
+                                captured_hook = hook
+                            end
+                        end
+                    else
+                        local hook_end = line:match('(.*)"""')
+                        if hook_end then
+                            hooks[captured_hook] = hooks[captured_hook] .. hook_end
+                            captured_hook = nil
+                        else
+                            hooks[captured_hook] = hooks[captured_hook] .. line .. "\n"
+                        end
+                    end
                 end
             end
         end
     end
 
-    if not check_on_multilib() and packages then
+    return profiles
+end
+
+
+local function get_profile(profiles, name)
+    local packages
+    local hooks = {}
+    local parents = {}
+
+    for parent in name:gmatch("([^.]+)") do
+        if #parents > 0 then
+            parents[#parents+1] = parents[#parents] .. "." .. parent
+        else
+            parents[#parents+1] = parent
+        end
+    end
+
+
+    if #parents > 0 then
+        for _, parent in ipairs(parents) do
+            packages = profiles[parent].packages
+            for hook_name, hook in pairs(profiles[parent]["hooks"]) do
+                if hooks[hook_name] ~= "" then
+                    if hook ~= "" then
+                        hooks[hook_name] = hook
+                    end
+                else
+                    hooks[hook_name] = hook
+                end
+            end
+        end
+    else
+        local profile = profiles[name]
+        packages = profile.packages
+        hooks = profile.hooks
+    end
+
+    if packages and not check_on_multilib() then
         packages = packages:gsub("%s?(lib32-[A-Za-z0-9-]+)", "")
     end
 
@@ -186,7 +228,7 @@ local function get_opt_argument(options, option, default)
             die("The mandatory option %s is omitted", option)
         end
     else
-        local option_argument = arg[index+1]
+        local option_argument = arg[index + 1]
         if option_argument == nil or options[option_argument:gsub("-%-", "")] then
             die("Missing argument for option %s", option)
         else
@@ -201,7 +243,7 @@ local function main()
     cachedir = get_opt_argument(options, "cachedir", "/var/cache/pacman/pkg")
     pmroot = get_opt_argument(options, "pmroot", "/")
     pmconfig = get_opt_argument(options, "pmconfig", "/etc/pacman.conf")
-    pacman = table.concat({"pacman --noconfirm", "--cachedir", cachedir, "-r", pmroot, "--config", pmconfig}, " ")
+    pacman = table.concat({ "pacman --noconfirm", "--cachedir", cachedir, "-r", pmroot, "--config", pmconfig }, " ")
     local profile_name = get_opt_argument(options, "profile")
     local path = get_opt_argument(options, "path", "/var/lib/chwd/db/profiles.toml")
 
@@ -213,10 +255,16 @@ local function main()
         die("Profiles file is not found: %s", path)
     end
 
-    local packages, hooks = get_profile(profile_name, path)
+    local profiles = parse_profiles(path)
+
+    if not profiles[profile_name] then
+        die("Profile not found")
+    end
+
+    local packages, hooks = get_profile(profiles, profile_name)
 
     if not packages then
-        die("Profiles not valid or not found in %s", path)
+        die("Profile %s is not valid", profile_name)
     end
 
     if options.install then
