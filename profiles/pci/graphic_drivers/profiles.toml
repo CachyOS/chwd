@@ -127,6 +127,7 @@ EOF
 """
 post_remove = """
     rm -f /etc/mkinitcpio.conf.d/10-chwd.conf
+    rm -f /etc/profile.d/nvidia-rt3d-workaround.sh
     mkinitcpio -P
 """
 device_ids = '*'
