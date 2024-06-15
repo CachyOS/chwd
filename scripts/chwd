@@ -195,7 +195,10 @@ local function get_profile(profiles, name)
 
     if #parents > 0 then
         for _, parent in ipairs(parents) do
-            packages = profiles[parent].packages
+            if profiles[parent].packages then
+                packages = profiles[parent].packages
+            end
+
             for hook_name, hook in pairs(profiles[parent]["hooks"]) do
                 if hooks[hook_name] ~= "" then
                     if hook ~= "" then
