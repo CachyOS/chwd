@@ -309,7 +309,7 @@ mod tests {
 
     #[test]
     fn graphics_profiles_correct() {
-        let prof_path = "graphic_drivers-profiles-test.toml";
+        let prof_path = "tests/profiles/graphic_drivers-profiles-test.toml";
         let parsed_profiles = parse_profiles(prof_path);
         assert!(parsed_profiles.is_ok());
 
@@ -360,7 +360,7 @@ mod tests {
 
     #[test]
     fn graphics_profiles_invalid() {
-        let prof_path = "graphic_drivers-invalid-profiles-test.toml";
+        let prof_path = "tests/profiles/graphic_drivers-invalid-profiles-test.toml";
         let parsed_profiles = crate::profile::get_invalid_profiles(prof_path);
         assert!(parsed_profiles.is_ok());
         let parsed_profiles = parsed_profiles.unwrap();
@@ -371,7 +371,7 @@ mod tests {
 
     #[test]
     fn profile_write_test() {
-        let prof_path = "profile-raw-escaped-strings-test.toml";
+        let prof_path = "tests/profiles/profile-raw-escaped-strings-test.toml";
         let parsed_profiles = parse_profiles(prof_path);
         assert!(parsed_profiles.is_ok());
         let parsed_profiles = parsed_profiles.unwrap();

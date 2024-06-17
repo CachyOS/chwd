@@ -143,7 +143,7 @@ mod tests {
 
     #[test]
     fn profile_find() {
-        let prof_path = "graphic_drivers-profiles-test.toml";
+        let prof_path = "tests/profiles/graphic_drivers-profiles-test.toml";
         let profiles = profile::parse_profiles(prof_path).expect("failed");
 
         assert!(misc::find_profile("nvidia-dkms", &profiles).is_some());
