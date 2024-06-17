@@ -21,4 +21,4 @@ jobs:
       - name: Run Busted
         uses: lunarmodules/busted@v2.2.0
         with:
-          args: --no-keep-going
+          args: --no-keep-going .
