@@ -68,3 +68,6 @@ post_remove = """
     mkinitcpio -P
 """
 device_ids = '>/some/path/to/file/nvidia-invalid-ids.ids'
+
+[invalid]
+desc = "Invalid profile for testing only"

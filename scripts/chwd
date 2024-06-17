@@ -195,8 +195,8 @@ local function get_profile(profiles, name)
 
     if #parents > 0 then
         for _, parent in ipairs(parents) do
-            if profiles[parent].packages then
-                packages = profiles[parent].packages
+            if profiles[parent]['packages'] then
+                packages = profiles[parent]['packages']
             end
 
             for hook_name, hook in pairs(profiles[parent]["hooks"]) do
@@ -213,10 +213,6 @@ local function get_profile(profiles, name)
         local profile = profiles[name]
         packages = profile.packages
         hooks = profile.hooks
-    end
-
-    if packages and not check_on_multilib() then
-        packages = packages:gsub("%s?(lib32-[A-Za-z0-9-]+)", "")
     end
 
     return packages, hooks
@@ -270,6 +266,10 @@ local function main()
         die("Profile %s is not valid", profile_name)
     end
 
+    if packages and not check_on_multilib() then
+        packages = packages:gsub("%s?(lib32-[A-Za-z0-9-]+)", "")
+    end
+
     if options.install then
         exec_hook(hooks["pre_install"])
 
@@ -297,4 +297,12 @@ local function main()
     end
 end
 
-main()
+---@diagnostic disable-next-line
+if _TEST then -- luacheck: ignore
+   return {
+       get_profile = get_profile,
+       parse_profiles = parse_profiles
+   }
+else
+    main()
+end
