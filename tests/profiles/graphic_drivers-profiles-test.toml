@@ -62,5 +62,5 @@ post_remove = """
     rm -f /etc/mkinitcpio.conf.d/10-chwd.conf
     mkinitcpio -P
 """
-device_ids = '>nvidia-test-ids.ids'
+device_ids = '>tests/profiles/nvidia-test-ids.ids'
 hwd_product_name_pattern = '(Ally)\w+'
