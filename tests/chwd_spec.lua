@@ -69,15 +69,51 @@ EOF
 
         describe("Inheritance", function()
             local packages, hooks = chwd.get_profile(profiles, child_name)
-            it("Inherit parent packages", function ()
+            it("Inherit parent packages", function()
                 assert.are.equals(packages,
                     "nvidia-utils egl-wayland nvidia-settings opencl-nvidia lib32-opencl-nvidia lib32-nvidia-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader")
             end)
-            it("Inherit some parent hook", function ()
+            it("Inherit some parent hook", function()
                 assert.are.equals(hooks['post_remove'], [[
     rm -f /etc/mkinitcpio.conf.d/10-chwd.conf
     mkinitcpio -P
 ]])
+            end)
+        end)
+
+        describe("Packages inspection", function()
+            local lfs = require("lfs")
+
+            local function search(path, t)
+                for file in lfs.dir(path) do
+                    if file ~= "." and file ~= ".." then
+                        local f = path .. '/' .. file
+                        local attr = lfs.attributes(f)
+                        assert(type(attr) == "table")
+                        if attr.mode == "directory" then
+                            search(f, t)
+                        else
+                            if f:match('.toml$') then
+                                t[#t + 1] = f
+                            end
+                        end
+                    end
+                end
+            end
+
+            local available_profiles = {}
+            search("./profiles", available_profiles)
+
+            it("Packages are available in repo", function()
+                for _, file in ipairs(available_profiles) do
+                    local profiles = chwd.parse_profiles(file)
+                    for pname, _ in pairs(profiles) do
+                        local packages = chwd.get_profile(profiles, pname)
+                        print(string.format("Checking profile %s for available packages: %s...", pname, packages))
+                        local _, _, exitcode = os.execute("pacman -Sp " .. packages .. " 1>/dev/null")
+                        assert.True(exitcode == 0)
+                    end
+                end
             end)
         end)
     end)

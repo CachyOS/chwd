@@ -15,10 +15,12 @@ on:
 jobs:
   sile:
     runs-on: ubuntu-latest
+    container: cachyos/cachyos:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Install dependencies
+        run: |
+          pacman -Syu --noconfirm lua lua-filesystem busted lua-busted
       - name: Run Busted
-        uses: lunarmodules/busted@v2.2.0
-        with:
-          args: --no-keep-going .
+        run: busted . --no-keep-going
