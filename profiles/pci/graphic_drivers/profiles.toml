@@ -119,6 +119,11 @@ class_ids = "0300 0302"
 vendor_ids = "10de"
 priority = 0
 packages = 'mesa lib32-mesa libva-mesa-driver mesa-vdpau opencl-clover-mesa lib32-opencl-clover-mesa lib32-libva-mesa-driver vulkan-nouveau'
+conditional_packages = """
+if ! lspci -d "*:*:030x" | grep -q NVIDIA; then
+    echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
+fi
+"""
 
 [intel]
 desc = "Mesa open source driver for Intel"
@@ -128,6 +133,11 @@ vendor_ids = "8086"
 device_ids = "*"
 priority = 4
 packages = 'mesa lib32-mesa libva-intel-driver lib32-libva-intel-driver opencl-clover-mesa lib32-opencl-clover-mesa vulkan-intel lib32-vulkan-intel intel-media-driver mesa-vdpau lib32-mesa-vdpau'
+conditional_packages = """
+if ! lspci -d "*:*:030x" | grep -q NVIDIA; then
+    echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
+fi
+"""
 
 [amd]
 desc = "Mesa open source driver for AMD"
@@ -137,6 +147,11 @@ vendor_ids = "1002"
 device_ids = "*"
 priority = 4
 packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-clover-mesa lib32-opencl-clover-mesa'
+conditional_packages = """
+if ! lspci -d "*:*:030x" | grep -q NVIDIA; then
+    echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
+fi
+"""
 
 [fallback]
 desc = 'Fallback profile'
