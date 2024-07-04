@@ -44,6 +44,9 @@ conditional_packages = """
     [ -z "$modules" ] && modules="nvidia-dkms"
 
     echo "$modules"
+
+    # Add libva-nvidia-driver to profile
+    echo "export LIBVA_DRIVER_NAME=nvidia" > /etc/profile.d/nvidia-vaapi.sh
 """
 post_install = """
     cat <<EOF >/etc/mkinitcpio.conf.d/10-chwd.conf
@@ -54,6 +57,7 @@ EOF
 """
 post_remove = """
     rm -f /etc/mkinitcpio.conf.d/10-chwd.conf
+    rm -f /etc/profile.d/nvidia-vaapi.sh
     mkinitcpio -P
 """
 device_ids = '*'
