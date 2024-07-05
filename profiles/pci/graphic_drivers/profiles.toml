@@ -45,8 +45,6 @@ conditional_packages = """
 
     echo "$modules"
 
-    # Add libva-nvidia-driver to profile
-    echo "export LIBVA_DRIVER_NAME=nvidia" > /etc/profile.d/nvidia-vaapi.sh
 """
 post_install = """
     cat <<EOF >/etc/mkinitcpio.conf.d/10-chwd.conf
@@ -54,6 +52,9 @@ post_install = """
 MODULES+=(nvidia nvidia_modeset nvidia_uvm nvidia_drm)
 EOF
     mkinitcpio -P
+
+    # Add libva-nvidia-driver to profile
+    echo "export LIBVA_DRIVER_NAME=nvidia" > /etc/profile.d/nvidia-vaapi.sh
 """
 post_remove = """
     rm -f /etc/mkinitcpio.conf.d/10-chwd.conf
