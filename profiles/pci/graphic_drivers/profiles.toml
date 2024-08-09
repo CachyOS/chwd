@@ -17,7 +17,7 @@
 # device_name_pattern = '(AD)\w+'
 
 [nvidia-open-dkms]
-desc = 'Closed source NVIDIA drivers for Linux (Latest)'
+desc = 'Open source NVIDIA drivers for Linux (Latest)'
 nonfree = true
 class_ids = "0300 0302 0380"
 vendor_ids = "10de"
@@ -59,7 +59,7 @@ post_remove = """
 device_name_pattern = "([A-Z]+[0-9]+[^M]*)[[:blank:]].*"
 
 [nvidia-open-dkms.prime]
-desc = 'Closed source NVIDIA drivers for Linux (Latest)'
+desc = 'Open source NVIDIA drivers for Linux (Latest)'
 class_ids = "0300 0302 0380"
 device_name_pattern = "([A-Z]+[0-9]+[A-Z]*M)[[:blank:]].*"
 priority = 11
