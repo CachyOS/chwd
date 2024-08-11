@@ -107,23 +107,23 @@ fn fill_profiles(
         if !Path::new(&config_file_path).exists() {
             continue;
         }
-        if let Ok(profiles) = crate::profile::parse_profiles(&config_file_path) {
-            for profile in profiles.into_iter() {
-                if profile.packages.is_empty() {
-                    continue;
-                }
-                // if we dont target ai sdk,
-                // skip profile marked as ai sdk.
-                if !is_ai_sdk && profile.is_ai_sdk {
-                    continue;
-                }
-                // if we target ai sdk,
-                // skip profile which isn't marked as ai sdk.
-                if is_ai_sdk && !profile.is_ai_sdk {
-                    continue;
-                }
-                configs.push(profile);
+        let profiles = crate::profile::parse_profiles(&config_file_path)
+            .expect("Urgent invalid profiles detected!");
+        for profile in profiles.into_iter() {
+            if profile.packages.is_empty() {
+                continue;
             }
+            // if we dont target ai sdk,
+            // skip profile marked as ai sdk.
+            if !is_ai_sdk && profile.is_ai_sdk {
+                continue;
+            }
+            // if we target ai sdk,
+            // skip profile which isn't marked as ai sdk.
+            if is_ai_sdk && !profile.is_ai_sdk {
+                continue;
+            }
+            configs.push(profile);
         }
         if let Ok(mut invalid_profile_names) =
             crate::profile::get_invalid_profiles(&config_file_path)
