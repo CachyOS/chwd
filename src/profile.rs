@@ -70,7 +70,7 @@ pub fn parse_profiles(file_path: &str) -> Result<Vec<Profile>> {
 
     for (key, value) in toml_table.iter() {
         if !value.is_table() {
-            continue;
+            anyhow::bail!("the value is not table!");
         }
         let value_table = value.as_table().unwrap();
 
@@ -109,7 +109,7 @@ pub fn get_invalid_profiles(file_path: &str) -> Result<Vec<String>> {
 
     for (key, value) in toml_table.iter() {
         if !value.is_table() {
-            continue;
+            anyhow::bail!("the value is not table!");
         }
         let value_table = value.as_table().unwrap();
 
