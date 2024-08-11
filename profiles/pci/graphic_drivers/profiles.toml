@@ -76,7 +76,7 @@ EOF
     # without letting the dGPU fully sleep or keeping it running for long
     # periods of time.
     # See: https://gitlab.gnome.org/GNOME/mutter/-/issues/2969
-    cat <<\EOF >>/etc/profile.d/nvidia-rt3d-workaround.sh
+    cat <<\EOF >/etc/profile.d/nvidia-rt3d-workaround.sh
 if [ -n "$(lspci -d "10de:*:0302")" ]; then
     export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json
 fi
@@ -149,7 +149,7 @@ EOF
     # without letting the dGPU fully sleep or keeping it running for long
     # periods of time.
     # See: https://gitlab.gnome.org/GNOME/mutter/-/issues/2969
-    cat <<\EOF >>/etc/profile.d/nvidia-rt3d-workaround.sh
+    cat <<\EOF >/etc/profile.d/nvidia-rt3d-workaround.sh
 if [ -n "$(lspci -d "10de:*:0302")" ]; then
     export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json
 fi
