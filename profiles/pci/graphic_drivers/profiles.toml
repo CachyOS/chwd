@@ -77,7 +77,7 @@ EOF
     # periods of time.
     # See: https://gitlab.gnome.org/GNOME/mutter/-/issues/2969
     cat <<EOF >/etc/profile.d/nvidia-rt3d-workaround.sh
-if lspci -d "*:*:0302" | grep -q NVIDIA; then
+if [ -n "$(lspci -d "10de:*:0302")" ]; then
     export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json
 fi
 EOF
@@ -150,7 +150,7 @@ EOF
     # periods of time.
     # See: https://gitlab.gnome.org/GNOME/mutter/-/issues/2969
     cat <<EOF >/etc/profile.d/nvidia-rt3d-workaround.sh
-if lspci -d "*:*:0302" | grep -q NVIDIA; then
+if [ -n "$(lspci -d "10de:*:0302")" ]; then
     export __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/50_mesa.json
 fi
 EOF
@@ -204,7 +204,7 @@ vendor_ids = "10de"
 priority = 0
 packages = 'mesa lib32-mesa libva-mesa-driver mesa-vdpau lib32-libva-mesa-driver vulkan-nouveau'
 conditional_packages = """
-if ! lspci -d "*:*:030x" | grep -q NVIDIA; then
+if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
 fi
 """
@@ -218,7 +218,7 @@ device_ids = "*"
 priority = 4
 packages = 'mesa lib32-mesa libva-intel-driver lib32-libva-intel-driver vulkan-intel lib32-vulkan-intel intel-media-driver intel-compute-runtime intel-oneapi-compiler-shared-runtime mesa-vdpau lib32-mesa-vdpau'
 conditional_packages = """
-if ! lspci -d "*:*:030x" | grep -q NVIDIA; then
+if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
 fi
 """
@@ -232,7 +232,7 @@ device_ids = "*"
 priority = 4
 packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau'
 conditional_packages = """
-if ! lspci -d "*:*:030x" | grep -q NVIDIA; then
+if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
 fi
 """
