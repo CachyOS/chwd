@@ -56,12 +56,12 @@ post_remove = """
     rm -f /etc/profile.d/nvidia-vaapi.sh
     mkinitcpio -P
 """
-device_name_pattern = '([A-Z]+[0-9]+[^M]*)[[:blank:]].*'
+device_name_pattern = '([A-Z]+[0-9]+[^M]*)\s.*'
 
 [nvidia-open-dkms.prime]
 desc = 'Open source NVIDIA drivers for Linux (Latest)'
 class_ids = "0300 0302 0380"
-device_name_pattern = '([A-Z]+[0-9]+[A-Z]*M)[[:blank:]].*'
+device_name_pattern = '([A-Z]+[0-9]+[A-Z]*M)\s.*'
 priority = 11
 packages = 'nvidia-utils egl-wayland nvidia-settings opencl-nvidia lib32-opencl-nvidia lib32-nvidia-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader nvidia-prime switcheroo-control'
 post_install = """
