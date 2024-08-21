@@ -37,29 +37,6 @@ use i18n_embed::DesktopLanguageRequester;
 use nix::unistd::Uid;
 use subprocess::Exec;
 
-fn perceed_inst_rem(
-    args: &Option<Vec<String>>,
-    working_profiles: &mut Vec<String>,
-) -> anyhow::Result<()> {
-    if let Some(values) = args {
-        let profile = values[0].to_lowercase();
-        working_profiles.push(profile);
-    }
-
-    Ok(())
-}
-
-fn perceed_autoconf(
-    args: &Option<Vec<String>>,
-    autoconf_class_id: &mut String,
-) -> anyhow::Result<()> {
-    if let Some(values) = args {
-        *autoconf_class_id = values[0].to_lowercase();
-    }
-
-    Ok(())
-}
-
 fn main() -> anyhow::Result<()> {
     let requested_languages = DesktopLanguageRequester::requested_languages();
     let localizer = crate::localization::localizer();
@@ -79,9 +56,18 @@ fn main() -> anyhow::Result<()> {
     let mut working_profiles: Vec<String> = vec![];
 
     let mut autoconf_class_id = String::new();
-    perceed_autoconf(&argstruct.autoconfigure, &mut autoconf_class_id)?;
-    perceed_inst_rem(&argstruct.install, &mut working_profiles)?;
-    perceed_inst_rem(&argstruct.remove, &mut working_profiles)?;
+
+    if let Some(profile) = &argstruct.install {
+        working_profiles.push(profile.to_lowercase());
+    }
+
+    if let Some(profile) = &argstruct.remove {
+        working_profiles.push(profile.to_lowercase());
+    }
+
+    if let Some(class_id) = &argstruct.autoconfigure {
+        autoconf_class_id = class_id.to_lowercase();
+    }
 
     if !argstruct.show_pci {
         argstruct.show_pci = true;
@@ -230,7 +216,7 @@ fn prepare_autoconfigure(
     if !found_device {
         console_writer::print_warning(&format!("No device of class '{autoconf_class_id}' found!"));
     } else if !profiles_name.is_empty() {
-        args.install = Some(profiles_name.clone());
+        args.install = Some(profiles_name.first().unwrap().clone());
     }
 
     profiles_name

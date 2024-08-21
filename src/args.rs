@@ -27,11 +27,11 @@ pub struct Args {
 
     /// Install profile
     #[arg(short, long, value_name = "profile", conflicts_with("remove"))]
-    pub install: Option<Vec<String>>,
+    pub install: Option<String>,
 
     /// Remove profile
     #[arg(short, long, value_name = "profile", conflicts_with("install"))]
-    pub remove: Option<Vec<String>>,
+    pub remove: Option<String>,
 
     /// Show detailed info for listings
     #[arg(short, long)]
@@ -55,7 +55,7 @@ pub struct Args {
 
     /// Autoconfigure
     #[arg(short, long, value_name = "classid", conflicts_with_all(["install", "remove"]))]
-    pub autoconfigure: Option<Vec<String>>,
+    pub autoconfigure: Option<String>,
 
     /// Toggle AI SDK profiles
     #[arg(long = "ai_sdk")]
