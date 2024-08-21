@@ -31,8 +31,8 @@ pub struct Data {
     pub sync_package_manager_database: bool,
     pub is_ai_sdk_target: bool,
     pub pci_devices: ListOfDevicesT,
-    pub installed_pci_profiles: ListOfProfilesT,
-    pub all_pci_profiles: ListOfProfilesT,
+    pub installed_profiles: ListOfProfilesT,
+    pub all_profiles: ListOfProfilesT,
     pub invalid_profiles: Vec<String>,
 }
 
@@ -55,24 +55,24 @@ impl Data {
             pci_device.installed_profiles.clear();
         }
 
-        self.installed_pci_profiles.clear();
+        self.installed_profiles.clear();
 
         // Refill data
         self.fill_installed_profiles();
 
-        set_matching_profiles(&mut self.pci_devices, &self.installed_pci_profiles, true);
+        set_matching_profiles(&mut self.pci_devices, &self.installed_profiles, true);
     }
 
     fn fill_installed_profiles(&mut self) {
         let conf_path = crate::consts::CHWD_PCI_DATABASE_DIR;
-        let configs = &mut self.installed_pci_profiles;
+        let configs = &mut self.installed_profiles;
 
         fill_profiles(configs, &mut self.invalid_profiles, conf_path, self.is_ai_sdk_target);
     }
 
     fn fill_all_profiles(&mut self) {
         let conf_path = crate::consts::CHWD_PCI_CONFIG_DIR;
-        let configs = &mut self.all_pci_profiles;
+        let configs = &mut self.all_profiles;
 
         fill_profiles(configs, &mut self.invalid_profiles, conf_path, self.is_ai_sdk_target);
     }
@@ -82,11 +82,11 @@ impl Data {
             pci_device.available_profiles.clear();
         }
 
-        self.all_pci_profiles.clear();
+        self.all_profiles.clear();
 
         self.fill_all_profiles();
 
-        set_matching_profiles(&mut self.pci_devices, &self.all_pci_profiles, false);
+        set_matching_profiles(&mut self.pci_devices, &self.all_profiles, false);
 
         self.update_installed_profile_data();
     }

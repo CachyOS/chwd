@@ -161,7 +161,7 @@ fn prepare_autoconfigure(
     let mut profiles_name = vec![];
 
     let devices = &data.pci_devices;
-    let installed_profiles = &data.installed_pci_profiles;
+    let installed_profiles = &data.installed_profiles;
 
     let mut found_device = false;
     for device in devices.iter() {
@@ -238,13 +238,13 @@ fn get_available_profile(data: &mut data::Data, profile_name: &str) -> Option<Ar
 
 fn get_db_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Profile>> {
     // Get the right profiles
-    let all_profiles = &data.all_pci_profiles;
+    let all_profiles = &data.all_profiles;
     misc::find_profile(profile_name, all_profiles)
 }
 
 fn get_installed_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Profile>> {
     // Get the right profiles
-    let installed_profiles = &data.installed_pci_profiles;
+    let installed_profiles = &data.installed_profiles;
     misc::find_profile(profile_name, installed_profiles)
 }
 

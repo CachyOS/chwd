@@ -32,9 +32,9 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
 
     // List all profiles
     if args.list_all {
-        let all_pci_profiles = &data.all_pci_profiles;
-        if !all_pci_profiles.is_empty() {
-            list_profiles(all_pci_profiles, &fl!("all-pci-profiles"));
+        let all_profiles = &data.all_profiles;
+        if !all_profiles.is_empty() {
+            list_profiles(all_profiles, &fl!("all-pci-profiles"));
         } else {
             print_warning(&fl!("pci-profiles-not-found"));
         }
@@ -42,11 +42,11 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
 
     // List installed profiles
     if args.list_installed {
-        let installed_pci_profiles = &data.installed_pci_profiles;
+        let installed_profiles = &data.installed_profiles;
         if args.detail {
-            print_installed_profiles(installed_pci_profiles);
-        } else if !installed_pci_profiles.is_empty() {
-            list_profiles(installed_pci_profiles, &fl!("installed-pci-profiles"));
+            print_installed_profiles(installed_profiles);
+        } else if !installed_profiles.is_empty() {
+            list_profiles(installed_profiles, &fl!("installed-pci-profiles"));
         } else {
             print_warning(&fl!("no-installed-pci-profiles"));
         }
