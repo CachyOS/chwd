@@ -16,6 +16,7 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+use clap::builder::ArgPredicate;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
@@ -30,7 +31,7 @@ pub struct Args {
     pub remove: Option<String>,
 
     /// Show detailed info for listings
-    #[arg(short, long)]
+    #[arg(short, long, requires_if(ArgPredicate::IsPresent, "listings"))]
     pub detail: bool,
 
     /// Force reinstall
@@ -38,15 +39,15 @@ pub struct Args {
     pub force: bool,
 
     /// List installed kernels
-    #[arg(long)]
+    #[arg(long, group = "listings")]
     pub list_installed: bool,
 
     /// List available profiles for all devices
-    #[arg(long = "list")]
+    #[arg(long = "list", group = "listings")]
     pub list_available: bool,
 
     /// List all profiles
-    #[arg(long)]
+    #[arg(long, group = "listings")]
     pub list_all: bool,
 
     /// Autoconfigure
