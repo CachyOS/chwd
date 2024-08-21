@@ -21,10 +21,6 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
-    /// Show PCI
-    #[arg(long = "pci")]
-    pub show_pci: bool,
-
     /// Install profile
     #[arg(short, long, value_name = "profile", conflicts_with("remove"))]
     pub install: Option<String>,

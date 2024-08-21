@@ -31,7 +31,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     }
 
     // List all profiles
-    if args.list_all && args.show_pci {
+    if args.list_all {
         let all_pci_profiles = &data.all_pci_profiles;
         if !all_pci_profiles.is_empty() {
             list_profiles(all_pci_profiles, &fl!("all-pci-profiles"));
@@ -41,7 +41,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     }
 
     // List installed profiles
-    if args.list_installed && args.show_pci {
+    if args.list_installed {
         let installed_pci_profiles = &data.installed_pci_profiles;
         if args.detail {
             print_installed_profiles("PCI", installed_pci_profiles);
@@ -53,7 +53,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     }
 
     // List available profiles
-    if args.list_available && args.show_pci {
+    if args.list_available {
         let pci_devices = &data.pci_devices;
         if args.detail {
             crate::device::print_available_profiles_in_detail("PCI", pci_devices);

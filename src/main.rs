@@ -69,10 +69,6 @@ fn main() -> anyhow::Result<()> {
         autoconf_class_id = class_id.to_lowercase();
     }
 
-    if !argstruct.show_pci {
-        argstruct.show_pci = true;
-    }
-
     // 2) Initialize
     let mut data_obj = data::Data::new(argstruct.is_ai_sdk);
 
