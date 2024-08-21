@@ -66,7 +66,7 @@ pub fn print_available_profiles_in_detail(devices: &[Device]) {
         }
         config_found = true;
 
-        console_writer::print_status(&format!(
+        log::info!(
             "{} {}: {} ({}:{}:{})",
             "PCI",
             fl!("device"),
@@ -74,7 +74,7 @@ pub fn print_available_profiles_in_detail(devices: &[Device]) {
             device.class_id,
             device.vendor_id,
             device.device_id
-        ));
+        );
         println!("  {} {} {}", device.class_name, device.vendor_name, device.device_name);
         println!();
         if !installed_profiles.is_empty() {
@@ -94,6 +94,6 @@ pub fn print_available_profiles_in_detail(devices: &[Device]) {
     }
 
     if !config_found {
-        console_writer::print_warning(&fl!("no-profile-device"));
+        console_writer::print_warn_msg!("no-profile-device");
     }
 }

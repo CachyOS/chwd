@@ -179,6 +179,7 @@ dependencies = [
  "i18n-embed",
  "i18n-embed-fl",
  "libpci",
+ "log",
  "nix",
  "once_cell",
  "regex",

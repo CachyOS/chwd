@@ -22,6 +22,7 @@ pub mod consts;
 pub mod data;
 pub mod device;
 pub mod localization;
+pub mod logger;
 pub mod misc;
 pub mod profile;
 
@@ -43,6 +44,9 @@ fn main() -> anyhow::Result<()> {
     if let Err(error) = localizer.select(&requested_languages) {
         eprintln!("Error while loading languages for library_fluent {}", error);
     }
+
+    // initialize the logger
+    logger::init_logger().expect("Failed to initialize logger");
 
     let args: Vec<String> = std::env::args().collect();
 
@@ -74,9 +78,9 @@ fn main() -> anyhow::Result<()> {
 
     let missing_dirs = misc::check_environment();
     if !missing_dirs.is_empty() {
-        console_writer::print_error("Following directories do not exist:");
+        log::error!("Following directories do not exist:");
         for missing_dir in missing_dirs.iter() {
-            console_writer::print_status(missing_dir);
+            log::info!("{missing_dir}");
         }
         anyhow::bail!("Error occurred");
     }
@@ -94,7 +98,7 @@ fn main() -> anyhow::Result<()> {
         return Ok(());
     }
     if !Uid::effective().is_root() {
-        console_writer::print_error(&fl!("root-operation"));
+        console_writer::print_error_msg!("root-operation");
         anyhow::bail!("Error occurred");
     }
 
@@ -104,16 +108,13 @@ fn main() -> anyhow::Result<()> {
             if working_profile.is_none() {
                 let working_profile = get_db_profile(&data_obj, profile_name);
                 if working_profile.is_none() {
-                    console_writer::print_error(&fl!(
+                    console_writer::print_error_msg!(
                         "profile-not-exist",
-                        profile_name = profile_name.as_str()
-                    ));
+                        profile_name = profile_name
+                    );
                     anyhow::bail!("Error occurred");
                 }
-                console_writer::print_error(&fl!(
-                    "no-matching-device",
-                    profile_name = profile_name.as_str()
-                ));
+                console_writer::print_error_msg!("no-matching-device", profile_name = profile_name);
                 anyhow::bail!("Error occurred");
             }
 
@@ -129,10 +130,10 @@ fn main() -> anyhow::Result<()> {
         } else if argstruct.remove.is_some() {
             let working_profile = get_installed_profile(&data_obj, profile_name);
             if working_profile.is_none() {
-                console_writer::print_error(&fl!(
+                console_writer::print_error_msg!(
                     "profile-not-installed",
-                    profile_name = profile_name.as_str()
-                ));
+                    profile_name = profile_name
+                );
                 anyhow::bail!("Error occurred");
             } else if !perform_transaction(
                 &mut data_obj,
@@ -182,7 +183,7 @@ fn prepare_autoconfigure(
             device.device_name
         );
         if profile.is_none() {
-            console_writer::print_warning(&format!("No config found for device: {device_info}"));
+            log::warn!("No config found for device: {device_info}");
             continue;
         }
         let profile = profile.unwrap();
@@ -192,15 +193,12 @@ fn prepare_autoconfigure(
 
         // Print found profile
         if skip {
-            console_writer::print_status(&format!(
-                "Skipping already installed profile '{}' for device: {}",
-                profile.name, device_info
-            ));
+            log::info!(
+                "Skipping already installed profile '{}' for device: {device_info}",
+                profile.name
+            );
         } else {
-            console_writer::print_status(&format!(
-                "Using profile '{}' for device: {}",
-                profile.name, device_info
-            ));
+            log::info!("Using profile '{}' for device: {device_info}", profile.name);
         }
 
         let profile_exists = profiles_name.iter().any(|x| x == &profile.name);
@@ -210,7 +208,7 @@ fn prepare_autoconfigure(
     }
 
     if !found_device {
-        console_writer::print_warning(&format!("No device of class '{autoconf_class_id}' found!"));
+        log::warn!("No device of class '{autoconf_class_id}' found!");
     } else if !profiles_name.is_empty() {
         args.install = Some(profiles_name.first().unwrap().clone());
     }
@@ -324,21 +322,20 @@ fn perform_transaction(
 ) -> bool {
     let status = perform_transaction_type(data, args, profile, transaction_type, force);
 
+    let profile_name = &profile.name;
     match status {
-        misc::Status::ErrorNotInstalled => console_writer::print_error(&fl!(
-            "profile-not-installed",
-            profile_name = profile.name.as_str()
-        )),
-        misc::Status::ErrorAlreadyInstalled => console_writer::print_warning(&format!(
-            "a version of profile '{}' is already installed!\nUse -f/--force to force \
-             installation...",
-            &profile.name
-        )),
-        misc::Status::ErrorNoMatchLocalConfig => {
-            console_writer::print_error(&fl!("pass-profile-no-match-install"))
+        misc::Status::ErrorNotInstalled => {
+            console_writer::print_error_msg!("profile-not-installed", profile_name = profile_name)
         },
-        misc::Status::ErrorScriptFailed => console_writer::print_error(&fl!("script-failed")),
-        misc::Status::ErrorSetDatabase => console_writer::print_error(&fl!("failed-set-db")),
+        misc::Status::ErrorAlreadyInstalled => log::warn!(
+            "a version of profile '{profile_name}' is already installed!\nUse -f/--force to force \
+             installation...",
+        ),
+        misc::Status::ErrorNoMatchLocalConfig => {
+            console_writer::print_error_msg!("pass-profile-no-match-install")
+        },
+        misc::Status::ErrorScriptFailed => console_writer::print_error_msg!("script-failed"),
+        misc::Status::ErrorSetDatabase => console_writer::print_error_msg!("failed-set-db"),
         _ => (),
     }
 

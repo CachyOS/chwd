@@ -19,7 +19,6 @@ use crate::fl;
 use crate::misc::Message;
 use crate::profile::Profile;
 
-use colored::Colorize;
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::*;
@@ -27,7 +26,7 @@ use comfy_table::*;
 pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     // Check for invalid profiles
     for invalid_profile in data.invalid_profiles.iter() {
-        print_warning(&fl!("invalid-profile", invalid_profile = invalid_profile.as_str()));
+        print_warn_msg!("invalid-profile", invalid_profile = invalid_profile.as_str());
     }
 
     // List all profiles
@@ -36,7 +35,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
         if !all_profiles.is_empty() {
             list_profiles(all_profiles, &fl!("all-pci-profiles"));
         } else {
-            print_warning(&fl!("pci-profiles-not-found"));
+            print_warn_msg!("pci-profiles-not-found");
         }
     }
 
@@ -48,7 +47,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
         } else if !installed_profiles.is_empty() {
             list_profiles(installed_profiles, &fl!("installed-pci-profiles"));
         } else {
-            print_warning(&fl!("no-installed-pci-profiles"));
+            print_warn_msg!("no-installed-pci-profiles");
         }
     }
 
@@ -82,7 +81,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
 }
 
 pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
-    print_status(header_msg);
+    log::info!("{header_msg}");
     println!();
 
     let mut table = Table::new();
@@ -101,7 +100,7 @@ pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
 
 pub fn print_installed_profiles(installed_profiles: &[Profile]) {
     if installed_profiles.is_empty() {
-        print_warning(&fl!("no-installed-profile-device"));
+        print_warn_msg!("no-installed-profile-device");
         return;
     }
 
@@ -113,21 +112,30 @@ pub fn print_installed_profiles(installed_profiles: &[Profile]) {
 
 pub fn print_message(msg_type: Message, msg_str: &str) {
     match msg_type {
-        Message::InstallStart => print_status(&format!("Installing {msg_str} ...")),
-        Message::InstallEnd => print_status(&format!("Successfully installed {msg_str}")),
-        Message::RemoveStart => print_status(&format!("Removing {msg_str} ...")),
-        Message::RemoveEnd => print_status(&format!("Successfully removed {msg_str}")),
+        Message::InstallStart => log::info!("Installing {msg_str} ..."),
+        Message::InstallEnd => log::info!("Successfully installed {msg_str}"),
+        Message::RemoveStart => log::info!("Removing {msg_str} ..."),
+        Message::RemoveEnd => log::info!("Successfully removed {msg_str}"),
     }
 }
 
-pub fn print_warning(msg: &str) {
-    println!("{} {}", "Warning:".yellow(), msg);
+#[macro_export]
+macro_rules! print_error_msg {
+    ($message_id:literal) => {{
+        log::error!("{}", fl!($message_id));
+    }};
+    ($message_id:literal, $($args:expr),*) => {{
+        log::error!("{}", fl!($message_id, $($args), *));
+    }};
 }
 
-pub fn print_error(msg: &str) {
-    eprintln!("{} {}", "Error:".red(), msg);
+#[macro_export]
+macro_rules! print_warn_msg {
+    ($message_id:literal) => {{
+        log::warn!("{}", fl!($message_id));
+    }};
+    ($message_id:literal, $($args:expr),*) => {{
+        log::warn!("{}", fl!($message_id, $($args), *));
+    }};
 }
-
-pub fn print_status(msg: &str) {
-    println!("{} {}", ">".red(), msg);
-}
+pub(crate) use {print_error_msg, print_warn_msg};
