@@ -44,7 +44,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     if args.list_installed {
         let installed_pci_profiles = &data.installed_pci_profiles;
         if args.detail {
-            print_installed_profiles("PCI", installed_pci_profiles);
+            print_installed_profiles(installed_pci_profiles);
         } else if !installed_pci_profiles.is_empty() {
             list_profiles(installed_pci_profiles, &fl!("installed-pci-profiles"));
         } else {
@@ -56,7 +56,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     if args.list_available {
         let pci_devices = &data.pci_devices;
         if args.detail {
-            crate::device::print_available_profiles_in_detail("PCI", pci_devices);
+            crate::device::print_available_profiles_in_detail(pci_devices);
         } else {
             for pci_device in pci_devices.iter() {
                 let available_profiles = &pci_device.get_available_profiles();
@@ -99,9 +99,9 @@ pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
     println!("{table}\n");
 }
 
-pub fn print_installed_profiles(device_type: &str, installed_profiles: &[Profile]) {
+pub fn print_installed_profiles(installed_profiles: &[Profile]) {
     if installed_profiles.is_empty() {
-        print_warning(&fl!("no-installed-profile-device", device_type = device_type));
+        print_warning(&fl!("no-installed-profile-device"));
         return;
     }
 

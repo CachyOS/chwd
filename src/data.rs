@@ -139,8 +139,6 @@ fn fill_devices() -> Option<ListOfDevicesT> {
     let from_hex =
         |hex_number: u32, fill: usize| -> String { format!("{:01$x}", hex_number, fill) };
 
-    let dev_type = "PCI".to_owned();
-
     // Initialize
     let mut pacc = libpci::PCIAccess::new(true);
 
@@ -159,7 +157,6 @@ fn fill_devices() -> Option<ListOfDevicesT> {
         let item_device = iter.device()?;
 
         devices.push(Device {
-            dev_type: dev_type.clone(),
             class_name: item_class,
             device_name: item_device,
             vendor_name: item_vendor,
@@ -336,7 +333,6 @@ mod tests {
     fn test_data() -> Vec<Device> {
         vec![
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Cezanne Data Fabric; Function 5".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -349,7 +345,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Audio device".to_string(),
                 device_name: "Family 17h/19h HD Audio Controller".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -362,7 +357,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "SMBus".to_string(),
                 device_name: "FCH SMBus Controller".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -375,7 +369,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Cezanne Data Fabric; Function 7".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -388,7 +381,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Renoir PCIe Dummy Host Bridge".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -401,7 +393,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Ethernet controller".to_string(),
                 device_name: "RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller"
                     .to_string(),
@@ -415,7 +406,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "PCI bridge".to_string(),
                 device_name: "Renoir/Cezanne PCIe GPP Bridge".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -428,7 +418,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Cezanne Data Fabric; Function 0".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -441,7 +430,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Network controller".to_string(),
                 device_name: "RTL8852AE 802.11ax PCIe Wireless Network Adapter".to_string(),
                 vendor_name: "Realtek Semiconductor Co., Ltd.".to_string(),
@@ -454,7 +442,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Audio device".to_string(),
                 device_name: "Renoir Radeon High Definition Audio Controller".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
@@ -467,7 +454,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "PCI bridge".to_string(),
                 device_name: "Renoir PCIe GPP Bridge".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -480,7 +466,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Cezanne Data Fabric; Function 2".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -493,7 +478,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "USB controller".to_string(),
                 device_name: "Renoir/Cezanne USB 3.1".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -506,7 +490,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "SD Host controller".to_string(),
                 device_name: "GL9750 SD Host Controller".to_string(),
                 vendor_name: "Genesys Logic, Inc".to_string(),
@@ -519,7 +502,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Cezanne Data Fabric; Function 4".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -532,7 +514,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "PCI bridge".to_string(),
                 device_name: "Renoir Internal PCIe GPP Bridge to Bus".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -545,7 +526,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Multimedia controller".to_string(),
                 device_name: "ACP/ACP3X/ACP6x Audio Coprocessor".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -558,7 +538,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Renoir/Cezanne Root Complex".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -571,7 +550,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Audio device".to_string(),
                 device_name: "Navi 10 HDMI Audio".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
@@ -584,7 +562,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Cezanne Data Fabric; Function 6".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -597,7 +574,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "IOMMU".to_string(),
                 device_name: "Renoir/Cezanne IOMMU".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -610,7 +586,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Non-Volatile memory controller".to_string(),
                 device_name: "3400 NVMe SSD [Hendrix]".to_string(),
                 vendor_name: "Micron Technology Inc".to_string(),
@@ -623,7 +598,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "PCI bridge".to_string(),
                 device_name: "Renoir/Cezanne PCIe GPP Bridge".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -636,7 +610,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "PCI bridge".to_string(),
                 device_name: "Navi 10 XL Upstream Port of PCI Express Switch".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
@@ -649,7 +622,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "ISA bridge".to_string(),
                 device_name: "FCH LPC Bridge".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -662,7 +634,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "PCI bridge".to_string(),
                 device_name: "Renoir/Cezanne PCIe GPP Bridge".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -675,7 +646,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "VGA compatible controller".to_string(),
                 device_name: "Cezanne [Radeon Vega Series / Radeon Vega Mobile Series]".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
@@ -688,7 +658,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Renoir PCIe Dummy Host Bridge".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -701,7 +670,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "PCI bridge".to_string(),
                 device_name: "Navi 10 XL Downstream Port of PCI Express Switch".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),
@@ -714,7 +682,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Cezanne Data Fabric; Function 1".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -727,7 +694,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Encryption controller".to_string(),
                 device_name: "Family 17h (Models 10h-1fh) Platform Security Processor".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -740,7 +706,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "PCI bridge".to_string(),
                 device_name: "Renoir/Cezanne PCIe GPP Bridge".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -753,7 +718,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Cezanne Data Fabric; Function 3".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -766,7 +730,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Host bridge".to_string(),
                 device_name: "Renoir PCIe Dummy Host Bridge".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -779,7 +742,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "USB controller".to_string(),
                 device_name: "Renoir/Cezanne USB 3.1".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD]".to_string(),
@@ -792,7 +754,6 @@ mod tests {
                 installed_profiles: vec![],
             },
             Device {
-                dev_type: "PCI".to_string(),
                 class_name: "Display controller".to_string(),
                 device_name: "Navi 14 [Radeon RX 5500/5500M / Pro 5500M]".to_string(),
                 vendor_name: "Advanced Micro Devices, Inc. [AMD/ATI]".to_string(),

@@ -21,7 +21,6 @@ use std::sync::Arc;
 
 #[derive(Debug, Default, Clone)]
 pub struct Device {
-    pub dev_type: String,
     pub class_name: String,
     pub device_name: String,
     pub vendor_name: String,
@@ -57,7 +56,7 @@ pub fn get_unique_devices(devices: &[Device]) -> Vec<Device> {
     uniq_devices
 }
 
-pub fn print_available_profiles_in_detail(device_type: &str, devices: &[Device]) {
+pub fn print_available_profiles_in_detail(devices: &[Device]) {
     let mut config_found = false;
     for device in devices.iter() {
         let available_profiles = &device.available_profiles;
@@ -69,7 +68,7 @@ pub fn print_available_profiles_in_detail(device_type: &str, devices: &[Device])
 
         console_writer::print_status(&format!(
             "{} {}: {} ({}:{}:{})",
-            device_type,
+            "PCI",
             fl!("device"),
             device.sysfs_id,
             device.class_id,
@@ -95,6 +94,6 @@ pub fn print_available_profiles_in_detail(device_type: &str, devices: &[Device])
     }
 
     if !config_found {
-        console_writer::print_warning(&fl!("no-profile-device", device_type = device_type));
+        console_writer::print_warning(&fl!("no-profile-device"));
     }
 }
