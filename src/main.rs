@@ -37,48 +37,6 @@ use i18n_embed::DesktopLanguageRequester;
 use nix::unistd::Uid;
 use subprocess::Exec;
 
-fn perceed_inst_rem(
-    args: &Option<Vec<String>>,
-    operation: &mut String,
-    working_profiles: &mut Vec<String>,
-) -> anyhow::Result<()> {
-    if let Some(values) = args {
-        let device_type = &values[0];
-        let profile = values[1].to_lowercase();
-
-        if "pci" != device_type && "usb" != device_type {
-            anyhow::bail!("invalid use of option: {args:?}");
-        }
-        *operation = device_type.to_uppercase();
-        working_profiles.push(profile);
-    }
-
-    Ok(())
-}
-
-fn perceed_autoconf(
-    args: &Option<Vec<String>>,
-    operation: &mut String,
-    autoconf_class_id: &mut String,
-    is_nonfree: &mut bool,
-) -> anyhow::Result<()> {
-    if let Some(values) = args {
-        let device_type = &values[0];
-        let driver_type = &values[1];
-        *is_nonfree = "nonfree" == driver_type;
-        *autoconf_class_id = values[2].to_lowercase();
-
-        if ("pci" != device_type && "usb" != device_type)
-            || ("free" != driver_type && "nonfree" != driver_type)
-        {
-            anyhow::bail!("invalid use of option: {args:?}");
-        }
-        *operation = device_type.to_uppercase();
-    }
-
-    Ok(())
-}
-
 fn main() -> anyhow::Result<()> {
     let requested_languages = DesktopLanguageRequester::requested_languages();
     let localizer = crate::localization::localizer();
@@ -95,27 +53,20 @@ fn main() -> anyhow::Result<()> {
         argstruct.list_available = true;
     }
 
-    if argstruct.is_nvidia_card {
-        misc::check_nvidia_card();
-        return Ok(());
-    }
-
     let mut working_profiles: Vec<String> = vec![];
 
-    let mut operation = String::new();
     let mut autoconf_class_id = String::new();
-    let mut autoconf_nonfree_driver = false;
-    perceed_autoconf(
-        &argstruct.autoconfigure,
-        &mut operation,
-        &mut autoconf_class_id,
-        &mut autoconf_nonfree_driver,
-    )?;
-    perceed_inst_rem(&argstruct.install, &mut operation, &mut working_profiles)?;
-    perceed_inst_rem(&argstruct.remove, &mut operation, &mut working_profiles)?;
 
-    if !argstruct.show_pci {
-        argstruct.show_pci = true;
+    if let Some(profile) = &argstruct.install {
+        working_profiles.push(profile.to_lowercase());
+    }
+
+    if let Some(profile) = &argstruct.remove {
+        working_profiles.push(profile.to_lowercase());
+    }
+
+    if let Some(class_id) = &argstruct.autoconfigure {
+        autoconf_class_id = class_id.to_lowercase();
     }
 
     // 2) Initialize
@@ -134,12 +85,8 @@ fn main() -> anyhow::Result<()> {
     console_writer::handle_arguments_listing(&data_obj, &argstruct);
 
     // 4) Auto configuration
-    let mut prepared_profiles = prepare_autoconfigure(
-        &data_obj,
-        &mut argstruct,
-        &autoconf_class_id,
-        autoconf_nonfree_driver,
-    );
+    let mut prepared_profiles =
+        prepare_autoconfigure(&data_obj, &mut argstruct, &autoconf_class_id);
     working_profiles.append(&mut prepared_profiles);
 
     // Transaction
@@ -206,7 +153,6 @@ fn prepare_autoconfigure(
     data: &data::Data,
     args: &mut args::Args,
     autoconf_class_id: &str,
-    autoconf_nonfree_driver: bool,
 ) -> Vec<String> {
     if args.autoconfigure.is_none() {
         return vec![];
@@ -215,7 +161,7 @@ fn prepare_autoconfigure(
     let mut profiles_name = vec![];
 
     let devices = &data.pci_devices;
-    let installed_profiles = &data.installed_pci_profiles;
+    let installed_profiles = &data.installed_profiles;
 
     let mut found_device = false;
     for device in devices.iter() {
@@ -223,8 +169,7 @@ fn prepare_autoconfigure(
             continue;
         }
         found_device = true;
-        let profile =
-            device.available_profiles.iter().find(|x| autoconf_nonfree_driver || !x.is_nonfree);
+        let profile = device.available_profiles.first();
 
         let device_info = format!(
             "{} ({}:{}:{}) {} {} {}",
@@ -267,7 +212,7 @@ fn prepare_autoconfigure(
     if !found_device {
         console_writer::print_warning(&format!("No device of class '{autoconf_class_id}' found!"));
     } else if !profiles_name.is_empty() {
-        args.install = Some(profiles_name.clone());
+        args.install = Some(profiles_name.first().unwrap().clone());
     }
 
     profiles_name
@@ -293,13 +238,13 @@ fn get_available_profile(data: &mut data::Data, profile_name: &str) -> Option<Ar
 
 fn get_db_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Profile>> {
     // Get the right profiles
-    let all_profiles = &data.all_pci_profiles;
+    let all_profiles = &data.all_profiles;
     misc::find_profile(profile_name, all_profiles)
 }
 
 fn get_installed_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Profile>> {
     // Get the right profiles
-    let installed_profiles = &data.installed_pci_profiles;
+    let installed_profiles = &data.installed_profiles;
     misc::find_profile(profile_name, installed_profiles)
 }
 

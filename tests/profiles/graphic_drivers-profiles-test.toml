@@ -29,7 +29,6 @@ device_name_pattern = '(AD)\w+'
 
 [nvidia-dkms]
 desc = 'Closed source NVIDIA drivers for Linux (Latest)'
-nonfree = true
 class_ids = "0300 0380 0302"
 vendor_ids = "10de"
 priority = 8

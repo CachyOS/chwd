@@ -19,8 +19,8 @@
 use std::path::Path;
 use std::sync::Arc;
 
+use crate::consts;
 use crate::profile::Profile;
-use crate::{consts, data};
 
 #[derive(Debug, PartialEq)]
 pub enum Transaction {
@@ -60,22 +60,6 @@ pub fn find_profile(profile_name: &str, profiles: &[Profile]) -> Option<Arc<Prof
         return Some(Arc::new(found_profile.clone()));
     }
     None
-}
-
-pub fn check_nvidia_card() {
-    let data = data::Data::new(false);
-    for pci_device in data.pci_devices.iter() {
-        if pci_device.available_profiles.is_empty() {
-            continue;
-        }
-
-        if pci_device.vendor_id == "10de"
-            && pci_device.available_profiles.iter().any(|x| x.is_nonfree)
-        {
-            println!("NVIDIA card found!");
-            return;
-        }
-    }
 }
 
 pub fn check_environment() -> Vec<String> {

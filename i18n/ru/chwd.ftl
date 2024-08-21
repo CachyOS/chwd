@@ -2,7 +2,6 @@
 name-header = Имя
 desc-header = Описание
 priority-header = Приоритет
-nonfree-header = Несвободный
 classids-header = IDS класса
 vendorids-header = IDS вендора
 
@@ -19,7 +18,7 @@ pass-profile-no-match-install = переданный профиль не сов�
 available = ДОСТУПНО
 installed = УСТАНОВЛЕНО
 device = Устройство
-no-profile-device = профили для устройств '{$device_type}' не найдены!
+no-profile-device = профили для устройств PCI не найдены!
 
 # console writer
 invalid-profile = профиль '{$invalid_profile}' недействительный!
@@ -27,4 +26,4 @@ all-pci-profiles = Все PCI профили:
 installed-pci-profiles = Установленные PCI профили:
 pci-profiles-not-found = PCI профили не найдены!
 no-installed-pci-profiles = Нет установленных PCI профилей!
-no-installed-profile-device = не найдено ни одного установленного профиля для устройств '{$device_type}'!
+no-installed-profile-device = не найдено ни одного установленного профиля для устройств PCI!

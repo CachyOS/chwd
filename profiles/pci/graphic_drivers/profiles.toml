@@ -18,7 +18,6 @@
 
 [nvidia-open-dkms]
 desc = 'Open source NVIDIA drivers for Linux (Latest)'
-nonfree = true
 class_ids = "0300 0302 0380"
 vendor_ids = "10de"
 priority = 10
@@ -80,7 +79,6 @@ post_remove = """
 
 [nvidia-dkms]
 desc = 'Closed source NVIDIA drivers for Linux (Latest)'
-nonfree = true
 class_ids = "0300 0302 0380"
 vendor_ids = "10de"
 priority = 12
@@ -142,7 +140,6 @@ post_remove = """
 [nvidia-dkms-470xx]
 desc = 'Closed source NVIDIA drivers for Linux (470xx branch, only for Kepler GPUs)'
 priority = 14
-nonfree = true
 class_ids = "0300 0380"
 vendor_ids = "10de"
 packages = 'nvidia-470xx-dkms nvidia-470xx-utils nvidia-470xx-settings opencl-nvidia-470xx vulkan-icd-loader lib32-nvidia-470xx-utils lib32-opencl-nvidia-470xx lib32-vulkan-icd-loader libva-nvidia-driver'
@@ -168,7 +165,6 @@ post_install = """
 [nvidia-dkms-390xx]
 desc = 'Closed source NVIDIA drivers for Linux (390xx branch, only for Fermi GPUs)'
 priority = 16
-nonfree = true
 vendor_ids = "10de"
 class_ids = "0300 0302 0380"
 packages = 'nvidia-390xx-dkms nvidia-390xx-utils nvidia-390xx-settings opencl-nvidia-390xx nvidia-390xx-utils nvidia-390xx-settings opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
@@ -176,7 +172,6 @@ device_name_pattern = '(GF)\w+'
 
 [nouveau]
 desc = "Open Nouveau driver for NVIDIA graphics cards (Only for old GPUs)"
-nonfree = false
 class_ids = "0300 0302"
 vendor_ids = "10de"
 priority = 0
@@ -189,7 +184,6 @@ fi
 
 [intel]
 desc = "Mesa open source driver for Intel"
-nonfree = false
 class_ids = "0300 0302"
 vendor_ids = "8086"
 device_ids = "*"
@@ -203,7 +197,6 @@ fi
 
 [amd]
 desc = "Mesa open source driver for AMD"
-nonfree = false
 class_ids = "0300 0302"
 vendor_ids = "1002"
 device_ids = "*"
@@ -217,7 +210,6 @@ fi
 
 [fallback]
 desc = 'Fallback profile'
-nonfree = false
 class_ids = "0300 0380 0302"
 vendor_ids = "1002 8086 10de"
 device_ids = "*"
@@ -226,7 +218,6 @@ packages = 'mesa lib32-mesa vulkan-swrast xf86-video-vesa'
 
 [virtualmachine]
 desc = 'X.org vmware video driver and open-vm-tools/virtualbox tools'
-nonfree = false
 class_ids = "0300"
 # Virtualbox version 6.0 uses VMSVGA on Linux guests by default, which has VMWare's VENDORID.
 # VENDOR VMWare=80ee Virtualbox=15AD Redhat(QXL)=1af4 Redhat(VirtIO)=1b36 cirrus=1013

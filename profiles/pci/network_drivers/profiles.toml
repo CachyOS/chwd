@@ -1,6 +1,5 @@
 [broadcom-wl]
 desc = 'Broadcom 802.11 Linux STA wireless driver'
-nonfree = false
 class_ids = "0200 0280 0282"
 vendor_ids = "14E4 14A4"
 device_ids = "4311 4312 4315 4727 4328 4329 432A 432B 432C 432D 0576 4353 4357 4358 4359 4365 4331 43B1 43A0 4360"

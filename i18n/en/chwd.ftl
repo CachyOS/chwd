@@ -2,7 +2,6 @@
 name-header = Name
 desc-header = Desc
 priority-header = Priority
-nonfree-header = NonFree
 classids-header = ClassIDS
 vendorids-header = VendorIDS
 
@@ -19,7 +18,7 @@ pass-profile-no-match-install = passed profile does not match with installed pro
 available = AVAILABLE
 installed = INSTALLED
 device = Device
-no-profile-device = no profiles for '{$device_type}' devices found!
+no-profile-device = no profiles for PCI devices found!
 
 # console writer
 invalid-profile = profile '{$invalid_profile}' is invalid!
@@ -27,4 +26,4 @@ all-pci-profiles = All PCI profiles:
 installed-pci-profiles = Installed PCI profiles:
 pci-profiles-not-found = No PCI profiles found!
 no-installed-pci-profiles = No installed PCI profiles!
-no-installed-profile-device = no installed profile for '{$device_type}' devices found!
+no-installed-profile-device = no installed profile for PCI devices found!

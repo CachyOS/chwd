@@ -33,8 +33,6 @@ pub struct HardwareID {
 
 #[derive(Debug, Clone)]
 pub struct Profile {
-    pub is_nonfree: bool,
-
     pub is_ai_sdk: bool,
 
     pub prof_path: String,
@@ -139,7 +137,6 @@ pub fn get_invalid_profiles(file_path: &str) -> Result<Vec<String>> {
 
 fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     let mut profile = Profile {
-        is_nonfree: node.get("nonfree").and_then(|x| x.as_bool()).unwrap_or(false),
         is_ai_sdk: node.get("ai_sdk").and_then(|x| x.as_bool()).unwrap_or(false),
         prof_path: "".to_owned(),
         name: profile_name.to_owned(),
@@ -241,7 +238,6 @@ fn merge_table_left(lhs: &mut toml::Table, rhs: &toml::Table) {
 
 pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     let mut table = toml::Table::new();
-    table.insert("nonfree".to_owned(), profile.is_nonfree.into());
     table.insert("ai_sdk".to_owned(), profile.is_ai_sdk.into());
     table.insert("desc".to_owned(), profile.desc.clone().into());
     table.insert("packages".to_owned(), profile.packages.clone().into());
@@ -294,7 +290,6 @@ pub fn print_profile_details(profile: &Profile) {
         .add_row(vec![&fl!("name-header"), &profile.name])
         .add_row(vec![&fl!("desc-header"), desc_formatted])
         .add_row(vec![&fl!("priority-header"), &profile.priority.to_string()])
-        .add_row(vec![&fl!("nonfree-header"), &profile.is_nonfree.to_string()])
         .add_row(vec![&fl!("classids-header"), &class_ids])
         .add_row(vec![&fl!("vendorids-header"), &vendor_ids]);
 
@@ -323,7 +318,6 @@ mod tests {
         }];
 
         let parsed_profiles = parsed_profiles.unwrap();
-        assert!(parsed_profiles[0].is_nonfree);
         assert_eq!(parsed_profiles[0].prof_path, prof_path);
         assert_eq!(parsed_profiles[0].name, "nvidia-dkms.40xxcards");
         assert_eq!(
@@ -341,7 +335,6 @@ mod tests {
         assert!(!parsed_profiles[0].post_install.is_empty());
         assert!(!parsed_profiles[0].post_remove.is_empty());
 
-        assert!(parsed_profiles[1].is_nonfree);
         assert_eq!(parsed_profiles[1].prof_path, prof_path);
         assert_eq!(parsed_profiles[1].name, "nvidia-dkms");
         assert_eq!(parsed_profiles[1].priority, 8);

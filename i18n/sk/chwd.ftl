@@ -2,7 +2,6 @@
 name-header = Meno
 desc-header = Popis
 priority-header = Priorita
-nonfree-header = Platené
 classids-header = ID Triedy
 vendorids-header = ID Predajcu
 
@@ -19,7 +18,7 @@ pass-profile-no-match-install = uvedený profil sa nezhoduje s nainštalovaným 
 available = DOSTUPNÉ
 installed = NAINŠTALOVANÉ
 device = Zariadenie
-no-profile-device = neboli nájdené žiadne profily pre zariadenia '{$device_type}'!
+no-profile-device = neboli nájdené žiadne profily pre zariadenia PCI!
 
 # Výstup v konzoly
 invalid-profile = profil '{$invalid_profile}' je neplatný!
@@ -27,4 +26,4 @@ all-pci-profiles = Všetky PCI profily:
 installed-pci-profiles = Inštalované PCI profily:
 pci-profiles-not-found = Žiadne PCI profily neboli nájdené!
 no-installed-pci-profiles = Žiadne PCI profily nie sú nainštalované!
-no-installed-profile-device = žiadny nainštalovaný profil pre zariadenie '{$device_type}' nebol nájdený !
+no-installed-profile-device = žiadny nainštalovaný profil pre zariadenie PCI nebol nájdený !

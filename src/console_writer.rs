@@ -31,32 +31,32 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     }
 
     // List all profiles
-    if args.list_all && args.show_pci {
-        let all_pci_profiles = &data.all_pci_profiles;
-        if !all_pci_profiles.is_empty() {
-            list_profiles(all_pci_profiles, &fl!("all-pci-profiles"));
+    if args.list_all {
+        let all_profiles = &data.all_profiles;
+        if !all_profiles.is_empty() {
+            list_profiles(all_profiles, &fl!("all-pci-profiles"));
         } else {
             print_warning(&fl!("pci-profiles-not-found"));
         }
     }
 
     // List installed profiles
-    if args.list_installed && args.show_pci {
-        let installed_pci_profiles = &data.installed_pci_profiles;
+    if args.list_installed {
+        let installed_profiles = &data.installed_profiles;
         if args.detail {
-            print_installed_profiles("PCI", installed_pci_profiles);
-        } else if !installed_pci_profiles.is_empty() {
-            list_profiles(installed_pci_profiles, &fl!("installed-pci-profiles"));
+            print_installed_profiles(installed_profiles);
+        } else if !installed_profiles.is_empty() {
+            list_profiles(installed_profiles, &fl!("installed-pci-profiles"));
         } else {
             print_warning(&fl!("no-installed-pci-profiles"));
         }
     }
 
     // List available profiles
-    if args.list_available && args.show_pci {
+    if args.list_available {
         let pci_devices = &data.pci_devices;
         if args.detail {
-            crate::device::print_available_profiles_in_detail("PCI", pci_devices);
+            crate::device::print_available_profiles_in_detail(pci_devices);
         } else {
             for pci_device in pci_devices.iter() {
                 let available_profiles = &pci_device.get_available_profiles();
@@ -90,18 +90,18 @@ pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
         .load_preset(UTF8_FULL)
         .apply_modifier(UTF8_ROUND_CORNERS)
         .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec![&fl!("name-header"), &fl!("nonfree-header")]);
+        .set_header(vec![&fl!("name-header"), &fl!("priority-header")]);
 
     for profile in profiles.iter() {
-        table.add_row(vec![&profile.name, &profile.is_nonfree.to_string()]);
+        table.add_row(vec![&profile.name, &profile.priority.to_string()]);
     }
 
     println!("{table}\n");
 }
 
-pub fn print_installed_profiles(device_type: &str, installed_profiles: &[Profile]) {
+pub fn print_installed_profiles(installed_profiles: &[Profile]) {
     if installed_profiles.is_empty() {
-        print_warning(&fl!("no-installed-profile-device", device_type = device_type));
+        print_warning(&fl!("no-installed-profile-device"));
         return;
     }
 

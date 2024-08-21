@@ -16,25 +16,22 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+use clap::builder::ArgPredicate;
 use clap::Parser;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Args {
-    /// Show PCI
-    #[arg(long = "pci")]
-    pub show_pci: bool,
-
     /// Install profile
-    #[arg(short, long, number_of_values = 2, value_names = &["usb/pci", "profile"], conflicts_with("remove"))]
-    pub install: Option<Vec<String>>,
+    #[arg(short, long, value_name = "profile", conflicts_with("remove"))]
+    pub install: Option<String>,
 
     /// Remove profile
-    #[arg(short, long, number_of_values = 2, value_names = &["usb/pci", "profile"], conflicts_with("install"))]
-    pub remove: Option<Vec<String>>,
+    #[arg(short, long, value_name = "profile", conflicts_with("install"))]
+    pub remove: Option<String>,
 
     /// Show detailed info for listings
-    #[arg(short, long)]
+    #[arg(short, long, requires_if(ArgPredicate::IsPresent, "listings"))]
     pub detail: bool,
 
     /// Force reinstall
@@ -42,24 +39,20 @@ pub struct Args {
     pub force: bool,
 
     /// List installed kernels
-    #[arg(long)]
+    #[arg(long, group = "listings")]
     pub list_installed: bool,
 
     /// List available profiles for all devices
-    #[arg(long = "list")]
+    #[arg(long = "list", group = "listings")]
     pub list_available: bool,
 
     /// List all profiles
-    #[arg(long)]
+    #[arg(long, group = "listings")]
     pub list_all: bool,
 
     /// Autoconfigure
-    #[arg(short, long, number_of_values = 3, value_names = &["usb/pci", "free/nonfree", "classid"], conflicts_with_all(["install", "remove"]))]
-    pub autoconfigure: Option<Vec<String>>,
-
-    /// Print if nvidia card found
-    #[arg(long = "is_nvidia_card")]
-    pub is_nvidia_card: bool,
+    #[arg(short, long, value_name = "classid", conflicts_with_all(["install", "remove"]))]
+    pub autoconfigure: Option<String>,
 
     /// Toggle AI SDK profiles
     #[arg(long = "ai_sdk")]
