@@ -2,7 +2,6 @@
 name-header = Имя
 desc-header = Описание
 priority-header = Приоритет
-nonfree-header = Несвободный
 classids-header = IDS класса
 vendorids-header = IDS вендора
 

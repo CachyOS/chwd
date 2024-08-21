@@ -19,7 +19,6 @@
 
 [steam-deck]
 desc = 'Valve Steam Deck'
-nonfree = false
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "1435 163f"
@@ -54,7 +53,6 @@ post_remove = """
 
 [phoenix]
 desc = 'ASUS ROG Ally and Lenovo Legion Go'
-nonfree = false
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "15bf"

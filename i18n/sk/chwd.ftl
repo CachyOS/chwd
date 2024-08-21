@@ -2,7 +2,6 @@
 name-header = Meno
 desc-header = Popis
 priority-header = Priorita
-nonfree-header = Platené
 classids-header = ID Triedy
 vendorids-header = ID Predajcu
 

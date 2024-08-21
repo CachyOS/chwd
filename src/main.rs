@@ -60,17 +60,12 @@ fn perceed_autoconf(
     args: &Option<Vec<String>>,
     operation: &mut String,
     autoconf_class_id: &mut String,
-    is_nonfree: &mut bool,
 ) -> anyhow::Result<()> {
     if let Some(values) = args {
         let device_type = &values[0];
-        let driver_type = &values[1];
-        *is_nonfree = "nonfree" == driver_type;
-        *autoconf_class_id = values[2].to_lowercase();
+        *autoconf_class_id = values[1].to_lowercase();
 
-        if ("pci" != device_type && "usb" != device_type)
-            || ("free" != driver_type && "nonfree" != driver_type)
-        {
+        if "pci" != device_type && "usb" != device_type {
             anyhow::bail!("invalid use of option: {args:?}");
         }
         *operation = device_type.to_uppercase();
@@ -104,13 +99,7 @@ fn main() -> anyhow::Result<()> {
 
     let mut operation = String::new();
     let mut autoconf_class_id = String::new();
-    let mut autoconf_nonfree_driver = false;
-    perceed_autoconf(
-        &argstruct.autoconfigure,
-        &mut operation,
-        &mut autoconf_class_id,
-        &mut autoconf_nonfree_driver,
-    )?;
+    perceed_autoconf(&argstruct.autoconfigure, &mut operation, &mut autoconf_class_id)?;
     perceed_inst_rem(&argstruct.install, &mut operation, &mut working_profiles)?;
     perceed_inst_rem(&argstruct.remove, &mut operation, &mut working_profiles)?;
 
@@ -134,12 +123,8 @@ fn main() -> anyhow::Result<()> {
     console_writer::handle_arguments_listing(&data_obj, &argstruct);
 
     // 4) Auto configuration
-    let mut prepared_profiles = prepare_autoconfigure(
-        &data_obj,
-        &mut argstruct,
-        &autoconf_class_id,
-        autoconf_nonfree_driver,
-    );
+    let mut prepared_profiles =
+        prepare_autoconfigure(&data_obj, &mut argstruct, &autoconf_class_id);
     working_profiles.append(&mut prepared_profiles);
 
     // Transaction
@@ -206,7 +191,6 @@ fn prepare_autoconfigure(
     data: &data::Data,
     args: &mut args::Args,
     autoconf_class_id: &str,
-    autoconf_nonfree_driver: bool,
 ) -> Vec<String> {
     if args.autoconfigure.is_none() {
         return vec![];
@@ -223,8 +207,7 @@ fn prepare_autoconfigure(
             continue;
         }
         found_device = true;
-        let profile =
-            device.available_profiles.iter().find(|x| autoconf_nonfree_driver || !x.is_nonfree);
+        let profile = device.available_profiles.first();
 
         let device_info = format!(
             "{} ({}:{}:{}) {} {} {}",

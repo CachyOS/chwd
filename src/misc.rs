@@ -69,9 +69,7 @@ pub fn check_nvidia_card() {
             continue;
         }
 
-        if pci_device.vendor_id == "10de"
-            && pci_device.available_profiles.iter().any(|x| x.is_nonfree)
-        {
+        if pci_device.vendor_id == "10de" && pci_device.available_profiles.first().is_some() {
             println!("NVIDIA card found!");
             return;
         }

@@ -90,10 +90,10 @@ pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
         .load_preset(UTF8_FULL)
         .apply_modifier(UTF8_ROUND_CORNERS)
         .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec![&fl!("name-header"), &fl!("nonfree-header")]);
+        .set_header(vec![&fl!("name-header"), &fl!("priority-header")]);
 
     for profile in profiles.iter() {
-        table.add_row(vec![&profile.name, &profile.is_nonfree.to_string()]);
+        table.add_row(vec![&profile.name, &profile.priority.to_string()]);
     }
 
     println!("{table}\n");

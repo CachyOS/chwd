@@ -54,7 +54,7 @@ pub struct Args {
     pub list_all: bool,
 
     /// Autoconfigure
-    #[arg(short, long, number_of_values = 3, value_names = &["usb/pci", "free/nonfree", "classid"], conflicts_with_all(["install", "remove"]))]
+    #[arg(short, long, number_of_values = 2, value_names = &["usb/pci", "classid"], conflicts_with_all(["install", "remove"]))]
     pub autoconfigure: Option<Vec<String>>,
 
     /// Print if nvidia card found

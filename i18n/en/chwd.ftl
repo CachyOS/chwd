@@ -2,7 +2,6 @@
 name-header = Name
 desc-header = Desc
 priority-header = Priority
-nonfree-header = NonFree
 classids-header = ClassIDS
 vendorids-header = VendorIDS
 

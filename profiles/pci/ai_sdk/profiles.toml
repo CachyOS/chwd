@@ -9,7 +9,6 @@
 
 [nvidia-ai-sdk]
 desc = 'NVIDIA AI SDK and related tools'
-nonfree = true
 ai_sdk = true
 #class_ids = "*"
 class_ids = "0300 0302"
@@ -21,7 +20,6 @@ device_name_pattern = '(AD|GV|TU|GA|GH|GM|GP)\w+'
 
 [rocm-ai-sdk]
 desc = 'AMD AI SDK and related tools'
-nonfree = true
 ai_sdk = true
 class_ids = "*"
 vendor_ids = "1002"
