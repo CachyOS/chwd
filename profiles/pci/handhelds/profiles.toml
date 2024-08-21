@@ -26,7 +26,6 @@ device_ids = "1435 163f"
 hwd_product_name_pattern = '(Jupiter)'
 priority = 6
 packages = 'powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
-#fbcon=vc:2-6 is not added here because it is added for all devices using calamares.
 post_install = """
     echo "Steam Deck Jupiter chwd installing..."
     username=$(id -nu 1000)
@@ -88,7 +87,7 @@ post_remove = """
 """
 
 [phoenix-rog-ally]
-desc = 'ASUS ROG Ally'
+desc = 'ASUS ROG Ally & Ally X'
 nonfree = false
 class_ids = "0300"
 vendor_ids = "1002"
