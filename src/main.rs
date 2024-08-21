@@ -76,11 +76,6 @@ fn main() -> anyhow::Result<()> {
         argstruct.list_available = true;
     }
 
-    if argstruct.is_nvidia_card {
-        misc::check_nvidia_card();
-        return Ok(());
-    }
-
     let mut working_profiles: Vec<String> = vec![];
 
     let mut autoconf_class_id = String::new();

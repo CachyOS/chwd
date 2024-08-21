@@ -57,10 +57,6 @@ pub struct Args {
     #[arg(short, long, value_name = "classid", conflicts_with_all(["install", "remove"]))]
     pub autoconfigure: Option<Vec<String>>,
 
-    /// Print if nvidia card found
-    #[arg(long = "is_nvidia_card")]
-    pub is_nvidia_card: bool,
-
     /// Toggle AI SDK profiles
     #[arg(long = "ai_sdk")]
     pub is_ai_sdk: bool,
