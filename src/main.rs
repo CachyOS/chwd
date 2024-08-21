@@ -39,17 +39,10 @@ use subprocess::Exec;
 
 fn perceed_inst_rem(
     args: &Option<Vec<String>>,
-    operation: &mut String,
     working_profiles: &mut Vec<String>,
 ) -> anyhow::Result<()> {
     if let Some(values) = args {
-        let device_type = &values[0];
-        let profile = values[1].to_lowercase();
-
-        if "pci" != device_type && "usb" != device_type {
-            anyhow::bail!("invalid use of option: {args:?}");
-        }
-        *operation = device_type.to_uppercase();
+        let profile = values[0].to_lowercase();
         working_profiles.push(profile);
     }
 
@@ -58,17 +51,10 @@ fn perceed_inst_rem(
 
 fn perceed_autoconf(
     args: &Option<Vec<String>>,
-    operation: &mut String,
     autoconf_class_id: &mut String,
 ) -> anyhow::Result<()> {
     if let Some(values) = args {
-        let device_type = &values[0];
-        *autoconf_class_id = values[1].to_lowercase();
-
-        if "pci" != device_type && "usb" != device_type {
-            anyhow::bail!("invalid use of option: {args:?}");
-        }
-        *operation = device_type.to_uppercase();
+        *autoconf_class_id = values[0].to_lowercase();
     }
 
     Ok(())
@@ -97,11 +83,10 @@ fn main() -> anyhow::Result<()> {
 
     let mut working_profiles: Vec<String> = vec![];
 
-    let mut operation = String::new();
     let mut autoconf_class_id = String::new();
-    perceed_autoconf(&argstruct.autoconfigure, &mut operation, &mut autoconf_class_id)?;
-    perceed_inst_rem(&argstruct.install, &mut operation, &mut working_profiles)?;
-    perceed_inst_rem(&argstruct.remove, &mut operation, &mut working_profiles)?;
+    perceed_autoconf(&argstruct.autoconfigure, &mut autoconf_class_id)?;
+    perceed_inst_rem(&argstruct.install, &mut working_profiles)?;
+    perceed_inst_rem(&argstruct.remove, &mut working_profiles)?;
 
     if !argstruct.show_pci {
         argstruct.show_pci = true;

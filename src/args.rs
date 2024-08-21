@@ -26,11 +26,11 @@ pub struct Args {
     pub show_pci: bool,
 
     /// Install profile
-    #[arg(short, long, number_of_values = 2, value_names = &["usb/pci", "profile"], conflicts_with("remove"))]
+    #[arg(short, long, value_name = "profile", conflicts_with("remove"))]
     pub install: Option<Vec<String>>,
 
     /// Remove profile
-    #[arg(short, long, number_of_values = 2, value_names = &["usb/pci", "profile"], conflicts_with("install"))]
+    #[arg(short, long, value_name = "profile", conflicts_with("install"))]
     pub remove: Option<Vec<String>>,
 
     /// Show detailed info for listings
@@ -54,7 +54,7 @@ pub struct Args {
     pub list_all: bool,
 
     /// Autoconfigure
-    #[arg(short, long, number_of_values = 2, value_names = &["usb/pci", "classid"], conflicts_with_all(["install", "remove"]))]
+    #[arg(short, long, value_name = "classid", conflicts_with_all(["install", "remove"]))]
     pub autoconfigure: Option<Vec<String>>,
 
     /// Print if nvidia card found
