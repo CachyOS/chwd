@@ -174,7 +174,7 @@ device_name_pattern = '(GF)\w+'
 desc = "Open Nouveau driver for NVIDIA graphics cards (Only for old GPUs)"
 class_ids = "0300 0302"
 vendor_ids = "10de"
-priority = 0
+priority = 9
 packages = 'mesa lib32-mesa libva-mesa-driver mesa-vdpau lib32-libva-mesa-driver vulkan-nouveau'
 conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
