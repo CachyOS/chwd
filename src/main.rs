@@ -166,7 +166,7 @@ fn prepare_autoconfigure(
 
     let mut found_device = false;
     for device in devices.iter() {
-        if device.class_id != autoconf_class_id {
+        if autoconf_class_id != "any" && device.class_id != autoconf_class_id {
             continue;
         }
         found_device = true;
@@ -183,7 +183,9 @@ fn prepare_autoconfigure(
             device.device_name
         );
         if profile.is_none() {
-            log::warn!("No config found for device: {device_info}");
+            if autoconf_class_id != "any" {
+                log::warn!("No config found for device: {device_info}");
+            }
             continue;
         }
         let profile = profile.unwrap();

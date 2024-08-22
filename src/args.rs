@@ -51,7 +51,7 @@ pub struct Args {
     pub list_all: bool,
 
     /// Autoconfigure
-    #[arg(short, long, value_name = "classid", conflicts_with_all(["install", "remove"]))]
+    #[arg(short, long, value_name = "classid", conflicts_with_all(["install", "remove"]), default_missing_value = "any", num_args(0..=1))]
     pub autoconfigure: Option<String>,
 
     /// Toggle AI SDK profiles
