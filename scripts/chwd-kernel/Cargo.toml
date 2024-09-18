@@ -6,9 +6,9 @@ license = "GPLv3"
 edition = "2021"
 
 [dependencies]
-alpm = { default-features = false, version = "3" }
-alpm-utils = { features = ["conf"], default-features = false, version = "3" }
-pacmanconf = "2"
+alpm = { default-features = false, version = "4" }
+alpm-utils = { features = ["conf"], default-features = false, version = "4" }
+pacmanconf = "3"
 
 subprocess = "0.2"
 clap = { features = ["derive"], version = "4" }

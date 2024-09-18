@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "alpm"
-version = "3.0.5"
+version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "310ec5dc25b236ee96bebf975af2d2de85e61001a7c39a0a7436a414ff3f6490"
+checksum = "c02d4b4d6bc861451437cdbd7feb35385874ff4cc449ace8e793fe8c30533240"
 dependencies = [
  "alpm-sys",
  "bitflags",
@@ -14,18 +14,18 @@ dependencies = [
 
 [[package]]
 name = "alpm-sys"
-version = "3.0.0"
+version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "08a17e0cf15a06d4b86e30c606ee8808ad791300f3bd5e364c30360354b010bd"
+checksum = "ad5eb56a41bf4f036c600aa1ddff354971926dd8ea29a3fb6589c6c375bf918b"
 dependencies = [
  "pkg-config",
 ]
 
 [[package]]
 name = "alpm-utils"
-version = "3.0.2"
+version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f1a65e48b9a950d1297b865a436733d496b6cdd966133a02fdadc6127dfe37e7"
+checksum = "7a56cf9221faa08b5a59a9f429cc5338d8e77e22e1d7fe7d3179fc5c3acf7fc3"
 dependencies = [
  "alpm",
  "pacmanconf",
@@ -119,9 +119,9 @@ checksum = "8628d1f5b9a7b1196ce1aa660e3ba7e2559d350649cbe94993519c127df667f2"
 
 [[package]]
 name = "clap"
-version = "4.5.16"
+version = "4.5.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed6719fffa43d0d87e5fd8caeab59be1554fb028cd30edc88fc4369b17971019"
+checksum = "3e5a21b8495e732f1b3c364c9949b201ca7bae518c502c80256c96ad79eaf6ac"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -129,9 +129,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.5.15"
+version = "4.5.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "216aec2b177652e3846684cbfe25c9964d18ec45234f0f5da5157b207ed1aab6"
+checksum = "8cf2dd12af7a047ad9d6da2b6b249759a22a7abc0f474c1dae1777afa4b21a73"
 dependencies = [
  "anstream",
  "anstyle",
@@ -213,9 +213,9 @@ checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 
 [[package]]
 name = "libc"
-version = "0.2.156"
+version = "0.2.158"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a5f43f184355eefb8d17fc948dbecf6c13be3c141f20d834ae842193a448c72a"
+checksum = "d8adc4bb1803a324070e64a98ae98f38934d91957a99cfb3a43dcbc01bc56439"
 
 [[package]]
 name = "nix"
@@ -231,9 +231,9 @@ dependencies = [
 
 [[package]]
 name = "pacmanconf"
-version = "2.1.0"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "31d9811f947c6ffc56eeafb789dfad44a7ea7cc383ac3bc6c9b23cd27100bbb1"
+checksum = "5be1f202256ab200a4fdaaad0988015987876b0aa336ca7a7e685080bab58a40"
 dependencies = [
  "cini",
 ]
@@ -255,9 +255,9 @@ dependencies = [
 
 [[package]]
 name = "quote"
-version = "1.0.36"
+version = "1.0.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0fa76aaf39101c457836aec0ce2316dbdc3ab723cdda1c6bd4e6ad4208acaca7"
+checksum = "b5b9d34b8991d19d98081b46eacdd8eb58c6f2b201139f7c5f643cc155a633af"
 dependencies = [
  "proc-macro2",
 ]
@@ -286,9 +286,9 @@ dependencies = [
 
 [[package]]
 name = "syn"
-version = "2.0.74"
+version = "2.0.77"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1fceb41e3d546d0bd83421d3409b1460cc7444cd389341a4c880fe7a042cb3d7"
+checksum = "9f35bcdf61fd8e7be6caf75f429fdca8beb3ed76584befb503b1569faee373ed"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -317,9 +317,9 @@ dependencies = [
 
 [[package]]
 name = "unicode-ident"
-version = "1.0.12"
+version = "1.0.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
+checksum = "e91b56cd4cadaeb79bbf1a5645f6b4f8dc5bde8834ad5894a8db35fda9efa1fe"
 
 [[package]]
 name = "unicode-width"
