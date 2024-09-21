@@ -19,7 +19,6 @@
 
 [steam-deck-jupiter]
 desc = 'Valve Steam Deck LCD'
-nonfree = false
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "1435 163f"
@@ -53,7 +52,6 @@ post_remove = """
 
 [steam-deck-galileo]
 desc = 'Valve Steam Deck OLED'
-nonfree = false
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "1435 163f"
@@ -88,7 +86,6 @@ post_remove = """
 
 [phoenix-rog-ally]
 desc = 'ASUS ROG Ally & Ally X'
-nonfree = false
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "15bf"
@@ -126,7 +123,6 @@ post_remove = """
 
 [phoenix-legion-go]
 desc = 'Lenovo Legion Go'
-nonfree = false
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "15bf"
