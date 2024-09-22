@@ -23,50 +23,83 @@
 #DEVICEIDS=15bf
 #83E1
 
-[steam-deck]
-desc = 'Valve Steam Deck'
+[steam-deck-jupiter]
+desc = 'Valve Steam Deck LCD'
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "1435 163f"
-hwd_product_name_pattern = '(Galileo)|(Jupiter)'
+hwd_product_name_pattern = '(Jupiter)'
 priority = 6
 packages = 'powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
-#fbcon=vc:2-6 is not added here because it is added for all devices using calamares.
 post_install = """
-    echo "Steam Deck chwd installing..."
+    echo "Steam Deck Jupiter chwd installing..."
     username=$(id -nu 1000)
     services=("jupiter-fan-control")
-    kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
     echo "Enabling services..."
     for service in ${services[@]}; do
         systemctl enable --now "${service}.service"
     done
-    echo "Adding required kernel parameters..."
-    sed -i "s/LINUX_OPTIONS=\"[^\"]*/& ${kernelparams}/" /etc/sdboot-manage.conf
+    #kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
+    #echo "Adding required kernel parameters..."
+    #sed -i "s/LINUX_OPTIONS=\"[^\"]*/& ${kernelparams}/" /etc/sdboot-manage.conf
 """
 post_remove = """
-    echo "Steam deck chwd removing..."
+    echo "Steam deck Jupiter chwd removing..."
     username=$(id -nu 1000)
     services=("jupiter-fan-control")
-    kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
     echo "Disabling services..."
     for service in ${services[@]}; do
         systemctl disable "${service}.service"
     done
-    echo "Removing kernel parameters..."
-    sed -i "s/${kernelparams}//" /etc/sdboot-manage.conf
+    #kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
+    #echo "Removing kernel parameters..."
+    #sed -i "s/${kernelparams}//" /etc/sdboot-manage.conf
 """
 
-[phoenix]
-desc = 'ASUS ROG Ally and Lenovo Legion Go'
+[steam-deck-galileo]
+desc = 'Valve Steam Deck OLED'
+class_ids = "0300"
+vendor_ids = "1002"
+device_ids = "1435 163f"
+hwd_product_name_pattern = '(Galileo)'
+priority = 6
+packages = 'powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
+#fbcon=vc:2-6 is not added here because it is added for all devices using calamares.
+post_install = """
+    echo "Steam Deck Galileo chwd installing..."
+    username=$(id -nu 1000)
+    services=("jupiter-fan-control")
+    echo "Enabling services..."
+    for service in ${services[@]}; do
+        systemctl enable --now "${service}.service"
+    done
+    #kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
+    #echo "Adding required kernel parameters..."
+    #sed -i "s/LINUX_OPTIONS=\"[^\"]*/& ${kernelparams}/" /etc/sdboot-manage.conf
+"""
+post_remove = """
+    echo "Steam deck Galileo chwd removing..."
+    username=$(id -nu 1000)
+    services=("jupiter-fan-control")
+    echo "Disabling services..."
+    for service in ${services[@]}; do
+        systemctl disable "${service}.service"
+    done
+    #kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
+    #echo "Removing kernel parameters..."
+    #sed -i "s/${kernelparams}//" /etc/sdboot-manage.conf
+"""
+
+[phoenix-rog-ally]
+desc = 'ASUS ROG Ally & Ally X'
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "15bf"
-hwd_product_name_pattern = '(ROG Ally).*|(83E1)'
+hwd_product_name_pattern = '(ROG Ally).*'
 priority = 6
 packages = 'hhd hhd-ui adjustor jupiter-hw-support steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
 post_install = """
-    echo "Ally and Legion chwd installing..."
+    echo "Ally chwd installing..."
     username=$(id -nu 1000)
     services=("hhd@${username}")
     maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
@@ -80,7 +113,44 @@ post_install = """
     done
 """
 post_remove = """
-    echo "Ally and Legion chwd removing..."
+    echo "Ally chwd removing..."
+    username=$(id -nu 1000)
+    services=("hhd@${username}")
+    maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
+    echo "Disabling services..."
+    for service in ${services[@]}; do
+        systemctl disable "${service}.service"
+    done
+    echo "Unmasking potentially conflicting services"
+    for mask in ${maskservices[@]}; do
+        systemctl unmask "${mask}.service"
+    done
+"""
+
+[phoenix-legion-go]
+desc = 'Lenovo Legion Go'
+class_ids = "0300"
+vendor_ids = "1002"
+device_ids = "15bf"
+hwd_product_name_pattern = '(83E1)'
+priority = 6
+packages = 'hhd hhd-ui adjustor jupiter-hw-support steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
+post_install = """
+    echo "Legion go chwd installing..."
+    username=$(id -nu 1000)
+    services=("hhd@${username}")
+    maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
+    echo "Enabling services..."
+    for service in ${services[@]}; do
+        systemctl enable --now "${service}.service"
+    done
+    echo "Masking potentially conflicting services"
+    for mask in ${maskservices[@]}; do
+        systemctl mask "${mask}.service"
+    done
+"""
+post_remove = """
+    echo "Legion go chwd removing..."
     username=$(id -nu 1000)
     services=("hhd@${username}")
     maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
