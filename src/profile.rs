@@ -15,10 +15,13 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::fl;
+
 use anyhow::Result;
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::*;
+
+use std::collections::BTreeMap;
 use std::fs;
 
 #[derive(Debug, Default, Clone, PartialEq)]
@@ -135,6 +138,50 @@ pub fn get_invalid_profiles(file_path: &str) -> Result<Vec<String>> {
     Ok(invalid_profile_list)
 }
 
+pub fn parse_profiles_merged(file_path: &str) -> Result<Vec<Profile>> {
+    let mut profiles = vec![];
+    let file_content = fs::read_to_string(file_path)?;
+    let toml_table = file_content.parse::<toml::Table>()?;
+
+    for (key, value) in toml_table.iter() {
+        if !value.is_table() {
+            anyhow::bail!("the value is not table!");
+        }
+        let value_table = value.as_table().unwrap();
+
+        let toplevel_profile = parse_profile(value_table, key);
+        if toplevel_profile.is_err() {
+            continue;
+        }
+
+        // dont push parent
+        if value_table.is_empty() {
+            let mut toplevel_profile = toplevel_profile?;
+            file_path.clone_into(&mut toplevel_profile.prof_path);
+            profiles.push(toplevel_profile);
+            continue;
+        }
+
+        for (nested_key, nested_value) in value_table.iter() {
+            if !nested_value.is_table() {
+                continue;
+            }
+            let nested_profile_name = format!("{}.{}", key, nested_key);
+            let mut nested_value_table = nested_value.as_table().unwrap().clone();
+            merge_table_left(&mut nested_value_table, value_table);
+            let nested_profile = parse_profile(&nested_value_table, &nested_profile_name);
+            if nested_profile.is_err() {
+                continue;
+            }
+            let mut nested_profile = nested_profile?;
+            file_path.clone_into(&mut nested_profile.prof_path);
+            profiles.push(nested_profile);
+        }
+    }
+
+    Ok(profiles)
+}
+
 fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     let mut profile = Profile {
         is_ai_sdk: node.get("ai_sdk").and_then(|x| x.as_bool()).unwrap_or(false),
@@ -237,6 +284,83 @@ fn merge_table_left(lhs: &mut toml::Table, rhs: &toml::Table) {
 }
 
 pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
+    let mut profiles = if std::path::Path::new(file_path).exists() {
+        parse_profiles_merged(file_path).expect("Failed to parse profiles")
+    } else {
+        vec![]
+    };
+
+    if let Some(index) = profiles.iter().position(|x| x.name == profile.name) {
+        profiles[index] = profile.clone();
+    } else {
+        profiles.push(profile.clone());
+    }
+
+    // convert Vec into expected toml structure
+    let profiles =
+        profiles.iter().map(|x| (x.name.clone(), profile_into_toml(x))).collect::<BTreeMap<_, _>>();
+
+    let toml_string = replace_escaping_toml(&profiles);
+    fs::write(file_path, toml_string).is_ok()
+}
+
+pub fn remove_profile_from_file(file_path: &str, profile_name: &str) -> bool {
+    let mut profiles = parse_profiles_merged(file_path).expect("Failed to parse profiles");
+
+    // Check if profile exists in file and remove it
+    if let Some(index) = profiles.iter().position(|x| x.name == profile_name) {
+        profiles.remove(index);
+
+        // convert Vec into expected toml structure
+        let profiles = profiles
+            .iter()
+            .map(|x| (x.name.clone(), profile_into_toml(x)))
+            .collect::<BTreeMap<_, _>>();
+
+        let toml_string = replace_escaping_toml(&profiles);
+        fs::write(file_path, toml_string).is_ok()
+    } else {
+        false
+    }
+}
+
+fn replace_escaping_toml(profiles: &BTreeMap<String, toml::Table>) -> String {
+    let mut toml_string = toml::to_string_pretty(profiles).unwrap();
+
+    for profile_name in profiles.keys() {
+        // Find escaped table name and replace with unescaped table name
+        toml_string =
+            toml_string.replace(&format!("[\"{profile_name}\"]"), &format!("[{profile_name}]"));
+    }
+
+    toml_string
+}
+
+pub fn print_profile_details(profile: &Profile) {
+    let mut class_ids = String::new();
+    let mut vendor_ids = String::new();
+    for hwd_id in profile.hwd_ids.iter() {
+        vendor_ids.push_str(&hwd_id.vendor_ids.join(" "));
+        class_ids.push_str(&hwd_id.class_ids.join(" "));
+    }
+
+    let desc_formatted = if profile.desc.is_empty() { "-" } else { &profile.desc };
+
+    let mut table = Table::new();
+    table
+        .load_preset(UTF8_FULL)
+        .apply_modifier(UTF8_ROUND_CORNERS)
+        .set_content_arrangement(ContentArrangement::Dynamic)
+        .add_row(vec![&fl!("name-header"), &profile.name])
+        .add_row(vec![&fl!("desc-header"), desc_formatted])
+        .add_row(vec![&fl!("priority-header"), &profile.priority.to_string()])
+        .add_row(vec![&fl!("classids-header"), &class_ids])
+        .add_row(vec![&fl!("vendorids-header"), &vendor_ids]);
+
+    println!("{table}\n");
+}
+
+fn profile_into_toml(profile: &Profile) -> toml::Table {
     let mut table = toml::Table::new();
     table.insert("ai_sdk".to_owned(), profile.is_ai_sdk.into());
     table.insert("desc".to_owned(), profile.desc.clone().into());
@@ -268,32 +392,7 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     table.insert("vendor_ids".to_owned(), vendor_ids.join(" ").into());
     table.insert("class_ids".to_owned(), class_ids.join(" ").into());
 
-    let toml_string = format!("[{}]\n{}", profile.name, toml::to_string_pretty(&table).unwrap());
-    fs::write(file_path, toml_string).is_ok()
-}
-
-pub fn print_profile_details(profile: &Profile) {
-    let mut class_ids = String::new();
-    let mut vendor_ids = String::new();
-    for hwd_id in profile.hwd_ids.iter() {
-        vendor_ids.push_str(&hwd_id.vendor_ids.join(" "));
-        class_ids.push_str(&hwd_id.class_ids.join(" "));
-    }
-
-    let desc_formatted = if profile.desc.is_empty() { "-" } else { &profile.desc };
-
-    let mut table = Table::new();
     table
-        .load_preset(UTF8_FULL)
-        .apply_modifier(UTF8_ROUND_CORNERS)
-        .set_content_arrangement(ContentArrangement::Dynamic)
-        .add_row(vec![&fl!("name-header"), &profile.name])
-        .add_row(vec![&fl!("desc-header"), desc_formatted])
-        .add_row(vec![&fl!("priority-header"), &profile.priority.to_string()])
-        .add_row(vec![&fl!("classids-header"), &class_ids])
-        .add_row(vec![&fl!("vendorids-header"), &vendor_ids]);
-
-    println!("{table}\n");
 }
 
 #[cfg(test)]
@@ -368,6 +467,7 @@ mod tests {
         let parsed_profiles = parse_profiles(prof_path);
         assert!(parsed_profiles.is_ok());
         let parsed_profiles = parsed_profiles.unwrap();
+        assert_eq!(parsed_profiles.len(), 1);
         let parsed_profile = &parsed_profiles[0];
 
         const K_POST_INSTALL_TEST_DATA: &str = r#"    echo "Steam Deck chwd installing..."
@@ -388,9 +488,10 @@ mod tests {
             use std::env;
 
             let tmp_dir = env::temp_dir();
-            format!("{}/.tempfile-chwd-test-{}", tmp_dir.to_string_lossy(), "123451231231")
+            format!("{}/.tempfile-chwd-test-{}", tmp_dir.to_string_lossy(), "123451231221231")
         };
 
+        let _ = fs::remove_file(&filepath);
         assert!(!std::path::Path::new(&filepath).exists());
         assert!(crate::profile::write_profile_to_file(&filepath, parsed_profile));
         let orig_content = fs::read_to_string(&filepath).unwrap();
@@ -399,5 +500,58 @@ mod tests {
         assert!(fs::remove_file(&filepath).is_ok());
 
         assert_eq!(orig_content, fs::read_to_string(prof_path).unwrap());
+    }
+
+    #[test]
+    fn multiple_profile_write_test() {
+        let prof_path = "tests/profiles/multiple-profile-raw-escaped-strings-test.toml";
+        let prof_parsed_path =
+            "tests/profiles/multiple-profile-raw-escaped-strings-test-parsed.toml";
+        let parsed_profiles = parse_profiles(prof_path);
+        assert!(parsed_profiles.is_ok());
+        let parsed_profiles = parsed_profiles.unwrap();
+        assert_eq!(parsed_profiles.len(), 3);
+
+        assert_eq!(&parsed_profiles[0].name, "case.test-profile");
+        assert_eq!(&parsed_profiles[1].name, "case.test-profile-2");
+        assert_eq!(&parsed_profiles[2].name, "case");
+
+        // empty file
+        let filepath = {
+            use std::env;
+
+            let tmp_dir = env::temp_dir();
+            format!("{}/.tempfile-chwd-test-{}", tmp_dir.to_string_lossy(), "12345123131")
+        };
+
+        let _ = fs::remove_file(&filepath);
+        assert!(!std::path::Path::new(&filepath).exists());
+
+        // insert profiles
+        assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profiles[0]));
+        assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profiles[1]));
+
+        // remove profiles
+        assert!(crate::profile::remove_profile_from_file(&filepath, &parsed_profiles[0].name));
+        assert!(crate::profile::remove_profile_from_file(&filepath, &parsed_profiles[1].name));
+
+        // try to remove profiles again
+        assert!(!crate::profile::remove_profile_from_file(&filepath, &parsed_profiles[0].name));
+        assert!(!crate::profile::remove_profile_from_file(&filepath, &parsed_profiles[1].name));
+
+        // insert same profiles again
+        assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profiles[0]));
+        assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profiles[1]));
+
+        // insert same profiles again
+        assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profiles[0]));
+        assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profiles[1]));
+
+        let orig_content = fs::read_to_string(&filepath).unwrap();
+
+        // cleanup
+        assert!(fs::remove_file(&filepath).is_ok());
+
+        assert_eq!(orig_content, fs::read_to_string(prof_parsed_path).unwrap());
     }
 }

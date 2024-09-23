@@ -426,7 +426,7 @@ fn remove_profile(data: &mut data::Data, args: &args::Args, profile: &Profile) -
         return misc::Status::ErrorScriptFailed;
     }
 
-    if fs::remove_file(&profile.prof_path).is_err() {
+    if !profile::remove_profile_from_file(&profile.prof_path, &profile.name) {
         return misc::Status::ErrorSetDatabase;
     }
 
