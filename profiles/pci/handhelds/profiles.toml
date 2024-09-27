@@ -100,7 +100,6 @@ priority = 6
 packages = 'inputplumber jupiter-hw-support steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
 post_install = """
     echo "Ally chwd installing..."
-    username=$(id -nu 1000)
     services=("inputplumber")
     maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
     echo "Enabling services..."
@@ -114,7 +113,6 @@ post_install = """
 """
 post_remove = """
     echo "Ally chwd removing..."
-    username=$(id -nu 1000)
     services=("inputplumber")
     maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
     echo "Disabling services..."
