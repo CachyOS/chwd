@@ -271,36 +271,6 @@ pub fn run_script(
     cmd.push_str(&format!(" --pmroot \"{}\"", args.pmroot));
     cmd.push_str(&format!(" --profile \"{}\"", profile.name));
     cmd.push_str(&format!(" --path \"{}\"", profile.prof_path));
-
-    // Set all profiles devices as argument
-    let devices = &data.pci_devices;
-    let found_devices = data::get_all_devices_of_profile(&data.pci_devices, profile)
-        .into_iter()
-        .map(|index| devices.get(index).unwrap().clone())
-        .collect::<Vec<device::Device>>();
-
-    // Get only unique ones from found devices
-    let devices = device::get_unique_devices(&found_devices);
-    for dev in devices.iter() {
-        let bus_id = dev.sysfs_busid.replace('.', ":");
-        let split = bus_id.split(':').collect::<Vec<_>>();
-        let split_size = split.len();
-        let bus_id = if split_size >= 3 {
-            // Convert to int to remove leading 0
-            format!(
-                "{}:{}:{}",
-                i64::from_str_radix(split[split_size - 3], 16).unwrap(),
-                i64::from_str_radix(split[split_size - 2], 16).unwrap(),
-                i64::from_str_radix(split[split_size - 1], 16).unwrap()
-            )
-        } else {
-            dev.sysfs_busid.clone()
-        };
-        cmd.push_str(&format!(
-            " --device \"{}|{}|{}|{}\"",
-            dev.class_id, dev.vendor_id, dev.device_id, bus_id
-        ));
-    }
     cmd.push_str(" 2>&1");
 
     let status = Exec::shell(cmd).join();
