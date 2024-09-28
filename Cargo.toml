@@ -1,6 +1,6 @@
 [package]
 name = "chwd"
-version = "1.8.8"
+version = "1.9.0"
 authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
 license = "GPLv3"
 edition = "2021"
