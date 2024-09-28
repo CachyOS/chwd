@@ -36,7 +36,7 @@ use std::{fs, str};
 use clap::Parser;
 use i18n_embed::DesktopLanguageRequester;
 use nix::unistd::Uid;
-use subprocess::Exec;
+use subprocess::{Exec, Redirection};
 
 fn main() -> anyhow::Result<()> {
     let requested_languages = DesktopLanguageRequester::requested_languages();
@@ -254,26 +254,24 @@ pub fn run_script(
     profile: &Profile,
     transaction: Transaction,
 ) -> bool {
-    let mut cmd = format!("exec {}", consts::CHWD_SCRIPT_PATH);
-
-    if Transaction::Remove == transaction {
-        cmd.push_str(" --remove");
+    let mut cmd_args: Vec<String> = if Transaction::Remove == transaction {
+        vec!["--remove".into()]
     } else {
-        cmd.push_str(" --install");
-    }
+        vec!["--install".into()]
+    };
 
     if data.sync_package_manager_database {
-        cmd.push_str(" --sync");
+        cmd_args.push("--sync".into());
     }
 
-    cmd.push_str(&format!(" --cachedir \"{}\"", args.pmcachedir));
-    cmd.push_str(&format!(" --pmconfig \"{}\"", args.pmconfig));
-    cmd.push_str(&format!(" --pmroot \"{}\"", args.pmroot));
-    cmd.push_str(&format!(" --profile \"{}\"", profile.name));
-    cmd.push_str(&format!(" --path \"{}\"", profile.prof_path));
-    cmd.push_str(" 2>&1");
+    cmd_args.extend_from_slice(&["--cachedir".into(), args.pmcachedir.clone()]);
+    cmd_args.extend_from_slice(&["--pmconfig".into(), args.pmconfig.clone()]);
+    cmd_args.extend_from_slice(&["--pmroot".into(), args.pmroot.clone()]);
+    cmd_args.extend_from_slice(&["--profile".into(), profile.name.clone()]);
+    cmd_args.extend_from_slice(&["--path".into(), profile.prof_path.clone()]);
 
-    let status = Exec::shell(cmd).join();
+    let status =
+        Exec::cmd(consts::CHWD_SCRIPT_PATH).args(&cmd_args).stderr(Redirection::Merge).join();
     if status.is_err() || !status.unwrap().success() {
         return false;
     }
