@@ -182,37 +182,30 @@ end
 local function get_profile(profiles, name)
     local packages
     local hooks = {}
-    local parents = {}
+    local keys = {}
 
-    for parent in name:gmatch("([^.]+)") do
-        if #parents > 0 then
-            parents[#parents+1] = parents[#parents] .. "." .. parent
-        else
-            parents[#parents+1] = parent
+    for tname in name:gmatch("([^.]*)") do
+        keys[#keys+1] = tname
+        local key = table.concat(keys, ".")
+        local profile = profiles[key]
+
+        if not profile then
+            die("Parent profile not found: %s", key)
         end
-    end
 
+        if profile.packages then
+            packages = profile.packages
+        end
 
-    if #parents > 0 then
-        for _, parent in ipairs(parents) do
-            if profiles[parent]['packages'] then
-                packages = profiles[parent]['packages']
-            end
-
-            for hook_name, hook in pairs(profiles[parent]["hooks"]) do
-                if hooks[hook_name] ~= "" then
-                    if hook ~= "" then
-                        hooks[hook_name] = hook
-                    end
-                else
+        for hook_name, hook in pairs(profile.hooks) do
+            if hooks[hook_name] ~= "" then
+                if hook ~= "" then
                     hooks[hook_name] = hook
                 end
+            else
+                hooks[hook_name] = hook
             end
         end
-    else
-        local profile = profiles[name]
-        packages = profile.packages
-        hooks = profile.hooks
     end
 
     return packages, hooks
