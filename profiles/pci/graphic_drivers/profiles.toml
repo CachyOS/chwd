@@ -126,10 +126,10 @@ device_name_pattern = '(GM|GP)\w+'
 [nvidia-dkms-470xx]
 desc = 'Closed source NVIDIA drivers for Linux (470xx branch, only for Kepler GPUs)'
 priority = 14
-class_ids = "0300 0380"
+class_ids = "0300 0302 0380"
 vendor_ids = "10de"
+device_ids = '>/var/lib/chwd/ids/nvidia-470.ids'
 packages = 'nvidia-470xx-dkms nvidia-470xx-utils nvidia-470xx-settings opencl-nvidia-470xx vulkan-icd-loader lib32-nvidia-470xx-utils lib32-opencl-nvidia-470xx lib32-vulkan-icd-loader libva-nvidia-driver'
-device_name_pattern = '(GK)\w+'
 conditional_packages = """
     # Trying to determine the laptop
     device_type="$(cat /sys/devices/virtual/dmi/id/chassis_type)"
@@ -157,13 +157,14 @@ priority = 16
 vendor_ids = "10de"
 class_ids = "0300 0302 0380"
 packages = 'nvidia-390xx-dkms nvidia-390xx-utils nvidia-390xx-settings opencl-nvidia-390xx nvidia-390xx-utils nvidia-390xx-settings opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
-device_name_pattern = '(GF)\w+'
+device_ids = '>/var/lib/chwd/ids/nvidia-390.ids'
 
 [nouveau]
 desc = "Open Nouveau driver for NVIDIA graphics cards (Only for old GPUs)"
 class_ids = "0300 0302"
 vendor_ids = "10de"
-priority = 9
+device_ids = '>/var/lib/chwd/ids/nouveau.ids'
+priority = 18
 packages = 'mesa lib32-mesa libva-mesa-driver mesa-vdpau lib32-libva-mesa-driver vulkan-nouveau'
 conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
