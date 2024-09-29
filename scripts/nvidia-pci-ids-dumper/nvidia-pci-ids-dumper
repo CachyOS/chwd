@@ -1,0 +1,110 @@
+#!/usr/bin/env lua
+--[[
+Copyright (C) 2024 Vasiliy Stelmachenok for CachyOS
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+--]]
+local found, json = pcall(require, 'dkjson')
+
+local code = 0
+
+local function err(msg, ...)
+    print(msg:format(...))
+    code = 1
+end
+
+if not found then
+    err("lua-dkjson dependency is missing, please install it from repositories")
+    os.exit(1)
+end
+
+local function write(generations)
+    for driver, ids in pairs(generations) do
+        local fname = "nvidia-" .. driver:match("([^.]+)") .. ".ids"
+        if driver == "nouveau" then
+            fname = "nouveau.ids"
+        end
+
+        local devices = {}
+        for id in pairs(ids) do
+            devices[#devices+1] = id
+        end
+
+        local hwdb, errmsg = io.open(fname, "w+")
+        if hwdb then
+            local content = table.concat(devices, " ")
+            hwdb:write(content .. "\n")
+        else
+            err("Failed to write PCI ids: %s", errmsg)
+        end
+    end
+end
+
+local function parse(chips)
+    local drivers = {
+        ["390.xx"] = {},
+        ["470.xx"] = {},
+        ["nouveau"] = {}
+    }
+    for _, chip in ipairs(chips) do
+        if chip.legacybranch then
+            local id = chip.devid:gsub("0x", ""):lower()
+            local branch = chip.legacybranch
+            if branch == "470.xx" then
+                drivers[branch][id] = true
+            elseif branch == "390.xx" then
+                drivers[branch][id] = true
+            else
+                drivers["nouveau"][id] = true
+            end
+        end
+    end
+
+    return drivers
+end
+
+local function main()
+    if #arg < 1 then
+        err("Specify path to the supported-gpu.json file")
+        os.exit(0)
+    end
+
+    local path = arg[1]
+    local file, errmsg = io.open(path, "r")
+
+    if file ~= nil then
+        local raw = file:read()
+
+        if raw then
+            local supported_gpus = json.decode(raw)
+
+            if supported_gpus.chips then
+                local generations = parse(supported_gpus.chips)
+                write(generations)
+            else
+                err("Failed to parse supported_gpus.json")
+            end
+        else
+            err("Failed to read file %s", path)
+        end
+
+        file:close()
+    else
+        err("Failed to open %s file: %s", path, errmsg)
+    end
+end
+
+main()
+os.exit(code)
