@@ -303,7 +303,7 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
         toml::Table::new()
     };
 
-    let table_item = toml::Value::Table(profile_into_toml(&profile));
+    let table_item = toml::Value::Table(profile_into_toml(profile));
 
     profiles.insert(profile.name.clone(), table_item);
 
@@ -487,7 +487,7 @@ mod tests {
         assert_eq!(parsed_profiles[0].name, "nvidia-dkms");
         assert_eq!(parsed_profiles[0].desc, "Closed source NVIDIA drivers for Linux (Latest)");
         assert_eq!(parsed_profiles[0].priority, 12);
-        assert_eq!(parsed_profiles[0].is_ai_sdk, false);
+        assert!(!parsed_profiles[0].is_ai_sdk);
         assert_eq!(
             parsed_profiles[0].packages,
             "nvidia-utils egl-wayland nvidia-settings opencl-nvidia lib32-opencl-nvidia \
