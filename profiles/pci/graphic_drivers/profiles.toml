@@ -201,7 +201,7 @@ class_ids = "0300 0302"
 vendor_ids = "1002"
 device_ids = "*"
 priority = 4
-packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau'
+packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau xf86-video-amdgpu'
 conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
