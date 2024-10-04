@@ -25,7 +25,6 @@ end
 
 if not found then
     err("lua-dkjson dependency is missing, please install it from repositories")
-    os.exit(1)
 end
 
 local function write(generations)
