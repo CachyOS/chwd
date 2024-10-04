@@ -75,6 +75,7 @@ class_ids = "0300 0302 0380"
 vendor_ids = "10de"
 priority = 12
 packages = 'nvidia-utils egl-wayland nvidia-settings opencl-nvidia lib32-opencl-nvidia lib32-nvidia-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader'
+device_ids = '>/var/lib/chwd/ids/nvidia-latest-closed.ids'
 conditional_packages = """
     kernels="$(pacman -Qqs "^linux-cachyos")"
     packages=""
@@ -121,7 +122,6 @@ post_remove = """
     rm -f /etc/profile.d/nvidia-vaapi.sh
     mkinitcpio -P
 """
-device_name_pattern = '(GM|GP)\w+'
 
 [nvidia-dkms-470xx]
 desc = 'Closed source NVIDIA drivers for Linux (470xx branch, only for Kepler GPUs)'
