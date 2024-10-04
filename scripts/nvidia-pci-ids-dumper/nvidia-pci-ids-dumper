@@ -18,13 +18,13 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 --]]
 local found, json = pcall(require, 'dkjson')
 
-local function err(msg, ...)
+local function die(msg, ...)
     print(msg:format(...))
     os.exit(1)
 end
 
 if not found then
-    err("lua-dkjson dependency is missing, please install it from repositories")
+    die("lua-dkjson dependency is missing, please install it from repositories")
 end
 
 local function write(generations)
@@ -44,7 +44,7 @@ local function write(generations)
             hwdb:write(content .. "\n")
             hwdb:close()
         else
-            err("Failed to write PCI ids: %s", errmsg)
+            die("Failed to write PCI ids: %s", errmsg)
         end
     end
 end
@@ -89,15 +89,14 @@ end
 
 local function main()
     if #arg < 1 then
-        err("Specify path to the supported-gpu.json file")
-        os.exit(0)
+        die("Specify path to the supported-gpu.json file")
     end
 
     local path = arg[1]
     local file, errmsg = io.open(path, "r")
 
     if not file then
-        err("Failed to open %s file: %s", path, errmsg)
+        die("Failed to open %s file: %s", path, errmsg)
         return
     end
 
@@ -105,13 +104,13 @@ local function main()
     file:close()
 
     if not raw then
-        err("Failed to read file %s", path)
+        die("Failed to read file %s", path)
     end
 
     local supported_gpus = json.decode(raw)
 
     if not supported_gpus.chips then
-        err("Failed to parse supported_gpus.json")
+        die("Failed to parse supported_gpus.json")
     end
 
     local generations = parse(supported_gpus.chips)
