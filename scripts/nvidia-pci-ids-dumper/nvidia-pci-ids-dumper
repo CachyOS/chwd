@@ -37,6 +37,8 @@ local function write(generations)
             devices[#devices+1] = id
         end
 
+        devices = table.sort(devices) or devices
+
         local hwdb, errmsg = io.open(fname, "w+")
         if hwdb then
             local content = table.concat(devices, " ")
