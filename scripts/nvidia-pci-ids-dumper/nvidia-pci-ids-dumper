@@ -18,11 +18,9 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 --]]
 local found, json = pcall(require, 'dkjson')
 
-local code = 0
-
 local function err(msg, ...)
     print(msg:format(...))
-    code = 1
+    os.exit(1)
 end
 
 if not found then
@@ -46,6 +44,7 @@ local function write(generations)
         if hwdb then
             local content = table.concat(devices, " ")
             hwdb:write(content .. "\n")
+            hwdb:close()
         else
             err("Failed to write PCI ids: %s", errmsg)
         end
@@ -84,27 +83,26 @@ local function main()
     local path = arg[1]
     local file, errmsg = io.open(path, "r")
 
-    if file ~= nil then
-        local raw = file:read()
-
-        if raw then
-            local supported_gpus = json.decode(raw)
-
-            if supported_gpus.chips then
-                local generations = parse(supported_gpus.chips)
-                write(generations)
-            else
-                err("Failed to parse supported_gpus.json")
-            end
-        else
-            err("Failed to read file %s", path)
-        end
-
-        file:close()
-    else
+    if not file then
         err("Failed to open %s file: %s", path, errmsg)
+        return
     end
+
+    local raw = file:read()
+    file:close()
+
+    if not raw then
+        err("Failed to read file %s", path)
+    end
+
+    local supported_gpus = json.decode(raw)
+
+    if not supported_gpus.chips then
+        err("Failed to parse supported_gpus.json")
+    end
+
+    local generations = parse(supported_gpus.chips)
+    write(generations)
 end
 
 main()
-os.exit(code)
