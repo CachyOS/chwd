@@ -29,13 +29,10 @@ if not found then
 end
 
 local function write(generations)
-    for driver, ids in pairs(generations) do
-        local fname = "nvidia-" .. driver:match("([^.]+)") .. ".ids"
-        if driver == "nouveau" then
-            fname = "nouveau.ids"
-        end
-
+    for branch, ids in pairs(generations) do
+        local fname = branch .. ".ids"
         local devices = {}
+
         for id in pairs(ids) do
             devices[#devices+1] = id
         end
@@ -53,20 +50,35 @@ end
 
 local function parse(chips)
     local drivers = {
-        ["390.xx"] = {},
-        ["470.xx"] = {},
+        ["nvidia-390"] = {},
+        ["nvidia-470"] = {},
+        ['nvidia-latest-closed'] = {},
         ["nouveau"] = {}
     }
     for _, chip in ipairs(chips) do
+        local id = chip.devid:gsub("0x", ""):lower()
         if chip.legacybranch then
-            local id = chip.devid:gsub("0x", ""):lower()
             local branch = chip.legacybranch
             if branch == "470.xx" then
-                drivers[branch][id] = true
+                drivers["nvidia-470"][id] = true
             elseif branch == "390.xx" then
-                drivers[branch][id] = true
+                drivers["nvidia-390"][id] = true
             else
                 drivers["nouveau"][id] = true
+            end
+        else
+            local features = chip.features
+            local kernelOpen = false
+
+            for _, feature in ipairs(features) do
+                if feature == "kernelopen" then
+                    kernelOpen = true
+                    break
+                end
+            end
+
+            if not kernelOpen then
+                drivers['nvidia-latest-closed'][id] = true
             end
         end
     end
