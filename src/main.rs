@@ -19,6 +19,7 @@
 pub mod args;
 pub mod console_writer;
 pub mod device_misc;
+pub mod localization;
 pub mod logger;
 pub mod misc;
 pub mod profile_misc;
@@ -38,7 +39,7 @@ use subprocess::{Exec, Redirection};
 
 fn main() -> anyhow::Result<()> {
     let requested_languages = DesktopLanguageRequester::requested_languages();
-    let localizer = chwd::localization::localizer();
+    let localizer = crate::localization::localizer();
     if let Err(error) = localizer.select(&requested_languages) {
         eprintln!("Error while loading languages for library_fluent {}", error);
     }
