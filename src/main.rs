@@ -18,16 +18,14 @@
 
 pub mod args;
 pub mod console_writer;
-pub mod consts;
 pub mod data;
 pub mod device;
-pub mod localization;
 pub mod logger;
 pub mod misc;
-pub mod profile;
 
 use misc::Transaction;
-use profile::Profile;
+use chwd::*;
+use chwd::profile::Profile;
 
 use std::path::Path;
 use std::sync::Arc;
@@ -40,7 +38,7 @@ use subprocess::{Exec, Redirection};
 
 fn main() -> anyhow::Result<()> {
     let requested_languages = DesktopLanguageRequester::requested_languages();
-    let localizer = crate::localization::localizer();
+    let localizer = chwd::localization::localizer();
     if let Err(error) = localizer.select(&requested_languages) {
         eprintln!("Error while loading languages for library_fluent {}", error);
     }
