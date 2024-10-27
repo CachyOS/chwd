@@ -149,7 +149,7 @@ pub fn get_available_profiles(is_ai_sdk: bool) -> Vec<Profile> {
             .available_profiles
             .clone()
             .into_iter()
-            .map(|x| Arc::try_unwrap(x.into()).unwrap())
+            .map(|x| Arc::unwrap_or_clone(x))
             .collect();
         available_profiles.append(&mut profiles);
     }
