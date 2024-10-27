@@ -145,12 +145,8 @@ pub fn get_available_profiles(is_ai_sdk: bool) -> Vec<Profile> {
         if device.available_profiles.is_empty() {
             continue;
         }
-        let mut profiles = device
-            .available_profiles
-            .clone()
-            .into_iter()
-            .map(|x| Arc::unwrap_or_clone(x))
-            .collect();
+        let mut profiles =
+            device.available_profiles.clone().into_iter().map(Arc::unwrap_or_clone).collect();
         available_profiles.append(&mut profiles);
     }
     available_profiles
