@@ -18,8 +18,10 @@
 
 pub mod args;
 pub mod console_writer;
+pub mod device_misc;
 pub mod logger;
 pub mod misc;
+pub mod profile_misc;
 
 use chwd::profile::Profile;
 use chwd::*;

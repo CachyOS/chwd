@@ -19,5 +19,6 @@
 pub mod consts;
 pub mod data;
 pub mod device;
+pub mod hwd_misc;
 pub mod localization;
 pub mod profile;

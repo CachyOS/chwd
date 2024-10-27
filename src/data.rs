@@ -245,7 +245,7 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
     }
 
     if let Some(gc_versions) = &profile.gc_versions {
-        if let Some(hwd_gc_versions) = crate::misc::get_gc_versions() {
+        if let Some(hwd_gc_versions) = crate::hwd_misc::get_gc_versions() {
             return get_all_devices_from_gc_versions(devices, &hwd_gc_versions, gc_versions);
         }
         return vec![];

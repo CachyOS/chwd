@@ -15,7 +15,6 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 use crate::profile::Profile;
-use crate::{console_writer, fl, profile};
 
 use std::sync::Arc;
 
@@ -54,46 +53,4 @@ pub fn get_unique_devices(devices: &[Device]) -> Vec<Device> {
     }
 
     uniq_devices
-}
-
-pub fn print_available_profiles_in_detail(devices: &[Device]) {
-    let mut config_found = false;
-    for device in devices.iter() {
-        let available_profiles = &device.available_profiles;
-        let installed_profiles = &device.installed_profiles;
-        if available_profiles.is_empty() && installed_profiles.is_empty() {
-            continue;
-        }
-        config_found = true;
-
-        log::info!(
-            "{} {}: {} ({}:{}:{})",
-            "PCI",
-            fl!("device"),
-            device.sysfs_id,
-            device.class_id,
-            device.vendor_id,
-            device.device_id
-        );
-        println!("  {} {} {}", device.class_name, device.vendor_name, device.device_name);
-        println!();
-        if !installed_profiles.is_empty() {
-            println!("  > {}:\n", fl!("installed"));
-            for installed_profile in installed_profiles.iter() {
-                profile::print_profile_details(installed_profile);
-            }
-            println!("\n");
-        }
-        if !available_profiles.is_empty() {
-            println!("  > {}:\n", fl!("available"));
-            for available_profile in available_profiles.iter() {
-                profile::print_profile_details(available_profile);
-            }
-            println!("\n");
-        }
-    }
-
-    if !config_found {
-        console_writer::print_warn_msg!("no-profile-device");
-    }
 }

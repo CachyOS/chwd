@@ -55,7 +55,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     if args.list_available {
         let pci_devices = &data.pci_devices;
         if args.detail {
-            crate::device::print_available_profiles_in_detail(pci_devices);
+            crate::device_misc::print_available_profiles_in_detail(pci_devices);
         } else {
             for pci_device in pci_devices.iter() {
                 let available_profiles = &pci_device.get_available_profiles();
@@ -105,7 +105,7 @@ pub fn print_installed_profiles(installed_profiles: &[Profile]) {
     }
 
     for profile in installed_profiles.iter() {
-        crate::profile::print_profile_details(profile);
+        crate::profile_misc::print_profile_details(profile);
     }
     println!();
 }
