@@ -17,5 +17,7 @@
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 pub mod consts;
+pub mod data;
+pub mod device;
 pub mod localization;
 pub mod profile;

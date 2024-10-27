@@ -22,6 +22,7 @@ use comfy_table::presets::UTF8_FULL;
 use comfy_table::*;
 
 use std::fs;
+use std::sync::Arc;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct HardwareID {
@@ -135,6 +136,29 @@ pub fn get_invalid_profiles(file_path: &str) -> Result<Vec<String>> {
     }
 
     Ok(invalid_profile_list)
+}
+
+// Returns list of profiles available for all devices on current hardware
+// is_ai_sdk is used to filter out profiles which dont represent AI SDK installation
+pub fn get_available_profiles(is_ai_sdk: bool) -> Vec<Profile> {
+    let mut available_profiles = vec![];
+    // populate data
+    let data_obj = crate::data::Data::new(is_ai_sdk);
+
+    // extract for each device
+    for device in &data_obj.pci_devices {
+        if device.available_profiles.is_empty() {
+            continue;
+        }
+        let mut profiles = device
+            .available_profiles
+            .clone()
+            .into_iter()
+            .map(|x| Arc::try_unwrap(x.into()).unwrap())
+            .collect();
+        available_profiles.append(&mut profiles);
+    }
+    available_profiles
 }
 
 pub fn parse_profiles_merged(file_path: &str) -> Result<Vec<Profile>> {

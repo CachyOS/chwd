@@ -18,14 +18,12 @@
 
 pub mod args;
 pub mod console_writer;
-pub mod data;
-pub mod device;
 pub mod logger;
 pub mod misc;
 
-use misc::Transaction;
-use chwd::*;
 use chwd::profile::Profile;
+use chwd::*;
+use misc::Transaction;
 
 use std::path::Path;
 use std::sync::Arc;
