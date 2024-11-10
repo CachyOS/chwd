@@ -74,16 +74,14 @@ end
 local function pacman_handle(action, pkgs)
     local cmd = table.concat({ pacman, action, pkgs }, " ")
     local _, _, code = os.execute(cmd)
-    if code ~= 0 then
-        die("ERROR: Pacman command was failed! Exit code: %s", code)
-    end
+    return code
 end
 
 local function install(packages)
     if sync then
-        pacman_handle("-Sy", "")
+        return pacman_handle("--needed -Sy", packages)
     end
-    pacman_handle("--needed -S", packages)
+    return pacman_handle("--needed -S", packages)
 end
 
 local function remove(packages)
@@ -98,8 +96,9 @@ local function remove(packages)
 
     if #pkgs == 0 then
         print("Nothing to remove...")
+        return 0
     else
-        pacman_handle("-Rdd", pkgs)
+        return pacman_handle("-Rdd", pkgs)
     end
 end
 
@@ -272,8 +271,14 @@ local function main()
             packages = packages .. " " .. conditional_packages
         end
 
-        install(packages)
-        exec_hook(hooks["post_install"])
+        local code = install(packages)
+        if code ~= 0 then
+            exec_hook(hooks["pre_remove"])
+            die("ERROR: Pacman command was failed! Exit code: %s", code)
+        else
+            exec_hook(hooks["post_install"])
+        end
+
     elseif options.remove then
         exec_hook(hooks["pre_remove"])
 
@@ -283,8 +288,12 @@ local function main()
             packages = packages .. " " .. conditional_packages
         end
 
-        remove(packages)
-        exec_hook(hooks["post_remove"])
+        local code = remove(packages)
+        if code ~= 0 then
+            die("ERROR: Pacman command was failed! Exit code: %s", code)
+        else
+            exec_hook(hooks["post_remove"])
+        end
     else
         die("Action is missing, exit...")
     end
