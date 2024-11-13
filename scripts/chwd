@@ -263,9 +263,9 @@ local function main()
     end
 
     if options.install then
-        exec_hook(hooks["pre_install"])
+        exec_hook(hooks.pre_install)
 
-        local conditional_packages = exec_hook(hooks["conditional_packages"])
+        local conditional_packages = exec_hook(hooks.conditional_packages)
 
         if conditional_packages then
             packages = packages .. " " .. conditional_packages
@@ -273,16 +273,16 @@ local function main()
 
         local code = install(packages)
         if code ~= 0 then
-            exec_hook(hooks["pre_remove"])
+            exec_hook(hooks.pre_remove)
             die("ERROR: Pacman command was failed! Exit code: %s", code)
         else
-            exec_hook(hooks["post_install"])
+            exec_hook(hooks.post_install)
         end
 
     elseif options.remove then
-        exec_hook(hooks["pre_remove"])
+        exec_hook(hooks.pre_remove)
 
-        local conditional_packages = exec_hook(hooks["conditional_packages"])
+        local conditional_packages = exec_hook(hooks.conditional_packages)
 
         if conditional_packages then
             packages = packages .. " " .. conditional_packages
@@ -292,7 +292,7 @@ local function main()
         if code ~= 0 then
             die("ERROR: Pacman command was failed! Exit code: %s", code)
         else
-            exec_hook(hooks["post_remove"])
+            exec_hook(hooks.post_remove)
         end
     else
         die("Action is missing, exit...")
