@@ -162,7 +162,7 @@ desc = 'Closed source NVIDIA drivers for Linux (390xx branch, only for Fermi GPU
 priority = 16
 vendor_ids = "10de"
 class_ids = "0300 0302 0380"
-packages = 'nvidia-390xx-dkms nvidia-390xx-utils nvidia-390xx-settings opencl-nvidia-390xx nvidia-390xx-utils nvidia-390xx-settings opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
+packages = 'nvidia-390xx-dkms  nvidia-390xx-utils nvidia-390xx-settings opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
 device_ids = '>/var/lib/chwd/ids/nvidia-390.ids'
 
 [nouveau]
@@ -171,7 +171,7 @@ class_ids = "0300 0302"
 vendor_ids = "10de"
 device_ids = '>/var/lib/chwd/ids/nouveau.ids'
 priority = 18
-packages = 'mesa lib32-mesa libva-mesa-driver mesa-vdpau lib32-libva-mesa-driver vulkan-nouveau'
+packages = 'mesa lib32-mesa vulkan-nouveau'
 conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
@@ -184,7 +184,7 @@ class_ids = "0300 0302"
 vendor_ids = "8086"
 device_ids = "*"
 priority = 4
-packages = 'mesa lib32-mesa libva-intel-driver lib32-libva-intel-driver vulkan-intel lib32-vulkan-intel intel-media-driver intel-compute-runtime intel-oneapi-compiler-shared-runtime mesa-vdpau lib32-mesa-vdpau'
+packages = 'mesa lib32-mesa libva-intel-driver lib32-libva-intel-driver vulkan-intel lib32-vulkan-intel intel-media-driver intel-compute-runtime intel-oneapi-compiler-shared-runtime'
 conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
@@ -197,7 +197,7 @@ class_ids = "0300 0302"
 vendor_ids = "1002"
 device_ids = "*"
 priority = 4
-packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon libva-mesa-driver lib32-libva-mesa-driver mesa-vdpau lib32-mesa-vdpau xf86-video-amdgpu'
+packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon xf86-video-amdgpu'
 conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
