@@ -109,14 +109,14 @@ local function exec_hook(hook)
     end
 
     if hook ~= "" then
-        local file = io.popen(("/bin/bash -c '%s'"):format(hook), "r")
+        local handle, errmsg = io.popen(("/bin/bash -c '%s'"):format(hook), "r")
 
-        if file then
-            local output = file:read('*all')
-            file:close()
+        if handle then
+            local output = handle:read('*all')
+            handle:close()
             return output
         else
-            print("ERROR: Unkown shell invocation error", hook)
+            print(("ERROR: Unkown shell invocation error for %s hook: %s"):format(hook, errmsg))
         end
     end
 end
