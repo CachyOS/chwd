@@ -67,8 +67,24 @@ local function get_opts(args)
 end
 
 local function is_installed(package_name)
-    local status = os.execute("pacman -Qqs " .. package_name .. " 1>/dev/null")
-    return status
+    local handle = io.popen("/bin/pacman -Qi " .. package_name)
+
+    if handle then
+        local line, provider
+        repeat
+            line = handle:read("*l")
+            if line then
+                provider = line:match("Name%s+:%s+([^%s]+)")
+            end
+        until provider or line == nil
+        handle:close()
+
+        if provider and provider == package_name then
+            return true
+        end
+    end
+
+    return false
 end
 
 local function pacman_handle(action, pkgs)
@@ -126,9 +142,9 @@ local function escape_pattern(text)
 end
 
 local function parse_profiles(path)
-    local profile_name_pattern      = "^%[([A-Za-z0-9-. ]+)%]"
-    local packages_pattern          = "^packages%s*=%s*'?\"?([A-Za-z0-9- ]+)'?\"?"
-    local profiles                  = {}
+    local profile_name_pattern = "^%[([A-Za-z0-9-. ]+)%]"
+    local packages_pattern     = "^packages%s*=%s*'?\"?([A-Za-z0-9- ]+)'?\"?"
+    local profiles             = {}
     local profile, captured_hook
 
     for line in io.lines(path) do
@@ -184,7 +200,7 @@ local function get_profile(profiles, name)
     local keys = {}
 
     for tname in name:gmatch("([^.]*)") do
-        keys[#keys+1] = tname
+        keys[#keys + 1] = tname
         local key = table.concat(keys, ".")
         local profile = profiles[key]
 
@@ -278,7 +294,6 @@ local function main()
         else
             exec_hook(hooks.post_install)
         end
-
     elseif options.remove then
         exec_hook(hooks.pre_remove)
 
@@ -301,10 +316,10 @@ end
 
 ---@diagnostic disable-next-line
 if _TEST then -- luacheck: ignore
-   return {
-       get_profile = get_profile,
-       parse_profiles = parse_profiles
-   }
+    return {
+        get_profile = get_profile,
+        parse_profiles = parse_profiles
+    }
 else
     main()
 end
