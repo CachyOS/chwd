@@ -177,6 +177,15 @@ if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
 fi
 """
+post_install = """
+if [ -z "$(lspci -d "10de:*:030x")" ]; then
+    # Force the use of Rusticl, otherwise it will be just a stub
+    echo "export RUSTICL_ENABLE=nouveau" > /etc/profile.d/opencl.sh
+fi
+"""
+post_remove = """
+rm -f /etc/profile.d/opencl.sh
+"""
 
 [intel]
 desc = "Mesa open source driver for Intel"
@@ -190,6 +199,15 @@ if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
 fi
 """
+post_install = """
+if [ -z "$(lspci -d "10de:*:030x")" ]; then
+    # Force the use of Rusticl, otherwise it will be just a stub
+    echo "export RUSTICL_ENABLE=iris" > /etc/profile.d/opencl.sh
+fi
+"""
+post_remove = """
+rm -f /etc/profile.d/opencl.sh
+"""
 
 [amd]
 desc = "Mesa open source driver for AMD"
@@ -202,6 +220,15 @@ conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
 fi
+"""
+post_install = """
+if [ -z "$(lspci -d "10de:*:030x")" ]; then
+    # Force the use of Rusticl, otherwise it will be just a stub
+    echo "export RUSTICL_ENABLE=radeonsi" > /etc/profile.d/opencl.sh
+fi
+"""
+post_remove = """
+rm -f /etc/profile.d/opencl.sh
 """
 
 [fallback]
