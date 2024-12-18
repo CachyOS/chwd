@@ -181,10 +181,13 @@ post_install = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
     # Force the use of Rusticl, otherwise it will be just a stub
     echo "export RUSTICL_ENABLE=nouveau" > /etc/profile.d/opencl.sh
+    mkdir -p /etc/environment.d
+    echo "RUSTICL_ENABLE=nouveau" > /etc/environment.d/30-opencl.conf
 fi
 """
 post_remove = """
 rm -f /etc/profile.d/opencl.sh
+rm -f /etc/environment.d/30-opencl.conf
 """
 
 [intel]
@@ -203,10 +206,13 @@ post_install = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
     # Force the use of Rusticl, otherwise it will be just a stub
     echo "export RUSTICL_ENABLE=iris" > /etc/profile.d/opencl.sh
+    mkdir -p /etc/environment.d
+    echo "RUSTICL_ENABLE=iris" > /etc/environment.d/30-opencl.conf
 fi
 """
 post_remove = """
 rm -f /etc/profile.d/opencl.sh
+rm -f /etc/environment.d/30-opencl.conf
 """
 
 [amd]
@@ -225,10 +231,13 @@ post_install = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
     # Force the use of Rusticl, otherwise it will be just a stub
     echo "export RUSTICL_ENABLE=radeonsi" > /etc/profile.d/opencl.sh
+    mkdir -p /etc/environment.d
+    echo "RUSTICL_ENABLE=radeonsi" > /etc/environment.d/30-opencl.conf
 fi
 """
 post_remove = """
 rm -f /etc/profile.d/opencl.sh
+rm -f /etc/environment.d/30-opencl.conf
 """
 
 [fallback]
