@@ -18,8 +18,12 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 --]]
 local pacman, pmconfig, pmroot, cachedir, sync
 
+local function printf(s, ...)
+    print(s:format(...))
+end
+
 local function die(err, ...)
-    print(err:format(...))
+    printf(err, ...)
     os.exit(1)
 end
 
@@ -118,23 +122,33 @@ local function remove(packages)
     end
 end
 
-local function exec_hook(hook)
+local function exec_hook(name, hooks)
+    local hook = hooks[name]
+
     if not hook then
         print("WARNING: An unknown hook is being called")
         return
     end
 
-    if hook ~= "" then
-        local handle, errmsg = io.popen(("/bin/bash -c '%s'"):format(hook), "r")
-
-        if handle then
-            local output = handle:read('*all')
-            handle:close()
-            return output
-        else
-            print(("ERROR: Unkown shell invocation error for %s hook: %s"):format(hook, errmsg))
-        end
+    if hook == "" then
+        return
     end
+
+    local handle, errmsg = io.popen(hook, "r")
+
+    if not handle then
+        printf("ERROR: Unknown shell invocation error for %s hook: %s", name, errmsg)
+        return
+    end
+
+    local output = handle:read("*a")
+    local success, _, exitcode = handle:close()
+
+    if not success then
+        printf("ERROR: Error occurred while executing %s hook: %s", name, exitcode)
+    end
+
+    return output
 end
 
 local function escape_pattern(text)
@@ -279,9 +293,9 @@ local function main()
     end
 
     if options.install then
-        exec_hook(hooks.pre_install)
+        exec_hook(hooks, "pre_install")
 
-        local conditional_packages = exec_hook(hooks.conditional_packages)
+        local conditional_packages = exec_hook(hooks, "conditional_packages")
 
         if conditional_packages then
             packages = packages .. " " .. conditional_packages
@@ -289,15 +303,15 @@ local function main()
 
         local code = install(packages)
         if code ~= 0 then
-            exec_hook(hooks.pre_remove)
+            exec_hook(hooks, "pre_remove")
             die("ERROR: Pacman command was failed! Exit code: %s", code)
         else
-            exec_hook(hooks.post_install)
+            exec_hook(hooks, "post_install")
         end
     elseif options.remove then
-        exec_hook(hooks.pre_remove)
+        exec_hook(hooks, "pre_remove")
 
-        local conditional_packages = exec_hook(hooks.conditional_packages)
+        local conditional_packages = exec_hook(hooks, "conditional_packages")
 
         if conditional_packages then
             packages = packages .. " " .. conditional_packages
@@ -307,7 +321,7 @@ local function main()
         if code ~= 0 then
             die("ERROR: Pacman command was failed! Exit code: %s", code)
         else
-            exec_hook(hooks.post_remove)
+            exec_hook(hooks, "post_remove")
         end
     else
         die("Action is missing, exit...")

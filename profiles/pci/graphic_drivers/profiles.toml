@@ -58,7 +58,7 @@ post_install = """
     device_type="$(cat /sys/devices/virtual/dmi/id/chassis_type)"
     if ((device_type >= 8 && device_type <= 11)); then
         # nvidia-powerd is not supported by Turing GPUs
-        if ! lspci -d "10de:*:030x" -vm | grep -q 'Device:\tTU.*'; then
+        if ! lspci -d "10de:*:030x" -vm | grep -q 'Device:\\tTU.*'; then
             systemctl enable nvidia-powerd
         fi
         systemctl enable switcheroo-control
@@ -99,7 +99,7 @@ conditional_packages = """
 
     # Trying to determine the laptop
     device_type="$(cat /sys/devices/virtual/dmi/id/chassis_type)"
-    if [[ "$device_type" -ge 8 && "$device_type" -le 11 ]]; then
+    if ((device_type >= 8 && device_type <= 11)); then
         packages+=" nvidia-prime switcheroo-control"
     fi
 
@@ -258,14 +258,14 @@ device_ids = "*"
 priority = 5
 packages = 'virtualbox-guest-utils xf86-video-vmware open-vm-tools xf86-input-vmmouse spice-vdagent qemu-guest-agent vulkan-virtio gtkmm3'
 post_install = """
-    if [[ "$(systemd-detect-virt)" == "oracle" ]]; then
+    if [ "$(systemd-detect-virt)" = "oracle" ]; then
         # Virtualbox detected
 
         # Load kernel modules and sync clock
         systemctl enable --now --no-block vboxservice.service
     else
 
-        if [[ "$(systemd-detect-virt)" == "vmware" ]]; then
+        if [ "$(systemd-detect-virt)" = "vmware" ]; then
             # Vmware detected
             systemctl enable --now --no-block vmtoolsd.service
         else
@@ -276,17 +276,17 @@ EOF
             mkinitcpio -P
         fi
     fi
-    if [[ -e /etc/gdm/custom.conf ]]; then
+    if [ -e /etc/gdm/custom.conf ]; then
         sed -i -e 's|#WaylandEnable=false|WaylandEnable=false|g' /etc/gdm/custom.conf
     fi"""
 pre_remove = """
     rm -f /etc/mkinitcpio.conf.d/10-chwd.conf
 """
 post_remove = """
-    if [[ "$(systemd-detect-virt)" == "oracle" ]]; then
+    if [ "$(systemd-detect-virt)" = "oracle" ]; then
         # Virtualbox detected
         systemctl disable --now vboxservice.service
-    elif [[ "$(systemd-detect-virt)" == "vmware" ]]; then
+    elif [ "$(systemd-detect-virt)" = "vmware" ]; then
         # Vmware detected
         systemctl disable --now vmtoolsd.service
     fi"""
