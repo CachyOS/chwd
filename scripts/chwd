@@ -122,7 +122,7 @@ local function remove(packages)
     end
 end
 
-local function exec_hook(name, hooks)
+local function exec_hook(hooks, name)
     local hook = hooks[name]
 
     if not hook then
