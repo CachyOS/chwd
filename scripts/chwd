@@ -18,21 +18,23 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 --]]
 local pacman, pmconfig, pmroot, cachedir, sync
 
---- @param s string
---- @return nil
+---@alias hookAlias {pre_install: string?, post_install: string?, post_remove: string?, pre_remove: string?, conditional_packages: string?}
+
+---@param s string
+---@param ... any
 local function printf(s, ...)
     print(s:format(...))
 end
 
---- @param err string
---- @return nil
+---@param err string
+---@param ... any
 local function die(err, ...)
     printf(err, ...)
     os.exit(1)
 end
 
---- @param path string
---- @return boolean
+---@param path string
+---@return boolean
 local function file_exists(path)
     local file = io.open(path, "r")
     if file then
@@ -43,7 +45,7 @@ local function file_exists(path)
     end
 end
 
---- @return boolean
+---@return boolean
 local function check_on_multilib()
     local multilib_pattern = "^%[multilib%]"
     for line in io.lines(pmconfig) do
@@ -54,8 +56,8 @@ local function check_on_multilib()
     return false
 end
 
---- @param str string
---- @return table
+---@param str string
+---@return string[]
 local function split(str)
     local t = {}
     for found in str:gmatch("([^%s]+)") do
@@ -64,8 +66,8 @@ local function split(str)
     return t
 end
 
---- @param args table
---- @return table
+---@param args string[]
+---@return table<string, integer>
 local function get_opts(args)
     local options = {}
     local option_pattern = "-%-?(.+)"
@@ -81,13 +83,16 @@ local function get_opts(args)
     return options
 end
 
---- @param package_name string
---- @return boolean
+---@param package_name string
+---@return boolean
 local function is_installed(package_name)
     local handle = io.popen("/bin/pacman -Qi " .. package_name)
 
     if handle then
-        local line, provider
+        ---@type string?
+        local line
+        ---@type string?
+        local provider
         repeat
             line = handle:read("*l")
             if line then
@@ -104,17 +109,17 @@ local function is_installed(package_name)
     return false
 end
 
---- @param action string
---- @param pkgs string
---- @return integer?
+---@param action string
+---@param pkgs string
+---@return number?
 local function pacman_handle(action, pkgs)
     local cmd = table.concat({ pacman, action, pkgs }, " ")
     local _, _, code = os.execute(cmd)
     return code
 end
 
---- @param packages string
---- @return integer?
+---@param packages string
+---@return number?
 local function install(packages)
     if sync then
         return pacman_handle("--needed -Sy", packages)
@@ -122,8 +127,8 @@ local function install(packages)
     return pacman_handle("--needed -S", packages)
 end
 
---- @param packages string
---- @return integer?
+---@param packages string
+---@return number?
 local function remove(packages)
     local pkgs = ""
     for _, pkg in ipairs(split(packages)) do
@@ -140,9 +145,9 @@ local function remove(packages)
     end
 end
 
---- @param hooks table
---- @param name string
---- @return string | nil
+---@param hooks hookAlias
+---@param name string
+---@return string?
 local function exec_hook(hooks, name)
     local hook = hooks[name]
 
@@ -172,21 +177,32 @@ local function exec_hook(hooks, name)
     return output
 end
 
---- @param text string
---- @return string?, integer
+---@param text string
+---@return string, integer
 local function escape_pattern(text)
     return text:gsub("([^%w])", "%%%1")
 end
 
---- @param path string
---- @return table | nil
+---@param path string
+---@return table<string, {packages: string?, hooks: hookAlias}>
 local function parse_profiles(path)
     local profile_name_pattern = "^%[([A-Za-z0-9-. ]+)%]"
     local packages_pattern     = "^packages%s*=%s*'?\"?([A-Za-z0-9- ]+)'?\"?"
     local profiles             = {}
-    local profile, captured_hook
+    ---@type string?
+    local profile
+    ---@type string?
+    local captured_hook
 
-    for line in io.lines(path) do
+    local profile_file, errmsg = io.open(path, "r")
+
+    if not profile_file then
+        die("Failed to open %s: %s", path, errmsg)
+    end
+
+    local line = profile_file:read("l")
+
+    while line do
         local profile_found = line:match(profile_name_pattern)
 
         if profile_found then
@@ -227,15 +243,17 @@ local function parse_profiles(path)
                 end
             end
         end
+
+        line = profile_file:read("l")
     end
 
     return profiles
 end
 
 
---- @param profiles table
---- @param name string
---- @return string | nil, table
+---@param profiles table<string, {packages: string?, hooks: hookAlias}>
+---@param name string
+---@return string?, hookAlias
 local function get_profile(profiles, name)
     local packages
     local hooks = {}
@@ -267,10 +285,11 @@ local function get_profile(profiles, name)
 
     return packages, hooks
 end
---- @param options table
---- @param option string
---- @param default nil | string
---- @return string|nil
+
+---@param options table<string, integer>
+---@param option string
+---@param default string?
+---@return string
 local function get_opt_argument(options, option, default)
     local index = options[option]
     if index == nil then
@@ -308,23 +327,23 @@ local function main()
     end
 
     if not file_exists(path) then
-        return die("Profiles file is not found: %s", path)
+        die("Profiles file is not found: %s", path)
     end
 
     local profiles = parse_profiles(path)
 
-    if not profiles then
-        return die("Couldn't find any profiles in %s", path)
+    if not next(profiles) then
+        die("Couldn't find any profiles in %s", path)
     end
 
     if not profiles[profile_name] then
-        return die("Profile not found in %s", path)
+        die("Profile not found")
     end
 
     local packages, hooks = get_profile(profiles, profile_name)
 
     if not packages then
-        return die("Profile %s is not valid", profile_name)
+        die("Profile %s is not valid", profile_name)
     end
 
     if packages and not check_on_multilib() then
