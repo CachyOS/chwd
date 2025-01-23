@@ -18,15 +18,21 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 --]]
 local pacman, pmconfig, pmroot, cachedir, sync
 
+--- @param s string
+--- @return nil
 local function printf(s, ...)
     print(s:format(...))
 end
 
+--- @param err string
+--- @return nil
 local function die(err, ...)
     printf(err, ...)
     os.exit(1)
 end
 
+--- @param path string
+--- @return boolean
 local function file_exists(path)
     local file = io.open(path, "r")
     if file then
@@ -37,6 +43,7 @@ local function file_exists(path)
     end
 end
 
+--- @return boolean
 local function check_on_multilib()
     local multilib_pattern = "^%[multilib%]"
     for line in io.lines(pmconfig) do
@@ -47,6 +54,8 @@ local function check_on_multilib()
     return false
 end
 
+--- @param str string
+--- @return table
 local function split(str)
     local t = {}
     for found in str:gmatch("([^%s]+)") do
@@ -55,6 +64,8 @@ local function split(str)
     return t
 end
 
+--- @param args table
+--- @return table
 local function get_opts(args)
     local options = {}
     local option_pattern = "-%-?(.+)"
@@ -70,6 +81,8 @@ local function get_opts(args)
     return options
 end
 
+--- @param package_name string
+--- @return boolean
 local function is_installed(package_name)
     local handle = io.popen("/bin/pacman -Qi " .. package_name)
 
@@ -91,12 +104,17 @@ local function is_installed(package_name)
     return false
 end
 
+--- @param action string
+--- @param pkgs string
+--- @return integer?
 local function pacman_handle(action, pkgs)
     local cmd = table.concat({ pacman, action, pkgs }, " ")
     local _, _, code = os.execute(cmd)
     return code
 end
 
+--- @param packages string
+--- @return integer?
 local function install(packages)
     if sync then
         return pacman_handle("--needed -Sy", packages)
@@ -104,11 +122,11 @@ local function install(packages)
     return pacman_handle("--needed -S", packages)
 end
 
+--- @param packages string
+--- @return integer?
 local function remove(packages)
-    packages = split(packages)
-
     local pkgs = ""
-    for _, pkg in ipairs(packages) do
+    for _, pkg in ipairs(split(packages)) do
         if is_installed(pkg) and (pkg ~= "mesa" or pkg ~= "lib32-mesa") then
             pkgs = pkgs .. " " .. pkg
         end
@@ -122,6 +140,9 @@ local function remove(packages)
     end
 end
 
+--- @param hooks table
+--- @param name string
+--- @return string | nil
 local function exec_hook(hooks, name)
     local hook = hooks[name]
 
@@ -151,10 +172,14 @@ local function exec_hook(hooks, name)
     return output
 end
 
+--- @param text string
+--- @return string?, integer
 local function escape_pattern(text)
     return text:gsub("([^%w])", "%%%1")
 end
 
+--- @param path string
+--- @return table | nil
 local function parse_profiles(path)
     local profile_name_pattern = "^%[([A-Za-z0-9-. ]+)%]"
     local packages_pattern     = "^packages%s*=%s*'?\"?([A-Za-z0-9- ]+)'?\"?"
@@ -208,6 +233,9 @@ local function parse_profiles(path)
 end
 
 
+--- @param profiles table
+--- @param name string
+--- @return string | nil, table
 local function get_profile(profiles, name)
     local packages
     local hooks = {}
@@ -239,14 +267,17 @@ local function get_profile(profiles, name)
 
     return packages, hooks
 end
-
+--- @param options table
+--- @param option string
+--- @param default nil | string
+--- @return string|nil
 local function get_opt_argument(options, option, default)
     local index = options[option]
     if index == nil then
         if default then
             return default
         else
-            die("The mandatory option %s is omitted", option)
+            die("The mandatory option --%s is omitted", option)
         end
     else
         local option_argument = arg[index + 1]
@@ -266,26 +297,34 @@ local function main()
     pmconfig = get_opt_argument(options, "pmconfig", "/etc/pacman.conf")
     pacman = table.concat({ "pacman --noconfirm", "--cachedir", cachedir, "-r", pmroot, "--config", pmconfig }, " ")
     local profile_name = get_opt_argument(options, "profile")
-    local path = get_opt_argument(options, "path", "/var/lib/chwd/db/profiles.toml")
+    local path = get_opt_argument(options, "path")
+
+    if not path or not profile_name then
+        return
+    end
 
     if options.sync then
         sync = true
     end
 
     if not file_exists(path) then
-        die("Profiles file is not found: %s", path)
+        return die("Profiles file is not found: %s", path)
     end
 
     local profiles = parse_profiles(path)
 
+    if not profiles then
+        return die("Couldn't find any profiles in %s", path)
+    end
+
     if not profiles[profile_name] then
-        die("Profile not found")
+        return die("Profile not found in %s", path)
     end
 
     local packages, hooks = get_profile(profiles, profile_name)
 
     if not packages then
-        die("Profile %s is not valid", profile_name)
+        return die("Profile %s is not valid", profile_name)
     end
 
     if packages and not check_on_multilib() then
