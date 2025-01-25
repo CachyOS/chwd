@@ -233,7 +233,7 @@ class_ids = "0300 0302"
 vendor_ids = "8086"
 device_ids = "*"
 priority = 4
-packages = 'mesa lib32-mesa libva-intel-driver lib32-libva-intel-driver vulkan-intel lib32-vulkan-intel intel-media-driver intel-compute-runtime intel-oneapi-compiler-shared-runtime'
+packages = 'mesa lib32-mesa libva-intel-driver lib32-libva-intel-driver vulkan-intel lib32-vulkan-intel intel-media-driver'
 conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
