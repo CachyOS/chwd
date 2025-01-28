@@ -254,7 +254,7 @@ rm -f /etc/environment.d/30-opencl.conf
 
 [amd]
 desc = "Mesa open source driver for AMD"
-class_ids = "0300 0302"
+class_ids = "0300 0302 0380"
 vendor_ids = "1002"
 device_ids = "*"
 priority = 4
