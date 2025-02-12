@@ -97,10 +97,10 @@ vendor_ids = "1002"
 device_ids = "15bf"
 hwd_product_name_pattern = '(ROG Ally).*'
 priority = 6
-packages = 'inputplumber jupiter-hw-support steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
+packages = 'steam-powerbuttond-git inputplumber jupiter-hw-support steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime'
 post_install = """
     echo "Ally chwd installing..."
-    services=("inputplumber")
+    services=("inputplumber" "steam-powerbuttond")
     maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
     echo "Enabling services..."
     for service in ${services[@]}; do
