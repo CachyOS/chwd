@@ -582,14 +582,14 @@ dependencies = [
 
 [[package]]
 name = "libpci"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "libc",
- "libpci-sys",
+ "libpci-c-sys",
 ]
 
 [[package]]
-name = "libpci-sys"
+name = "libpci-c-sys"
 version = "0.1.1"
 dependencies = [
  "bindgen",

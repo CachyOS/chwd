@@ -108,7 +108,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "libpci-sys"
+name = "libpci-c-sys"
 version = "0.1.1"
 dependencies = [
  "bindgen",

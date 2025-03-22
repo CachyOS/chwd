@@ -1,6 +1,6 @@
 [package]
 name = "libpci"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
 license = "GPL-3.0-only"
@@ -12,13 +12,13 @@ repository = "https://github.com/CachyOS/chwd"
 categories = ["api-bindings"]
 
 [dependencies]
-libpci-sys = { path = "../libpci-sys", default-features = false, version = "0.1.0" }
+libpci-c-sys = { path = "../libpci-sys", default-features = false, version = "0.1.1" }
 libc = { default-features = false, version = "0.2" }
 
 [features]
 default = []
 
-std = ["libpci-sys/std"]
+std = ["libpci-c-sys/std"]
 
 [[example]]
 name = "example1"

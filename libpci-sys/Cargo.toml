@@ -1,5 +1,5 @@
 [package]
-name = "libpci-sys"
+name = "libpci-c-sys"
 version = "0.1.1"
 edition = "2021"
 authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
