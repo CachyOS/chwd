@@ -2,7 +2,7 @@
 name = "chwd"
 version = "1.12.1"
 authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
-license = "GPLv3"
+license = "GPL-3.0-only"
 edition = "2021"
 
 [dependencies]
