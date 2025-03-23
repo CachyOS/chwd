@@ -20,6 +20,7 @@ mod kernel;
 
 use clap::Parser;
 use dialoguer::Confirm;
+use itertools::Itertools;
 use subprocess::{Exec, Redirection};
 
 #[derive(Parser, Debug)]
@@ -92,7 +93,7 @@ fn show_installed_kernels(kernels: &[kernel::Kernel]) {
         current_kernel
     );
     println!("The following kernels are installed in your system:");
-    for kernel in kernels {
+    for kernel in kernels.iter().unique_by(|p| &p.name) {
         if !kernel.is_installed().unwrap() {
             continue;
         }
