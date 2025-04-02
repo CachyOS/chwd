@@ -15,7 +15,7 @@ class_ids = "0300 0302"
 vendor_ids = "10de"
 priority = 9
 packages = 'cuda cudnn nccl python-pytorch-opt-cuda ollama-cuda tensorflow-opt-cuda python-tensorflow-opt-cuda'
-device_name_pattern = '(AD|GV|TU|GA|GH|GM|GP)\w+'
+device_name_pattern = '(GB|AD|GV|TU|GA|GH|GM|GP)\w+'
 #device_ids = '*'
 
 [rocm-ai-sdk]
