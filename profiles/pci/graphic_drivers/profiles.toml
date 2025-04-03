@@ -251,7 +251,7 @@ class_ids = "0300 0302"
 vendor_ids = "8086"
 device_ids = "*"
 priority = 4
-packages = 'mesa lib32-mesa vulkan-intel lib32-vulkan-intel'
+packages = 'mesa lib32-mesa vulkan-intel lib32-vulkan-intel gst-plugin-va'
 conditional_packages = """
 pkgs=""
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
@@ -286,7 +286,7 @@ class_ids = "0300 0302 0380"
 vendor_ids = "1002"
 device_ids = "*"
 priority = 4
-packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon xf86-video-amdgpu'
+packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon xf86-video-amdgpu gst-plugin-va'
 conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
