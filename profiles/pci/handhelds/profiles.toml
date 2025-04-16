@@ -110,6 +110,20 @@ post_install = """
     for mask in ${maskservices[@]}; do
         systemctl mask "${mask}.service"
     done
+    echo "Installing audio profile..."
+    product_name="$(cat /sys/devices/virtual/dmi/id/product_name)"
+    mkdir -p /etc/pipewire/pipewire.conf.d /etc/wireplumber/wireplumber.conf.d/
+    ln -s /usr/share/cachyos-handheld/rog-ally/pipewire/filter-chain.conf \
+        /etc/pipewire/pipewire.conf.d
+    if [[ "$product_name" =~ RC71L ]]; then
+        ln -s /usr/share/cachyos-handheld/rog-ally/wireplumber/alsa-card0.conf \
+            /etc/wireplumber/wireplumber.conf.d
+    else
+        ln -s /usr/share/cachyos-handheld/rog-ally/wireplumber/alsa-card0-x.conf \
+            /etc/wireplumber/wireplumber.conf.d
+    fi
+    ln -s /usr/share/cachyos-handheld/common/wireplumber/alsa-card1.conf \
+        /etc/wireplumber/wireplumber.conf.d
 """
 post_remove = """
     echo "Ally chwd removing..."
@@ -123,6 +137,10 @@ post_remove = """
     for mask in ${maskservices[@]}; do
         systemctl unmask "${mask}.service"
     done
+    echo "Removing audio profile..."
+    rm -f /etc/pipewire/pipewire.conf.d/filter-chain.conf
+    rm -f /etc/wireplumber/wireplumber.conf.d/alsa-card0{,-x}.conf
+    rm -f /etc/wireplumber/wireplumber.conf.d/alsa-card1.conf
 """
 
 [phoenix-legion-go]
