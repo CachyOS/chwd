@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 toml = "0.8"
-libpci = { path = "libpci", version = "0.1.1" }
+libpci = { path = "libpci", version = "0.1.2" }
 subprocess = "0.2"
 colored = "3"
 log = "0.4"

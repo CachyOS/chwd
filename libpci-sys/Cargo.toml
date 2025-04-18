@@ -1,6 +1,6 @@
 [package]
 name = "libpci-c-sys"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
 license = "GPL-3.0-only"
