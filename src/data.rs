@@ -137,7 +137,8 @@ fn fill_profiles(
 
 fn fill_devices() -> Option<ListOfDevicesT> {
     #[allow(clippy::uninlined_format_args)]
-    let from_hex = |hex_number: u32, fill: usize| -> String { format!("{:01$x}", hex_number, fill) };
+    let from_hex =
+        |hex_number: u32, fill: usize| -> String { format!("{:01$x}", hex_number, fill) };
 
     // Initialize
     let mut pacc = libpci::PCIAccess::new(true);
