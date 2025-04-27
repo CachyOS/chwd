@@ -79,7 +79,7 @@ pub fn parse_profiles(file_path: &str) -> Result<Vec<Profile>> {
             if !nested_value.is_table() {
                 continue;
             }
-            let nested_profile_name = format!("{}.{}", key, nested_key);
+            let nested_profile_name = format!("{key}.{nested_key}");
             let mut nested_value_table = nested_value.as_table().unwrap().clone();
             merge_table_left(&mut nested_value_table, value_table);
             let nested_profile = parse_profile(&nested_value_table, &nested_profile_name);
@@ -119,7 +119,7 @@ pub fn get_invalid_profiles(file_path: &str) -> Result<Vec<String>> {
             if !nested_value.is_table() {
                 continue;
             }
-            let nested_profile_name = format!("{}.{}", key, nested_key);
+            let nested_profile_name = format!("{key}.{nested_key}");
             let mut nested_value_table = nested_value.as_table().unwrap().clone();
             merge_table_left(&mut nested_value_table, value_table);
             let nested_profile = parse_profile(&nested_value_table, &nested_profile_name);
@@ -180,7 +180,7 @@ pub fn parse_profiles_merged(file_path: &str) -> Result<Vec<Profile>> {
             if !nested_value.is_table() {
                 continue;
             }
-            let nested_profile_name = format!("{}.{}", key, nested_key);
+            let nested_profile_name = format!("{key}.{nested_key}");
             let mut nested_value_table = nested_value.as_table().unwrap().clone();
             merge_table_left(&mut nested_value_table, value_table);
             let nested_profile = parse_profile(&nested_value_table, &nested_profile_name);

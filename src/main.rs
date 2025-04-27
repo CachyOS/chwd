@@ -41,7 +41,7 @@ fn main() -> anyhow::Result<()> {
     let requested_languages = DesktopLanguageRequester::requested_languages();
     let localizer = crate::localization::localizer();
     if let Err(error) = localizer.select(&requested_languages) {
-        eprintln!("Error while loading languages for library_fluent {}", error);
+        eprintln!("Error while loading languages for library_fluent {error}");
     }
 
     // initialize the logger
