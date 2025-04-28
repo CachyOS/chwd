@@ -23,6 +23,12 @@
 #DEVICEIDS=15bf
 #83E1
 
+# MSI Claw 2nd Generation (Lunar Lake)
+# CLASSIDS=0300
+# VENDORIDS=8086
+# DEVICEIDS=64a0
+# Claw 8 AI+ A2VM
+
 [steam-deck-jupiter]
 desc = 'Valve Steam Deck LCD'
 class_ids = "0300"
@@ -186,3 +192,12 @@ post_remove = """
     rm -f /etc/pipewire/pipewire.conf.d/filter-chain.conf
     rm -f /etc/wireplumber/wireplumber.conf.d/alsa-card{0,1}.conf
 """
+
+[lunar-msi-claw]
+desc = 'MSI Claw Lunar Lake'
+class_ids = "0300"
+vendor_ids = "8086"
+device_ids = "64a0"
+hwd_product_name_pattern = '(A2VM)'
+priority = 6
+packages = 'hhd hhd-ui adjustor jupiter-hw-support steam cachyos-handheld'
