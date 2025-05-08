@@ -229,7 +229,7 @@ priority = 18
 packages = 'mesa lib32-mesa vulkan-nouveau'
 conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
-    echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
+    echo "opencl-mesa lib32-opencl-mesa"
 fi
 """
 post_install = """
@@ -255,7 +255,7 @@ packages = 'mesa lib32-mesa vulkan-intel lib32-vulkan-intel gst-plugin-va'
 conditional_packages = """
 pkgs=""
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
-    pkgs+="opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
+    pkgs+="opencl-mesa lib32-opencl-mesa"
 fi
 
 device_id="$(lspci -d "8086:*:030x" -n | cut -d" " -f3 | cut -d":" -f2 | head -n1)"
@@ -289,7 +289,7 @@ priority = 4
 packages = 'mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon xf86-video-amdgpu gst-plugin-va'
 conditional_packages = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
-    echo "opencl-rusticl-mesa lib32-opencl-rusticl-mesa"
+    echo "opencl-mesa lib32-opencl-mesa"
 fi
 """
 post_install = """
