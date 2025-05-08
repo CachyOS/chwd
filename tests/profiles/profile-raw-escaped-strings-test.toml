@@ -5,7 +5,7 @@ desc = "Test profile"
 device_ids = "1435 163f"
 device_name_pattern = '(AD)\w+'
 hwd_product_name_pattern = '(Ally)\w+'
-packages = "opencl-rusticl-mesa lib32-opencl-rusticl-mesa rocm-opencl-runtime"
+packages = "opencl-mesa lib32-opencl-mesa rocm-opencl-runtime"
 post_install = '''
     echo "Steam Deck chwd installing..."
     username=$(id -nu 1000)
