@@ -100,12 +100,7 @@ priority = 6
 packages = 'steamos-powerbuttond inputplumber jupiter-hw-support steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
 post_install = """
     echo "Ally chwd installing..."
-    services=("inputplumber" "inputplumber-suspend")
     maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
-    echo "Enabling services..."
-    for service in ${services[@]}; do
-        systemctl enable --now "${service}.service"
-    done
     echo "Masking potentially conflicting services"
     for mask in ${maskservices[@]}; do
         systemctl mask "${mask}.service"
@@ -127,12 +122,7 @@ post_install = """
 """
 post_remove = """
     echo "Ally chwd removing..."
-    services=("inputplumber" "inputplumber-suspend")
     maskservices=("jupiter-biosupdate" "jupiter-controller-update" "jupiter-fan-control")
-    echo "Disabling services..."
-    for service in ${services[@]}; do
-        systemctl disable "${service}.service"
-    done
     echo "Unmasking potentially conflicting services"
     for mask in ${maskservices[@]}; do
         systemctl unmask "${mask}.service"
