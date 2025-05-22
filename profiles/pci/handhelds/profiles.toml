@@ -30,7 +30,7 @@ vendor_ids = "1002"
 device_ids = "1435 163f"
 hwd_product_name_pattern = '(Jupiter)'
 priority = 6
-packages = 'powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
+packages = 'steamos-powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
 post_install = """
     echo "Steam Deck Jupiter chwd installing..."
     username=$(id -nu 1000)
@@ -63,7 +63,7 @@ vendor_ids = "1002"
 device_ids = "1435 163f"
 hwd_product_name_pattern = '(Galileo)'
 priority = 6
-packages = 'powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
+packages = 'steamos-powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
 #fbcon=vc:2-6 is not added here because it is added for all devices using calamares.
 post_install = """
     echo "Steam Deck Galileo chwd installing..."
