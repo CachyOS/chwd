@@ -33,27 +33,19 @@ priority = 6
 packages = 'steamos-powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
 post_install = """
     echo "Steam Deck Jupiter chwd installing..."
-    username=$(id -nu 1000)
     services=("jupiter-fan-control")
     echo "Enabling services..."
     for service in ${services[@]}; do
         systemctl enable --now "${service}.service"
     done
-    #kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
-    #echo "Adding required kernel parameters..."
-    #sed -i "s/LINUX_OPTIONS=\"[^\"]*/& ${kernelparams}/" /etc/sdboot-manage.conf
 """
 post_remove = """
     echo "Steam deck Jupiter chwd removing..."
-    username=$(id -nu 1000)
     services=("jupiter-fan-control")
     echo "Disabling services..."
     for service in ${services[@]}; do
         systemctl disable "${service}.service"
     done
-    #kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
-    #echo "Removing kernel parameters..."
-    #sed -i "s/${kernelparams}//" /etc/sdboot-manage.conf
 """
 
 [steam-deck-galileo]
@@ -67,27 +59,19 @@ packages = 'steamos-powerbuttond jupiter-hw-support jupiter-fan-control steamdec
 #fbcon=vc:2-6 is not added here because it is added for all devices using calamares.
 post_install = """
     echo "Steam Deck Galileo chwd installing..."
-    username=$(id -nu 1000)
     services=("jupiter-fan-control")
     echo "Enabling services..."
     for service in ${services[@]}; do
         systemctl enable --now "${service}.service"
     done
-    #kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
-    #echo "Adding required kernel parameters..."
-    #sed -i "s/LINUX_OPTIONS=\"[^\"]*/& ${kernelparams}/" /etc/sdboot-manage.conf
 """
 post_remove = """
     echo "Steam deck Galileo chwd removing..."
-    username=$(id -nu 1000)
     services=("jupiter-fan-control")
     echo "Disabling services..."
     for service in ${services[@]}; do
         systemctl disable "${service}.service"
     done
-    #kernelparams="amd_iommu=off amdgpu.gttsize=8128 spi_amd.speed_dev=1 audit=0 iomem=relaxed amdgpu.ppfeaturemask=0xffffffff"
-    #echo "Removing kernel parameters..."
-    #sed -i "s/${kernelparams}//" /etc/sdboot-manage.conf
 """
 
 [phoenix-rog-ally]
