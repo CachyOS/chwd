@@ -187,12 +187,12 @@ post_remove = """
     rm -f /etc/wireplumber/wireplumber.conf.d/alsa-card{0,1}.conf
 """
 
-[lunar-msi-claw]
-desc = 'MSI Claw Lunar Lake'
+[intel-msi-claw]
+desc = 'MSI Claw Intel'
 class_ids = "0300"
 vendor_ids = "8086"
-device_ids = "64a0"
-hwd_product_name_pattern = '(A2VM)'
+device_ids = "64a0 7d55"
+hwd_product_name_pattern = '(A2VM|A1M)'
 priority = 6
 packages = 'inputplumber steamos-manager steamos-powerbuttond cachyos-handheld mesa lib32-mesa vulkan-intel lib32-vulkan-intel intel-media-driver'
 post_install = """
