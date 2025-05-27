@@ -1,13 +1,13 @@
-[steam-deck-jupiter]
-desc = 'Valve Steam Deck LCD'
+[vangogh-steam-deck]
+desc = 'Valve Steam Deck'
 class_ids = "0300"
 vendor_ids = "1002"
 device_ids = "1435 163f"
-hwd_product_name_pattern = '(Jupiter)'
+hwd_product_name_pattern = '(Jupiter|Galileo)'
 priority = 6
 packages = 'steamos-powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
 post_install = """
-    echo "Steam Deck Jupiter chwd installing..."
+    echo "Steam Deck chwd installing..."
     services=("jupiter-fan-control")
     echo "Enabling services..."
     for service in ${services[@]}; do
@@ -15,32 +15,7 @@ post_install = """
     done
 """
 post_remove = """
-    echo "Steam deck Jupiter chwd removing..."
-    services=("jupiter-fan-control")
-    echo "Disabling services..."
-    for service in ${services[@]}; do
-        systemctl disable "${service}.service"
-    done
-"""
-
-[steam-deck-galileo]
-desc = 'Valve Steam Deck OLED'
-class_ids = "0300"
-vendor_ids = "1002"
-device_ids = "1435 163f"
-hwd_product_name_pattern = '(Galileo)'
-priority = 6
-packages = 'steamos-powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
-post_install = """
-    echo "Steam Deck Galileo chwd installing..."
-    services=("jupiter-fan-control")
-    echo "Enabling services..."
-    for service in ${services[@]}; do
-        systemctl enable --now "${service}.service"
-    done
-"""
-post_remove = """
-    echo "Steam deck Galileo chwd removing..."
+    echo "Steam Deck chwd removing..."
     services=("jupiter-fan-control")
     echo "Disabling services..."
     for service in ${services[@]}; do
