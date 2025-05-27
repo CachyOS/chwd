@@ -1,28 +1,3 @@
-#Steam Deck's
-#CLASSIDS=0300
-#VENDORIDS=1002
-#DEVICEIDS=1435 (oled), 163f (lcd)
-#Galileo (OLED)
-#Jupiter (LCD)
-
-#ASUS Rog Ally
-#CLASSIDS=0300
-#VENDORIDS=1002
-#DEVICEIDS=15bf
-#ROG Ally RC71L
-
-#ASUS Rog Ally X
-#CLASSIDS=0300
-#VENDORIDS=1002
-#DEVICEIDS=15bf
-#ROG Ally X RC72LA_RC72LA
-
-#Lenovo Legion GO APU
-#CLASSIDS=0300
-#VENDORIDS=1002
-#DEVICEIDS=15bf
-#83E1
-
 [steam-deck-jupiter]
 desc = 'Valve Steam Deck LCD'
 class_ids = "0300"
@@ -56,7 +31,6 @@ device_ids = "1435 163f"
 hwd_product_name_pattern = '(Galileo)'
 priority = 6
 packages = 'steamos-powerbuttond jupiter-hw-support jupiter-fan-control steamdeck-dsp steam cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
-#fbcon=vc:2-6 is not added here because it is added for all devices using calamares.
 post_install = """
     echo "Steam Deck Galileo chwd installing..."
     services=("jupiter-fan-control")
