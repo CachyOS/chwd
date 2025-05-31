@@ -5,7 +5,7 @@ vendor_ids = "1002"
 device_ids = "1435 163f"
 hwd_product_name_pattern = '(Jupiter|Galileo)'
 priority = 6
-packages = 'steamos-powerbuttond jupiter-fan-control steamdeck-dsp cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
+packages = 'steamos-manager steamos-powerbuttond jupiter-fan-control steamdeck-dsp cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
 post_install = """
     echo "Steam Deck chwd installing..."
     services=("jupiter-fan-control")
@@ -30,7 +30,7 @@ vendor_ids = "1002"
 device_ids = "15bf 15c8"
 hwd_product_name_pattern = '(ROG Ally).*'
 priority = 6
-packages = 'steamos-powerbuttond inputplumber cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
+packages = 'steamos-manager steamos-powerbuttond inputplumber cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
 post_install = """
     echo "Ally chwd installing..."
     echo "Installing audio profile..."
