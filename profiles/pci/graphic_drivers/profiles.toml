@@ -321,7 +321,7 @@ class_ids = "0300"
 vendor_ids = "80ee 15AD 1af4 1b36 1013 1234"
 device_ids = "*"
 priority = 5
-packages = 'virtualbox-guest-utils xf86-video-vmware open-vm-tools xf86-input-vmmouse spice-vdagent qemu-guest-agent vulkan-virtio gtkmm3'
+packages = 'virtualbox-guest-utils open-vm-tools xf86-input-vmmouse spice-vdagent qemu-guest-agent vulkan-virtio gtkmm3'
 post_install = """
     if [ "$(systemd-detect-virt)" = "oracle" ]; then
         # Virtualbox detected
