@@ -209,7 +209,11 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         post_remove: node.get("post_remove").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
         pre_install: node.get("pre_install").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
         pre_remove: node.get("pre_remove").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
-        conditional_packages: node.get("conditional_packages").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
+        conditional_packages: node
+            .get("conditional_packages")
+            .and_then(|x| x.as_str())
+            .unwrap_or("")
+            .to_owned(),
         desc: node.get("desc").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
         priority: node.get("priority").and_then(|x| x.as_integer()).unwrap_or(0) as i32,
         hwd_ids: vec![Default::default()],
@@ -394,7 +398,8 @@ fn profile_into_toml(profile: &Profile) -> toml::Table {
         table.insert("pre_remove".to_owned(), profile.pre_remove.clone().into());
     }
     if !profile.conditional_packages.is_empty() {
-        table.insert("conditional_packages".to_owned(), profile.conditional_packages.clone().into());
+        table
+            .insert("conditional_packages".to_owned(), profile.conditional_packages.clone().into());
     }
     if let Some(dev_name_pattern) = &profile.device_name_pattern {
         table.insert("device_name_pattern".to_owned(), dev_name_pattern.clone().into());
@@ -457,8 +462,8 @@ mod tests {
         assert_eq!(parsed_profiles[0].hwd_ids, hwd_ids);
         assert!(!parsed_profiles[0].post_install.is_empty());
         assert!(!parsed_profiles[0].post_remove.is_empty());
-        assert!(!parsed_profiles[0].pre_install.is_empty());
-        assert!(!parsed_profiles[0].pre_remove.is_empty());
+        assert!(parsed_profiles[0].pre_install.is_empty());
+        assert!(parsed_profiles[0].pre_remove.is_empty());
 
         assert_eq!(parsed_profiles[1].prof_path, prof_path);
         assert_eq!(parsed_profiles[1].name, "nvidia-dkms");
@@ -475,8 +480,8 @@ mod tests {
         assert_eq!(parsed_profiles[1].gc_versions, None);
         assert!(!parsed_profiles[1].post_install.is_empty());
         assert!(!parsed_profiles[1].post_remove.is_empty());
-        assert!(!parsed_profiles[1].pre_install.is_empty());
-        assert!(!parsed_profiles[1].pre_remove.is_empty());
+        assert!(parsed_profiles[1].pre_install.is_empty());
+        assert!(parsed_profiles[1].pre_remove.is_empty());
     }
 
     #[test]
@@ -509,7 +514,7 @@ mod tests {
             parsed_profiles[0].device_name_pattern,
             Some("((GM|GP)+[0-9]+[^M]*\\s.*)".to_owned())
         );
-        assert!(!parsed_profiles[0].conditional_packages.is_empty());
+        assert!(parsed_profiles[0].conditional_packages.is_empty());
         assert_eq!(parsed_profiles[0].hwd_product_name_pattern, None);
         assert_eq!(parsed_profiles[0].hwd_ids, hwd_ids);
         assert_eq!(parsed_profiles[0].gc_versions, None);
