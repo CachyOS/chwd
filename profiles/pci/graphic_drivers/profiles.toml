@@ -29,7 +29,7 @@ conditional_packages = """
 
     for kernel in $kernels; do
         case "$kernel" in
-            *-nvidia-open) modules+=" ${kernel}";;
+            *-nvidia-open|*-nvidia) modules+=" ${kernel}";;
             *-headers|*-zfs|*-nvidia|*-dbg);;
             *) packages+=" ${kernel}-nvidia-open";;
         esac
