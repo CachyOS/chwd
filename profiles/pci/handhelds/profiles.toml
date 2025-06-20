@@ -72,14 +72,6 @@ post_install = """
     for service in ${services[@]}; do
         systemctl enable --now "${service}.service"
     done
-    echo "Installing audio profile..."
-    mkdir -p /etc/pipewire/pipewire.conf.d /etc/wireplumber/wireplumber.conf.d
-    ln -s /usr/share/cachyos-handheld/legion-go/pipewire/filter-chain.conf \
-        /etc/pipewire/pipewire.conf.d
-    ln -s /usr/share/cachyos-handheld/legion-go/wireplumber/alsa-card0.conf \
-        /etc/wireplumber/wireplumber.conf.d
-    ln -s /usr/share/cachyos-handheld/common/wireplumber/alsa-card1.conf \
-        /etc/wireplumber/wireplumber.conf.d
 """
 post_remove = """
     echo "Legion go chwd removing..."
@@ -89,9 +81,6 @@ post_remove = """
     for service in ${services[@]}; do
         systemctl disable "${service}.service"
     done
-    echo "Removing audio profile.."
-    rm -f /etc/pipewire/pipewire.conf.d/filter-chain.conf
-    rm -f /etc/wireplumber/wireplumber.conf.d/alsa-card{0,1}.conf
 """
 
 [intel-msi-claw]
