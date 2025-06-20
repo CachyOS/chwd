@@ -175,10 +175,17 @@ device_ids = '>/var/lib/chwd/ids/nvidia-470.ids'
 packages = 'nvidia-470xx-dkms nvidia-470xx-utils nvidia-470xx-settings opencl-nvidia-470xx vulkan-icd-loader lib32-nvidia-470xx-utils lib32-opencl-nvidia-470xx lib32-vulkan-icd-loader libva-nvidia-driver'
 conditional_packages = """
     # Trying to determine the laptop
+    packages=""
     device_type="$(cat /sys/devices/virtual/dmi/id/chassis_type)"
     if ((device_type >= 8 && device_type <= 11)); then
-        echo "nvidia-prime switcheroo-control"
+        packages+=" nvidia-prime switcheroo-control"
     fi
+
+    if pacman -Qqs plasma-desktop &>/dev/null; then
+        packages+=" plasma-x11-session"
+    fi
+
+    echo "$packages"
 """
 post_install = """
     # Trying to determine the laptop
@@ -208,6 +215,11 @@ vendor_ids = "10de"
 class_ids = "0300 0380"
 packages = 'nvidia-390xx-dkms  nvidia-390xx-utils nvidia-390xx-settings opencl-nvidia-390xx lib32-nvidia-390xx-utils lib32-opencl-nvidia-390xx'
 device_ids = '>/var/lib/chwd/ids/nvidia-390.ids'
+conditional_packages = """
+    if pacman -Qqs plasma-desktop &>/dev/null; then
+        echo "plasma-x11-session"
+    fi
+"""
 post_install = """
     mkdir -p /etc/sddm.conf.d
     cat << EOF >/etc/sddm.conf.d/01-wayland.conf
