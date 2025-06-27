@@ -83,6 +83,15 @@ post_remove = """
     done
 """
 
+[amd-legion-go-s]
+desc = 'Lenovo Legion Go S'
+class_ids = "0300"
+vendor_ids = "1002"
+device_ids = "1681 15bf"
+hwd_product_name_pattern = '(83L3|83N6|83Q2|83Q3)'
+priority = 6
+packages = 'inputplumber steamos-manager steamos-powerbuttond cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
+
 [intel-msi-claw]
 desc = 'MSI Claw Intel'
 class_ids = "0300"
