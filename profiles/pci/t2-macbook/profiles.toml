@@ -24,7 +24,7 @@ EOF
 
     if pacman -Qs grub &> /dev/null ; then
         echo "GRUB is installed. Generating the GRUB configuration file..."
-        sed -i "s/GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*/& ${kernelparams}/" /etc/defaut/grub
+        sed -i "s/GRUB_CMDLINE_LINUX_DEFAULT=\"[^\"]*/& ${kernelparams}/" /etc/default/grub
         grub-mkconfig -o /boot/grub/grub.cfg
     fi
     
