@@ -4,7 +4,7 @@ class_ids = "0200 0280 0282"
 vendor_ids = "14E4 14A4"
 device_ids = "4311 4312 4315 4727 4328 4329 432A 432B 432C 432D 0576 4353 4357 4358 4359 4365 4331 43B1 43A0 4360"
 priority = 1
-packages = 'broadcom-wl-dkms'
+packages = 'broadcom-wl-dkms linux-firmware-broadcom'
 post_install = """
     cat <<EOF >/etc/modprobe.d/01-chwd-net-blacklist.conf
 # Do not load modules on boot.
