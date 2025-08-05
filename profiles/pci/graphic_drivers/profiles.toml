@@ -172,7 +172,7 @@ priority = 14
 class_ids = "0300 0302 0380"
 vendor_ids = "10de"
 device_ids = '>/var/lib/chwd/ids/nvidia-470.ids'
-packages = 'nvidia-470xx-dkms nvidia-470xx-utils nvidia-470xx-settings opencl-nvidia-470xx vulkan-icd-loader lib32-nvidia-470xx-utils lib32-opencl-nvidia-470xx lib32-vulkan-icd-loader libva-nvidia-driver linux-firmware-nvidia'
+packages = 'nvidia-470xx-dkms nvidia-470xx-utils nvidia-470xx-settings opencl-nvidia-470xx vulkan-icd-loader lib32-nvidia-470xx-utils lib32-opencl-nvidia-470xx lib32-vulkan-icd-loader libva-nvidia-driver'
 conditional_packages = """
     # Trying to determine the laptop
     packages=""
