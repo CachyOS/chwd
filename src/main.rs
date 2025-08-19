@@ -94,20 +94,8 @@ fn main() -> anyhow::Result<()> {
 
     // Check
     if let Some(profile) = &argstruct.check {
-        let working_profile = get_available_profile(&mut data_obj, profile);
-        if working_profile.is_none() {
-            let working_profile = get_db_profile(&data_obj, profile);
-            if working_profile.is_none() {
-                console_writer::print_error_msg!(
-                    "profile-not-exist",
-                    profile_name = profile
-                );
-                anyhow::bail!("Error occurred");
-            }
-            console_writer::print_error_msg!("no-matching-device", profile_name = profile);
-            anyhow::bail!("Error occurred");
-        }
-
+        // ignore returned profile
+        let _ = get_working_profile(&mut data_obj, profile)?;
         return Ok(());
     }
 
@@ -123,24 +111,12 @@ fn main() -> anyhow::Result<()> {
 
     for profile_name in working_profiles.iter() {
         if argstruct.install.is_some() {
-            let working_profile = get_available_profile(&mut data_obj, profile_name);
-            if working_profile.is_none() {
-                let working_profile = get_db_profile(&data_obj, profile_name);
-                if working_profile.is_none() {
-                    console_writer::print_error_msg!(
-                        "profile-not-exist",
-                        profile_name = profile_name
-                    );
-                    anyhow::bail!("Error occurred");
-                }
-                console_writer::print_error_msg!("no-matching-device", profile_name = profile_name);
-                anyhow::bail!("Error occurred");
-            }
+            let working_profile = get_working_profile(&mut data_obj, profile_name)?;
 
             if !perform_transaction(
                 &mut data_obj,
                 &argstruct,
-                &working_profile.unwrap(),
+                &working_profile,
                 Transaction::Install,
                 argstruct.force,
             ) {
@@ -265,6 +241,20 @@ fn get_installed_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Pr
     // Get the right profiles
     let installed_profiles = &data.installed_profiles;
     misc::find_profile(profile_name, installed_profiles)
+}
+
+fn get_working_profile(data: &mut data::Data, profile_name: &str) -> anyhow::Result<Arc<Profile>> {
+    let working_profile = get_available_profile(data, profile_name);
+    if working_profile.is_none() {
+        let working_profile = get_db_profile(data, profile_name);
+        if working_profile.is_none() {
+            console_writer::print_error_msg!("profile-not-exist", profile_name = profile_name);
+            anyhow::bail!("Error occurred");
+        }
+        console_writer::print_error_msg!("no-matching-device", profile_name = profile_name);
+        anyhow::bail!("Error occurred");
+    }
+    Ok(working_profile.unwrap())
 }
 
 pub fn run_script(
