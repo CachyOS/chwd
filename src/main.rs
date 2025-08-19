@@ -95,7 +95,7 @@ fn main() -> anyhow::Result<()> {
     // Check
     if let Some(profile) = &argstruct.check {
         // ignore returned profile
-        let _ = get_working_profile(&mut data_obj, profile)?;
+        let _ = get_working_profile(&data_obj, profile)?;
         return Ok(());
     }
 
@@ -111,7 +111,7 @@ fn main() -> anyhow::Result<()> {
 
     for profile_name in working_profiles.iter() {
         if argstruct.install.is_some() {
-            let working_profile = get_working_profile(&mut data_obj, profile_name)?;
+            let working_profile = get_working_profile(&data_obj, profile_name)?;
 
             if !perform_transaction(
                 &mut data_obj,
@@ -204,17 +204,16 @@ fn prepare_autoconfigure(
     profiles_name
 }
 
-fn get_available_profile(data: &mut data::Data, profile_name: &str) -> Option<Arc<Profile>> {
+fn get_available_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Profile>> {
     // Get the right devices
-    let devices = &mut data.pci_devices;
-
-    for device in devices.iter_mut() {
-        let available_profiles = &mut device.available_profiles;
+    let devices = &data.pci_devices;
+    for device in devices {
+        let available_profiles = &device.available_profiles;
         if available_profiles.is_empty() {
             continue;
         }
 
-        let available_profile = available_profiles.iter_mut().find(|x| x.name == profile_name);
+        let available_profile = available_profiles.iter().find(|x| x.name == profile_name);
         if let Some(available_profile) = available_profile {
             return Some(Arc::clone(available_profile));
         }
@@ -234,7 +233,7 @@ fn get_installed_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Pr
     misc::find_profile(profile_name, installed_profiles)
 }
 
-fn get_working_profile(data: &mut data::Data, profile_name: &str) -> anyhow::Result<Arc<Profile>> {
+fn get_working_profile(data: &data::Data, profile_name: &str) -> anyhow::Result<Arc<Profile>> {
     let working_profile = get_available_profile(data, profile_name);
     if working_profile.is_none() {
         let working_profile = get_db_profile(data, profile_name);
