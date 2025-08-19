@@ -92,10 +92,30 @@ fn main() -> anyhow::Result<()> {
         prepare_autoconfigure(&data_obj, &mut argstruct, &autoconf_class_id);
     working_profiles.append(&mut prepared_profiles);
 
+    // Check
+    if let Some(profile) = &argstruct.check {
+        let working_profile = get_available_profile(&mut data_obj, profile);
+        if working_profile.is_none() {
+            let working_profile = get_db_profile(&data_obj, profile);
+            if working_profile.is_none() {
+                console_writer::print_error_msg!(
+                    "profile-not-exist",
+                    profile_name = profile
+                );
+                anyhow::bail!("Error occurred");
+            }
+            console_writer::print_error_msg!("no-matching-device", profile_name = profile);
+            anyhow::bail!("Error occurred");
+        }
+
+        return Ok(());
+    }
+
     // Transaction
     if !(argstruct.install.is_some() || argstruct.remove.is_some()) {
         return Ok(());
     }
+
     if !Uid::effective().is_root() {
         console_writer::print_error_msg!("root-operation");
         anyhow::bail!("Error occurred");
