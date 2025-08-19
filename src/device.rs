@@ -37,6 +37,19 @@ impl Device {
         let smth_handle_arc = |profile: &Profile| profile.clone();
         self.available_profiles.iter().map(|x| smth_handle_arc(x)).collect()
     }
+
+    pub fn device_info(&self) -> String {
+        format!(
+            "{} ({}:{}:{}) {} {} {}",
+            self.sysfs_busid,
+            self.class_id,
+            self.vendor_id,
+            self.device_id,
+            self.class_name,
+            self.vendor_name,
+            self.device_name
+        )
+    }
 }
 
 pub fn get_unique_devices(devices: &[Device]) -> Vec<Device> {

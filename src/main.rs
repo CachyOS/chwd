@@ -167,16 +167,7 @@ fn prepare_autoconfigure(
         found_device = true;
         let profile = device.available_profiles.first();
 
-        let device_info = format!(
-            "{} ({}:{}:{}) {} {} {}",
-            device.sysfs_busid,
-            device.class_id,
-            device.vendor_id,
-            device.device_id,
-            device.class_name,
-            device.vendor_name,
-            device.device_name
-        );
+        let device_info = device.device_info();
         if profile.is_none() {
             if autoconf_class_id != "any" {
                 log::warn!("No config found for device: {device_info}");
