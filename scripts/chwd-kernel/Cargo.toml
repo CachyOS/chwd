@@ -13,7 +13,7 @@ pacmanconf = "3"
 subprocess = "0.2"
 clap = { features = ["derive"], version = "4" }
 nix = { features = ["user"], default-features = false, version = "0.30" }
-dialoguer = { default-features = false, version = "0.11" }
+dialoguer = { default-features = false, version = "0.12" }
 itertools = "0.14"
 
 [profile.release]
