@@ -255,6 +255,14 @@ else
     pkgs+=" intel-media-driver"
 fi
 
+if grep -q "$device_id" /var/lib/chwd/ids/intel-media-sdk.ids 2>/dev/null; then
+    pkgs+=" intel-media-sdk"
+else
+    if ! grep -q "$device_id" /var/lib/chwd/ids/intel-vaapi.ids 2>/dev/null; then
+        pkgs+=" vpl-gpu-rt"
+    fi
+fi
+
 echo "$pkgs"
 """
 post_install = """
