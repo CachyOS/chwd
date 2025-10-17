@@ -195,7 +195,7 @@ class_ids = "0300 0302"
 vendor_ids = "10de"
 device_ids = '>/var/lib/chwd/ids/nouveau.ids'
 priority = 18
-packages = 'mesa lib32-mesa'
+packages = 'mesa lib32-mesa nouveau-fw'
 conditional_packages = """
 packages=""
 
