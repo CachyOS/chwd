@@ -195,11 +195,21 @@ class_ids = "0300 0302"
 vendor_ids = "10de"
 device_ids = '>/var/lib/chwd/ids/nouveau.ids'
 priority = 18
-packages = 'mesa lib32-mesa vulkan-nouveau linux-firmware-nvidia'
+packages = 'mesa lib32-mesa'
 conditional_packages = """
+packages=""
+
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
-    echo "opencl-mesa lib32-opencl-mesa"
+    packages+="opencl-mesa lib32-opencl-mesa"
 fi
+
+# Install vulkan-nouveau and linux-firmware-nvidia only for Kepler GPUs
+device_id="$(lspci -d "10de:*:030x" -n | cut -d" " -f3 | cut -d":" -f2 | head -n1)"
+if grep -q "$device_id" /var/lib/chwd/ids/nvidia-470.ids 2>/dev/null; then
+    packages+=" vulkan-nouveau linux-firmware-nvidia"
+fi
+
+echo "$packages"
 """
 post_install = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
