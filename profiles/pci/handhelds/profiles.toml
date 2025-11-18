@@ -121,6 +121,15 @@ post_remove = """
     rm -f /etc/limine-entry-tool.d/20-chwd.conf
 """
 
+[amd-xbox-rog-ally]
+desc = 'ASUS XBox ROG Ally & Ally X'
+class_ids = "0300 0380"
+vendor_ids = "1002"
+device_ids = "163f 150e"
+hwd_product_name_pattern = '(RC73YA|RC73XA)'
+priority = 6
+packages = 'steamos-manager steamos-powerbuttond inputplumber cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa'
+
 [intel-msi-claw]
 desc = 'MSI Claw Intel'
 class_ids = "0300"
