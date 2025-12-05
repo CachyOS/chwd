@@ -249,7 +249,7 @@ fi
 
 [intel]
 desc = "Mesa open source driver for Intel"
-class_ids = "0300 0302"
+class_ids = "0300 0302 0380"
 vendor_ids = "8086"
 device_ids = "*"
 priority = 4
