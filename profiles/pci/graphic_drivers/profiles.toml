@@ -93,12 +93,12 @@ post_remove = """
     rm -f /usr/lib/systemd/user-environment-generators/20-nvidia-rtd3-workaround
 """
 
-[nvidia-dkms]
-desc = 'Closed source NVIDIA drivers for Linux (Latest)'
+[nvidia-dkms-580xx]
+desc = 'Closed source NVIDIA drivers for Linux (580xx)'
 class_ids = "0300 0302 0380"
 vendor_ids = "10de"
 priority = 12
-packages = 'nvidia-utils egl-wayland nvidia-settings opencl-nvidia lib32-opencl-nvidia lib32-nvidia-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader'
+packages = 'nvidia-580xx-dkms nvidia-580xx-utils nvidia-580xx-settings opencl-nvidia-580xx lib32-opencl-nvidia-580xx lib32-nvidia-580xx-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader'
 device_ids = '>/var/lib/chwd/ids/nvidia-latest-closed.ids'
 conditional_packages = """
     kernels="$(pacman -Qqs "^linux-cachyos")"
@@ -106,15 +106,10 @@ conditional_packages = """
 
     for kernel in $kernels; do
         case "$kernel" in
-            *-headers|*-zfs|*-nvidia-open|*-dbg);;
-            *-nvidia) packages+=" ${kernel}";;
-            *) packages+=" ${kernel}-nvidia";;
+            *-headers|*-zfs|*-nvidia-open|*-dbg|*-nvidia);;
+            *) packages+=" ${kernel}-headers";;
         esac
     done
-
-    # Fallback if there are no kernels with pre-built modules
-    [ -z "$packages" ] && packages="nvidia-dkms"
-
 
     # Trying to determine the laptop
     device_type="$(cat /sys/devices/virtual/dmi/id/chassis_type)"
