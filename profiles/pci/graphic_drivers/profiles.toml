@@ -302,18 +302,6 @@ if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-mesa lib32-opencl-mesa"
 fi
 """
-post_install = """
-if [ -z "$(lspci -d "10de:*:030x")" ]; then
-    # Force the use of Rusticl, otherwise it will be just a stub
-    echo "export RUSTICL_ENABLE=radeonsi" > /etc/profile.d/opencl.sh
-    mkdir -p /etc/environment.d
-    echo "RUSTICL_ENABLE=radeonsi" > /etc/environment.d/30-opencl.conf
-fi
-"""
-post_remove = """
-rm -f /etc/profile.d/opencl.sh
-rm -f /etc/environment.d/30-opencl.conf
-"""
 
 [fallback]
 desc = 'Fallback profile'
