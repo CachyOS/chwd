@@ -4,9 +4,9 @@ version = 4
 
 [[package]]
 name = "alpm"
-version = "4.0.3"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e7af97d07874ead330d0d636e0953bfdb05973010bbf0ed996a600c283bcd05c"
+checksum = "65194002f3ee42412a21c9a4edf2de285cc0680575bcc7f026e698b52784fa95"
 dependencies = [
  "alpm-sys",
  "bitflags",
@@ -14,18 +14,18 @@ dependencies = [
 
 [[package]]
 name = "alpm-sys"
-version = "4.0.3"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b380d61cb56db2db0fc88072b77e760a107691521ac83012379d97d6d6e6f7ac"
+checksum = "7364aaf7673e679a2616e26c78af26b922b69afeba965333386f7d0400daf3a3"
 dependencies = [
  "pkg-config",
 ]
 
 [[package]]
 name = "alpm-utils"
-version = "4.0.1"
+version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a56cf9221faa08b5a59a9f429cc5338d8e77e22e1d7fe7d3179fc5c3acf7fc3"
+checksum = "a59a6ffb120311a82dd5569a3bfa0098db8a1c1d8b5ec568e97b61cff3b10729"
 dependencies = [
  "alpm",
  "pacmanconf",
