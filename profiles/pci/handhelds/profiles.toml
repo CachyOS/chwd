@@ -5,7 +5,7 @@ vendor_ids = "1002"
 device_ids = "1435 163f"
 hwd_product_name_pattern = '(Jupiter|Galileo)'
 priority = 6
-packages = 'steamos-manager steamos-powerbuttond jupiter-fan-control steamdeck-dsp cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
+packages = 'steamos-manager steamos-powerbuttond jupiter-fan-control steamdeck-dsp cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa'
 conditional_packages = """
     if grep -q 'Galileo' /sys/devices/virtual/dmi/id/product_name; then
         echo 'galileo-mura'
@@ -42,7 +42,7 @@ vendor_ids = "1002"
 device_ids = "15bf 15c8"
 hwd_product_name_pattern = '(ROG Ally).*'
 priority = 6
-packages = 'steamos-manager steamos-powerbuttond inputplumber cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
+packages = 'steamos-manager steamos-powerbuttond inputplumber cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa'
 post_install = """
     echo "Ally chwd installing..."
     echo "Installing audio profile..."
@@ -75,7 +75,7 @@ vendor_ids = "1002"
 device_ids = "15bf"
 hwd_product_name_pattern = '(83E1)'
 priority = 6
-packages = 'hhd hhd-ui adjustor cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
+packages = 'hhd hhd-ui adjustor cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa'
 post_install = """
     echo "Legion go chwd installing..."
     username=$(id -nu 1000)
@@ -109,7 +109,7 @@ vendor_ids = "1002"
 device_ids = "1681 15bf"
 hwd_product_name_pattern = '(83L3|83N6|83Q2|83Q3)'
 priority = 6
-packages = 'inputplumber steamos-manager steamos-powerbuttond cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa rocm-opencl-runtime'
+packages = 'inputplumber steamos-manager steamos-powerbuttond cachyos-handheld mesa lib32-mesa vulkan-radeon lib32-vulkan-radeon opencl-mesa lib32-opencl-mesa'
 post_install = """
     if [ -d /etc/limine-entry-tool.d ]; then
         cat << 'EOF' > /etc/limine-entry-tool.d/20-chwd.conf
@@ -137,7 +137,7 @@ vendor_ids = "8086"
 device_ids = "64a0 7d55"
 hwd_product_name_pattern = '(A2VM|A1M)'
 priority = 6
-packages = 'inputplumber steamos-manager steamos-powerbuttond cachyos-handheld mesa lib32-mesa vulkan-intel lib32-vulkan-intel intel-media-driver'
+packages = 'inputplumber steamos-manager steamos-powerbuttond cachyos-handheld mesa lib32-mesa vulkan-intel lib32-vulkan-intel intel-media-driver opencl-mesa lib32-opencl-mesa'
 post_install = """
     echo "Claw chwd installing..."
     echo msi-wmi-platform > /usr/lib/modules-load.d/chwd-msi-claw.conf
@@ -145,10 +145,17 @@ post_install = """
     mkdir -p /etc/wireplumber/wireplumber.conf.d
     ln -s /usr/share/cachyos-handheld/msi-claw/wireplumber/alsa-card0.conf \
         /etc/wireplumber/wireplumber.conf.d
+    echo "Installing OpenCL profile..."
+    echo "export RUSTICL_ENABLE=iris" > /etc/profile.d/opencl.sh
+    mkdir -p /etc/environment.d
+    echo "RUSTICL_ENABLE=iris" > /etc/environment.d/30-opencl.conf
 """
 post_remove = """
     echo "Claw chwd removing..."
     rm -f /usr/lib/modules-load.d/chwd-msi-claw.conf
     echo "Removing audio profile..."
     rm -f /etc/wireplumber/wireplumber.conf.d/alsa-card0.conf
+    echo "Removing Opencl profile..."
+    rm -f /etc/profile.d/opencl.sh
+    rm -f /etc/environment.d/30-opencl.conf
 """
