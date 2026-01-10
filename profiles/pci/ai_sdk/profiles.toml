@@ -33,7 +33,7 @@ device_ids = '*'
 priority = 9
 packages = 'rocm-hip-sdk python-pytorch-opt-rocm ollama-rocm tensorflow-opt python-tensorflow-opt chatbox'
 # https://docs.kernel.org/gpu/amdgpu/driver-misc.html
-gc_versions = '11.0.0 11.0.3 10.3.0 9.4.1 9.4.2 9.4.3'
+gc_versions = '12.0.0 11.0.0 11.0.3 10.3.0 9.4.1 9.4.2 9.4.3'
 post_install = """
   systemctl enable ollama.service
 """
