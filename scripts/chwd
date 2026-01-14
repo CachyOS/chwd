@@ -152,7 +152,7 @@ local function exec_hook(hooks, name)
     local hook = hooks[name]
 
     if not hook then
-        print("WARNING: An unknown hook is being called")
+        printf("WARNING: An unknown hook is being called: %s", name)
         return
     end
 
@@ -269,7 +269,7 @@ local function get_profile(profiles, name)
             end
 
             for hook_name, hook in pairs(profile.hooks) do
-                if hooks[hook_name] ~= "" then
+                if hooks[hook_name] then
                     if hook ~= "" then
                         hooks[hook_name] = hook
                     end
