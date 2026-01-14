@@ -37,6 +37,7 @@ pub struct Data {
 }
 
 impl Data {
+    #[must_use]
     pub fn new(is_ai_sdk: bool) -> Self {
         let mut res = Self {
             pci_devices: fill_devices().expect("Failed to init"),
@@ -51,7 +52,7 @@ impl Data {
 
     pub fn update_installed_profile_data(&mut self) {
         // Clear profile Vec's in each device element
-        for pci_device in self.pci_devices.iter_mut() {
+        for pci_device in &mut self.pci_devices {
             pci_device.installed_profiles.clear();
         }
 
@@ -78,7 +79,7 @@ impl Data {
     }
 
     fn update_profiles_data(&mut self) {
-        for pci_device in self.pci_devices.iter_mut() {
+        for pci_device in &mut self.pci_devices {
             pci_device.available_profiles.clear();
         }
 
@@ -109,7 +110,7 @@ fn fill_profiles(
         }
         let profiles = crate::profile::parse_profiles(&config_file_path)
             .expect("Urgent invalid profiles detected!");
-        for profile in profiles.into_iter() {
+        for profile in profiles {
             if profile.packages.is_empty() {
                 continue;
             }
@@ -161,17 +162,17 @@ fn fill_devices() -> Option<ListOfDevicesT> {
             class_name: item_class,
             device_name: item_device,
             vendor_name: item_vendor,
-            class_id: from_hex(iter.class_id()? as _, 4),
-            device_id: from_hex(iter.device_id()? as _, 4),
-            vendor_id: from_hex(iter.vendor_id()? as _, 4),
+            class_id: from_hex(iter.class_id()?.into(), 4),
+            device_id: from_hex(iter.device_id()?.into(), 4),
+            vendor_id: from_hex(iter.vendor_id()?.into(), 4),
             sysfs_busid: format!(
                 "{}:{}:{}.{}",
                 from_hex(iter.domain()? as _, 4),
-                from_hex(iter.bus()? as _, 2),
-                from_hex(iter.dev()? as _, 2),
+                from_hex(iter.bus()?.into(), 2),
+                from_hex(iter.dev()?.into(), 2),
                 iter.func()?,
             ),
-            sysfs_id: "".to_owned(),
+            sysfs_id: String::new(),
             available_profiles: vec![],
             installed_profiles: vec![],
         });
@@ -184,7 +185,7 @@ fn set_matching_profile(profile: &Profile, devices: &mut ListOfDevicesT, set_as_
     let found_indices: Vec<usize> = get_all_devices_of_profile(devices, profile);
 
     // Set config to all matching devices
-    for found_index in found_indices.into_iter() {
+    for found_index in found_indices {
         let found_device = devices.get_mut(found_index).unwrap();
         let to_be_added = if set_as_installed {
             &mut found_device.installed_profiles
@@ -200,7 +201,7 @@ fn set_matching_profiles(
     profiles: &ListOfProfilesT,
     set_as_installed: bool,
 ) {
-    for profile in profiles.iter() {
+    for profile in profiles {
         set_matching_profile(profile, devices, set_as_installed);
     }
 }
@@ -224,6 +225,7 @@ fn get_all_devices_from_gc_versions(
     found_indices
 }
 
+#[must_use]
 pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -> Vec<usize> {
     let mut found_indices = vec![];
 
@@ -252,7 +254,7 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
         return vec![];
     }
 
-    for hwd_id in profile.hwd_ids.iter() {
+    for hwd_id in &profile.hwd_ids {
         let mut found_device = false;
 
         // Check all devices

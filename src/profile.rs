@@ -57,6 +57,7 @@ impl Default for Profile {
 }
 
 impl Profile {
+    #[must_use]
     pub fn new() -> Self {
         Self { hwd_ids: vec![Default::default()], ..Default::default() }
     }
@@ -67,7 +68,7 @@ pub fn parse_profiles(file_path: &str) -> Result<Vec<Profile>> {
     let file_content = fs::read_to_string(file_path)?;
     let toml_table = file_content.parse::<toml::Table>()?;
 
-    for (key, value) in toml_table.iter() {
+    for (key, value) in &toml_table {
         if !value.is_table() {
             anyhow::bail!("the value is not table!");
         }
@@ -78,7 +79,7 @@ pub fn parse_profiles(file_path: &str) -> Result<Vec<Profile>> {
             continue;
         }
 
-        for (nested_key, nested_value) in value_table.iter() {
+        for (nested_key, nested_value) in value_table {
             if !nested_value.is_table() {
                 continue;
             }
@@ -106,7 +107,7 @@ pub fn get_invalid_profiles(file_path: &str) -> Result<Vec<String>> {
     let file_content = fs::read_to_string(file_path)?;
     let toml_table = file_content.parse::<toml::Table>()?;
 
-    for (key, value) in toml_table.iter() {
+    for (key, value) in &toml_table {
         if !value.is_table() {
             anyhow::bail!("the value is not table!");
         }
@@ -118,7 +119,7 @@ pub fn get_invalid_profiles(file_path: &str) -> Result<Vec<String>> {
             continue;
         }
 
-        for (nested_key, nested_value) in value_table.iter() {
+        for (nested_key, nested_value) in value_table {
             if !nested_value.is_table() {
                 continue;
             }
@@ -160,7 +161,7 @@ pub fn parse_profiles_merged(file_path: &str) -> Result<Vec<Profile>> {
     let file_content = fs::read_to_string(file_path)?;
     let toml_table = file_content.parse::<toml::Table>()?;
 
-    for (key, value) in toml_table.iter() {
+    for (key, value) in &toml_table {
         if !value.is_table() {
             anyhow::bail!("the value is not table!");
         }
@@ -179,7 +180,7 @@ pub fn parse_profiles_merged(file_path: &str) -> Result<Vec<Profile>> {
             continue;
         }
 
-        for (nested_key, nested_value) in value_table.iter() {
+        for (nested_key, nested_value) in value_table {
             if !nested_value.is_table() {
                 continue;
             }
@@ -201,8 +202,8 @@ pub fn parse_profiles_merged(file_path: &str) -> Result<Vec<Profile>> {
 
 fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     let mut profile = Profile {
-        is_ai_sdk: node.get("ai_sdk").and_then(|x| x.as_bool()).unwrap_or(false),
-        prof_path: "".to_owned(),
+        is_ai_sdk: node.get("ai_sdk").and_then(toml::Value::as_bool).unwrap_or(false),
+        prof_path: String::new(),
         name: profile_name.to_owned(),
         packages: node.get("packages").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
         post_install: node.get("post_install").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
@@ -215,7 +216,7 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
             .unwrap_or("")
             .to_owned(),
         desc: node.get("desc").and_then(|x| x.as_str()).unwrap_or("").to_owned(),
-        priority: node.get("priority").and_then(|x| x.as_integer()).unwrap_or(0) as i32,
+        priority: node.get("priority").and_then(toml::Value::as_integer).unwrap_or(0) as i32,
         hwd_ids: vec![Default::default()],
         device_name_pattern: node
             .get("device_name_pattern")
@@ -245,15 +246,18 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     if !profile.hwd_ids.last().unwrap().device_ids.is_empty() {
         profile.hwd_ids.push(Default::default());
     }
-    profile.hwd_ids.last_mut().unwrap().device_ids =
-        devids_val.split(' ').filter(|x| !x.is_empty()).map(|x| x.to_owned()).collect::<Vec<_>>();
+    profile.hwd_ids.last_mut().unwrap().device_ids = devids_val
+        .split(' ')
+        .filter(|x| !x.is_empty())
+        .map(std::borrow::ToOwned::to_owned)
+        .collect::<Vec<_>>();
     if !profile.hwd_ids.last().unwrap().class_ids.is_empty() {
         profile.hwd_ids.push(Default::default());
     }
     profile.hwd_ids.last_mut().unwrap().class_ids = conf_classids
         .split(' ')
         .filter(|x| !x.is_empty())
-        .map(|x| x.to_owned())
+        .map(std::borrow::ToOwned::to_owned)
         .collect::<Vec<_>>();
 
     if !conf_vendorids.is_empty() {
@@ -264,7 +268,7 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         profile.hwd_ids.last_mut().unwrap().vendor_ids = conf_vendorids
             .split(' ')
             .filter(|x| !x.is_empty())
-            .map(|x| x.to_owned())
+            .map(std::borrow::ToOwned::to_owned)
             .collect::<Vec<_>>();
     }
 
@@ -275,7 +279,7 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     };
 
     // Append * to all empty vectors
-    for hwd_id in profile.hwd_ids.iter_mut() {
+    for hwd_id in &mut profile.hwd_ids {
         append_star(&mut hwd_id.class_ids);
         append_star(&mut hwd_id.vendor_ids);
         append_star(&mut hwd_id.device_ids);
@@ -302,11 +306,12 @@ fn merge_table_left(lhs: &mut toml::Table, rhs: &toml::Table) {
     for (rhs_key, rhs_val) in rhs {
         // rhs key not found in lhs - direct move
         if lhs.get(rhs_key).is_none() {
-            lhs.insert(rhs_key.to_string(), rhs_val.clone());
+            lhs.insert(rhs_key.clone(), rhs_val.clone());
         }
     }
 }
 
+#[must_use]
 pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     // lets check manually if it does exist already in the profiles map
     // NOTE: instead of trying to overwrite profile, we return error
@@ -336,6 +341,7 @@ pub fn write_profile_to_file(file_path: &str, profile: &Profile) -> bool {
     fs::write(file_path, toml_string).is_ok()
 }
 
+#[must_use]
 pub fn remove_profile_from_file(file_path: &str, profile_name: &str) -> bool {
     // we cannot remove profile from file, if the file doesn't exist and therefore nothing to be
     // removed
@@ -369,7 +375,7 @@ pub fn remove_profile_from_file(file_path: &str, profile_name: &str) -> bool {
 fn replace_escaping_toml(profiles: &toml::Table) -> String {
     let mut toml_string = profiles.to_string();
 
-    for (profile_name, _) in profiles.iter() {
+    for (profile_name, _) in profiles {
         // Find escaped table name and replace with unescaped table name
         toml_string =
             toml_string.replace(&format!("[\"{profile_name}\"]"), &format!("[{profile_name}]"));
@@ -636,8 +642,7 @@ mod tests {
     #[test]
     fn inherited_profile_write_test() {
         let prof_path = "tests/profiles/children-profile.toml";
-        let prof_parsed_path =
-            "tests/profiles/inherited-profile.toml";
+        let prof_parsed_path = "tests/profiles/inherited-profile.toml";
         let parsed_profiles = parse_profiles(prof_path);
         assert!(parsed_profiles.is_ok());
         let parsed_profiles = parsed_profiles.unwrap();

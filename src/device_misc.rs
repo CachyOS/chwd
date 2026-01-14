@@ -19,7 +19,7 @@ use crate::{console_writer, fl, profile_misc};
 
 pub fn print_available_profiles_in_detail(devices: &[Device]) {
     let mut config_found = false;
-    for device in devices.iter() {
+    for device in devices {
         let available_profiles = &device.available_profiles;
         let installed_profiles = &device.installed_profiles;
         if available_profiles.is_empty() && installed_profiles.is_empty() {
@@ -40,14 +40,14 @@ pub fn print_available_profiles_in_detail(devices: &[Device]) {
         println!();
         if !installed_profiles.is_empty() {
             println!("  > {}:\n", fl!("installed"));
-            for installed_profile in installed_profiles.iter() {
+            for installed_profile in installed_profiles {
                 profile_misc::print_profile_details(installed_profile);
             }
             println!("\n");
         }
         if !available_profiles.is_empty() {
             println!("  > {}:\n", fl!("available"));
-            for available_profile in available_profiles.iter() {
+            for available_profile in available_profiles {
                 profile_misc::print_profile_details(available_profile);
             }
             println!("\n");

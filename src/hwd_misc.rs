@@ -14,6 +14,7 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+#[must_use]
 pub fn get_sysfs_busid_from_amdgpu_path(amdgpu_path: &str) -> &str {
     amdgpu_path.split('/')
         // Extract the 7th element (amdgpu id)
@@ -30,7 +31,7 @@ pub fn get_gc_versions() -> Option<Vec<(String, String)>> {
 
     let gc_versions = ip_match_paths
         .filter_map(Result::ok)
-        .filter_map(|path| path.to_str().map(|s| s.to_owned()))
+        .filter_map(|path| path.to_str().map(std::borrow::ToOwned::to_owned))
         .filter_map(|ip_match_path| {
             let sysfs_busid = get_sysfs_busid_from_amdgpu_path(&ip_match_path).to_owned();
 

@@ -19,12 +19,12 @@ use crate::profile::Profile;
 
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
-use comfy_table::*;
+use comfy_table::{ContentArrangement, Table};
 
 pub fn print_profile_details(profile: &Profile) {
     let mut class_ids = String::new();
     let mut vendor_ids = String::new();
-    for hwd_id in profile.hwd_ids.iter() {
+    for hwd_id in &profile.hwd_ids {
         vendor_ids.push_str(&hwd_id.vendor_ids.join(" "));
         class_ids.push_str(&hwd_id.class_ids.join(" "));
     }

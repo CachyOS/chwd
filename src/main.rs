@@ -25,7 +25,7 @@ pub mod misc;
 pub mod profile_misc;
 
 use chwd::profile::Profile;
-use chwd::*;
+use chwd::{consts, data, device, profile};
 use misc::Transaction;
 
 use std::path::Path;
@@ -78,7 +78,7 @@ fn main() -> anyhow::Result<()> {
     let missing_dirs = misc::check_environment();
     if !missing_dirs.is_empty() {
         log::error!("Following directories do not exist:");
-        for missing_dir in missing_dirs.iter() {
+        for missing_dir in &missing_dirs {
             log::info!("{missing_dir}");
         }
         anyhow::bail!("Error occurred");
@@ -109,7 +109,7 @@ fn main() -> anyhow::Result<()> {
         anyhow::bail!("Error occurred");
     }
 
-    for profile_name in working_profiles.iter() {
+    for profile_name in &working_profiles {
         if argstruct.install.is_some() {
             let working_profile = get_working_profile(&data_obj, profile_name)?;
 
@@ -160,7 +160,7 @@ fn prepare_autoconfigure(
     let installed_profiles = &data.installed_profiles;
 
     let mut found_device = false;
-    for device in devices.iter() {
+    for device in devices {
         if autoconf_class_id != "any" && device.class_id != autoconf_class_id {
             continue;
         }
@@ -294,14 +294,14 @@ fn perform_transaction(
     let profile_name = &profile.name;
     match status {
         misc::Status::ErrorNotInstalled => {
-            console_writer::print_error_msg!("profile-not-installed", profile_name = profile_name)
+            console_writer::print_error_msg!("profile-not-installed", profile_name = profile_name);
         },
         misc::Status::ErrorAlreadyInstalled => log::warn!(
             "a version of profile '{profile_name}' is already installed!\nUse -f/--force to force \
              installation...",
         ),
         misc::Status::ErrorNoMatchLocalConfig => {
-            console_writer::print_error_msg!("pass-profile-no-match-install")
+            console_writer::print_error_msg!("pass-profile-no-match-install");
         },
         misc::Status::ErrorScriptFailed => console_writer::print_error_msg!("script-failed"),
         misc::Status::ErrorSetDatabase => console_writer::print_error_msg!("failed-set-db"),

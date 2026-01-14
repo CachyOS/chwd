@@ -33,11 +33,13 @@ pub struct Device {
 }
 
 impl Device {
+    #[must_use]
     pub fn get_available_profiles(&self) -> Vec<Profile> {
         let smth_handle_arc = |profile: &Profile| profile.clone();
         self.available_profiles.iter().map(|x| smth_handle_arc(x)).collect()
     }
 
+    #[must_use]
     pub fn device_info(&self) -> String {
         format!(
             "{} ({}:{}:{}) {} {} {}",
@@ -52,9 +54,10 @@ impl Device {
     }
 }
 
+#[must_use]
 pub fn get_unique_devices(devices: &[Device]) -> Vec<Device> {
     let mut uniq_devices = vec![];
-    for device in devices.iter() {
+    for device in devices {
         // Check if already in list
         let found = uniq_devices.iter().any(|x: &Device| {
             (device.sysfs_busid == x.sysfs_busid) && (device.sysfs_id == x.sysfs_id)

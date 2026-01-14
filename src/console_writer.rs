@@ -21,21 +21,21 @@ use crate::profile::Profile;
 
 use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
-use comfy_table::*;
+use comfy_table::{ContentArrangement, Table};
 
 pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
     // Check for invalid profiles
-    for invalid_profile in data.invalid_profiles.iter() {
+    for invalid_profile in &data.invalid_profiles {
         print_warn_msg!("invalid-profile", invalid_profile = invalid_profile.as_str());
     }
 
     // List all profiles
     if args.list_all {
         let all_profiles = &data.all_profiles;
-        if !all_profiles.is_empty() {
-            list_profiles(all_profiles, &fl!("all-pci-profiles"));
-        } else {
+        if all_profiles.is_empty() {
             print_warn_msg!("pci-profiles-not-found");
+        } else {
+            list_profiles(all_profiles, &fl!("all-pci-profiles"));
         }
     }
 
@@ -57,7 +57,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
         if args.detail {
             crate::device_misc::print_available_profiles_in_detail(pci_devices);
         } else {
-            for pci_device in pci_devices.iter() {
+            for pci_device in pci_devices {
                 let available_profiles = &pci_device.get_available_profiles();
                 if available_profiles.is_empty() {
                     continue;
@@ -91,7 +91,7 @@ pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(vec![&fl!("name-header"), &fl!("priority-header")]);
 
-    for profile in profiles.iter() {
+    for profile in profiles {
         table.add_row(vec![&profile.name, &profile.priority.to_string()]);
     }
 
@@ -104,7 +104,7 @@ pub fn print_installed_profiles(installed_profiles: &[Profile]) {
         return;
     }
 
-    for profile in installed_profiles.iter() {
+    for profile in installed_profiles {
         crate::profile_misc::print_profile_details(profile);
     }
     println!();
