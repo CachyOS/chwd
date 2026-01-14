@@ -146,7 +146,7 @@ local function remove(packages)
 end
 
 ---@param hooks hookAlias
----@param name string
+---@param name "pre_install" | "post_install" | "pre_remove" | "post_remove" | "conditional_packages"
 ---@return string?
 local function exec_hook(hooks, name)
     local hook = hooks[name]
