@@ -1,0 +1,11 @@
+[handheld]
+desc = 'Fallback handheld profile'
+class_ids = "0601"
+priority = 3
+packages = 'steamos-manager inputplumber steamos-powerbuttond cachyos-handheld'
+
+[handheld.exact]
+desc = "Exact"
+hwd_product_name_pattern= "82SN"
+priority = 4
+packages = "fastfetch"

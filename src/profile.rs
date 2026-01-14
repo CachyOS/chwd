@@ -632,4 +632,53 @@ mod tests {
 
         assert_eq!(orig_content, expected_output);
     }
+
+    #[test]
+    fn inherited_profile_write_test() {
+        let prof_path = "tests/profiles/children-profile.toml";
+        let prof_parsed_path =
+            "tests/profiles/inherited-profile.toml";
+        let parsed_profiles = parse_profiles(prof_path);
+        assert!(parsed_profiles.is_ok());
+        let parsed_profiles = parsed_profiles.unwrap();
+        assert_eq!(parsed_profiles.len(), 2);
+
+        assert_eq!(&parsed_profiles[0].name, "handheld.exact");
+        assert_eq!(&parsed_profiles[1].name, "handheld");
+
+        // empty file
+        let filepath = {
+            use std::env;
+
+            let tmp_dir = env::temp_dir();
+            format!("{}/.tempfile-chwd-test-{}", tmp_dir.to_string_lossy(), "12345abcd3131")
+        };
+
+        let _ = fs::remove_file(&filepath);
+        assert!(!std::path::Path::new(&filepath).exists());
+
+        // insert profiles
+        assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profiles[0]));
+
+        // remove profiles
+        assert!(crate::profile::remove_profile_from_file(&filepath, &parsed_profiles[0].name));
+        assert!(crate::profile::remove_profile_from_file(&filepath, &parsed_profiles[1].name));
+
+        // try to remove profiles again
+        assert!(!crate::profile::remove_profile_from_file(&filepath, &parsed_profiles[0].name));
+
+        // insert same profiles again
+        assert!(crate::profile::write_profile_to_file(&filepath, &parsed_profiles[0]));
+
+        // insert same profiles again
+        assert!(!crate::profile::write_profile_to_file(&filepath, &parsed_profiles[0]));
+
+        let orig_content = fs::read_to_string(&filepath).unwrap();
+        let expected_output = fs::read_to_string(prof_parsed_path).unwrap();
+
+        // cleanup
+        assert!(fs::remove_file(&filepath).is_ok());
+
+        assert_eq!(orig_content, expected_output);
+    }
 }

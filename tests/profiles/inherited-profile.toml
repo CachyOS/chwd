@@ -1,0 +1,9 @@
+[handheld.exact]
+ai_sdk = false
+class_ids = "0601"
+desc = "Exact"
+device_ids = "*"
+hwd_product_name_pattern = "82SN"
+packages = "fastfetch"
+priority = 4
+vendor_ids = "*"
