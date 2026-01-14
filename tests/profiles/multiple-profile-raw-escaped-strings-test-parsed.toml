@@ -6,12 +6,12 @@ device_ids = "1435 163f"
 device_name_pattern = '(AD)\w+'
 hwd_product_name_pattern = '(Ally)\w+'
 packages = "opencl-mesa lib32-opencl-mesa rocm-opencl-runtime"
-post_install = '''
+post_install = """
     echo "Steam Deck chwd installing..."
-'''
-post_remove = '''
+"""
+post_remove = """
     echo "Steam deck chwd removing..."
-'''
+"""
 priority = 6
 vendor_ids = "1002"
 
@@ -23,11 +23,11 @@ device_ids = "1432"
 device_name_pattern = '(ADW)\w+'
 hwd_product_name_pattern = '(AllyX)\w+'
 packages = "opencl-mesa lib32-opencl-mesa rocm-opencl-runtime mesa"
-post_install = '''
+post_install = """
     echo "Test installing..."
-'''
-post_remove = '''
+"""
+post_remove = """
     echo "Test removing..."
-'''
+"""
 priority = 7
 vendor_ids = "1005"
