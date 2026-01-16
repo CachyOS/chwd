@@ -103,24 +103,6 @@ post_install = """
     systemctl enable switcheroo-control
 """
 
-[nvidia-dkms-470xx]
-desc = 'Closed source NVIDIA drivers for Linux (470xx branch, only for Kepler GPUs)'
-priority = 14
-class_ids = "0300 0302 0380"
-vendor_ids = "10de"
-device_ids = '>/var/lib/chwd/ids/nvidia-470.ids'
-driver_conflict_group = "nvidia"
-packages = 'nvidia-470xx-dkms nvidia-470xx-utils nvidia-470xx-settings opencl-nvidia-470xx vulkan-icd-loader lib32-nvidia-470xx-utils lib32-opencl-nvidia-470xx lib32-vulkan-icd-loader libva-nvidia-driver cachyos-drm-awaiter'
-
-[nvidia-dkms-470xx.prime]
-desc = 'Closed source NVIDIA drivers for Linux (470xx branch, only for mobile Kepler GPUs)'
-priority = 15
-packages = 'nvidia-470xx-dkms nvidia-470xx-utils nvidia-470xx-settings opencl-nvidia-470xx vulkan-icd-loader lib32-nvidia-470xx-utils lib32-opencl-nvidia-470xx lib32-vulkan-icd-loader libva-nvidia-driver nvidia-prime switcheroo-control cachyos-drm-awaiter'
-chassis_types = "8 9 10 11 31"
-post_install = """
-    systemctl enable switcheroo-control
-"""
-
 [nouveau]
 desc = "Open Nouveau driver for NVIDIA graphics cards (Only for old GPUs)"
 class_ids = "0300 0302"
