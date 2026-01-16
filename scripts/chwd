@@ -263,21 +263,19 @@ local function get_profile(profiles, name)
         local key = table.concat(keys, ".")
         local profile = profiles[key]
 
-        if not profile then
-            die("Parent profile not found: %s", key)
-        end
+        if profile then
+            if profile.packages then
+                packages = profile.packages
+            end
 
-        if profile.packages then
-            packages = profile.packages
-        end
-
-        for hook_name, hook in pairs(profile.hooks) do
-            if hooks[hook_name] ~= "" then
-                if hook ~= "" then
+            for hook_name, hook in pairs(profile.hooks) do
+                if hooks[hook_name] ~= "" then
+                    if hook ~= "" then
+                        hooks[hook_name] = hook
+                    end
+                else
                     hooks[hook_name] = hook
                 end
-            else
-                hooks[hook_name] = hook
             end
         end
     end
