@@ -63,7 +63,7 @@ impl Kernel<'_> {
 ///    reponame/linux-xxx reponame/linux-xxx-headers
 ///    reponame/linux-yyy reponame/linux-yyy-headers
 ///    ...
-pub fn get_kernels(alpm_handle: &alpm::Alpm) -> Vec<Kernel> {
+pub fn get_kernels(alpm_handle: &alpm::Alpm) -> Vec<Kernel<'_>> {
     let mut kernels = Vec::new();
     let needles: &[String] = &["linux-[a-z]".into(), "headers".into()];
     // let needles: &[String] = &["linux[^ ]*-headers".into()];
