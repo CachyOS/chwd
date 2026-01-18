@@ -157,7 +157,7 @@ impl<'a> PCIAccess<'a> {
     }
 
     /// Get linked list of devices
-    pub fn devices(&mut self) -> Option<PCIDevice> {
+    pub fn devices(&mut self) -> Option<PCIDevice<'_>> {
         if self.handle.is_null() {
             None
         } else {
