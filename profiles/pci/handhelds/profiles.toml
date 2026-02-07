@@ -1,7 +1,7 @@
 [handheld]
 desc = 'Generic handheld profile'
 class_ids = "0601"
-hwd_product_name_pattern= '83E1|83L3|83N6|83Q2|83Q3|83N0|83N1|AIR|AOKZOE|AYANEO|AYA NEO FOUNDER|A2VM|A1M|BZ2EM|FLIP 1S DS|FLIP DS|FLIP KB|G1617-01|G1618-03|G1618-04|G1618-05|G1619-04|Galileo|GEEK|Jupiter|Loki Max|Loki MiniPro|Loki Zero|NEO-01|NEXT|ONE XPLAYER|ONEXPLAYER|SLIDE|Win600|RC71L|RC73YA|RC72LA|RC73XA'
+hwd_product_name_pattern = '83E1|83L3|83N6|83Q2|83Q3|83N0|83N1|AIR|AOKZOE|AYANEO|AYA NEO FOUNDER|BZ2EM|FLIP 1S DS|FLIP DS|FLIP KB|G1617-01|G1618-03|G1618-04|G1618-05|G1619-04|Galileo|GEEK|Jupiter|Loki Max|Loki MiniPro|Loki Zero|NEO-01|NEXT|ONE XPLAYER|ONEXPLAYER|SLIDE|Win600|RC71L|RC73YA|RC72LA|RC73XA'
 priority = 1
 packages = 'steamos-manager inputplumber steamos-powerbuttond cachyos-handheld'
 
@@ -63,7 +63,7 @@ post_remove = """
 
 [handheld.intel-msi-claw]
 desc = 'MSI Claw Intel'
-hwd_product_name_pattern = '(A2VM|A1M)'
+hwd_product_name_pattern = '^Claw (?:[78] AI\+ A2VM|A1M)$'
 priority = 2
 post_install = """
     echo "Claw chwd installing..."
