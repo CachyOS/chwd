@@ -3,13 +3,13 @@ desc = 'Generic handheld profile'
 class_ids = "0601"
 hwd_product_name_pattern= '83E1|83L3|83N6|83Q2|83Q3|83N0|83N1|AIR|AOKZOE|AYANEO|AYA NEO FOUNDER|A2VM|A1M|BZ2EM|FLIP 1S DS|FLIP DS|FLIP KB|G1617-01|G1618-03|G1618-04|G1618-05|G1619-04|Galileo|GEEK|Jupiter|Loki Max|Loki MiniPro|Loki Zero|NEO-01|NEXT|ONE XPLAYER|ONEXPLAYER|SLIDE|Win600|RC71L|RC73YA|RC72LA|RC73XA'
 priority = 1
-packages = 'steamos-manager inputplumber steamos-powerbuttond cachyos-handheld'
+packages = 'steamos-manager inputplumber steamos-powerbuttond'
 
 [handheld.steam-deck]
 desc = 'Valve Steam Deck'
 hwd_product_name_pattern = '(Jupiter|Galileo)'
 priority = 2
-packages = 'steamos-manager steamos-powerbuttond cachyos-handheld jupiter-fan-control steamdeck-dsp'
+packages = 'steamos-manager steamos-powerbuttond jupiter-fan-control steamdeck-dsp'
 conditional_packages = """
     if grep -q 'Galileo' /sys/devices/virtual/dmi/id/product_name; then
         echo 'galileo-mura'
