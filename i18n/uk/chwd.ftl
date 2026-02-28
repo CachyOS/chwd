@@ -27,3 +27,4 @@ installed-pci-profiles = Встановлені PCI-профілі:
 pci-profiles-not-found = PCI-профілі не знайдено!
 no-installed-pci-profiles = Немає встановлених PCI-профілів!
 no-installed-profile-device = не знайдено встановлених профілів для PCI-пристроїв!
+ 
