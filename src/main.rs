@@ -154,7 +154,7 @@ fn prepare_autoconfigure(
         return vec![];
     }
 
-    let mut profiles_name = vec![];
+    let mut profiles_with_priority: Vec<(i32, String)> = vec![];
 
     let devices = &data.pci_devices;
     let installed_profiles = &data.installed_profiles;
@@ -189,11 +189,17 @@ fn prepare_autoconfigure(
             log::info!("Using profile '{}' for device: {device_info}", profile.name);
         }
 
-        let profile_exists = profiles_name.iter().any(|x| x == &profile.name);
+        let profile_exists = profiles_with_priority.iter().any(|x| x.1 == profile.name);
         if !profile_exists && !skip {
-            profiles_name.push(profile.name.clone());
+            profiles_with_priority.push((profile.priority, profile.name.clone()));
         }
     }
+
+    // Sort by priority descending so higher-priority profiles (e.g. GPU)
+    // are installed before lower-priority ones (e.g. handhelds).
+    profiles_with_priority.sort_by_key(|b| std::cmp::Reverse(b.0));
+    let profiles_name: Vec<String> =
+        profiles_with_priority.into_iter().map(|(_, name)| name).collect();
 
     if !found_device {
         log::warn!("No device of class '{autoconf_class_id}' found!");
