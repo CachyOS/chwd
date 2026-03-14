@@ -23,3 +23,11 @@ post_remove = """
     rm -f /etc/modprobe.d/01-chwd-net-blacklist.conf
     mkinitcpio -P
 """
+
+[marvell-wifi]
+desc = 'Marvell AVASTAR 802.11ac Wireless (88W8897) firmware'
+class_ids = "0200 0280"
+vendor_ids = "11AB"
+device_ids = "*"
+priority = 1
+packages = 'linux-firmware-marvell'
