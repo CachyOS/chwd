@@ -83,7 +83,7 @@ pub fn get_kernels(alpm_handle: &alpm::Alpm) -> Vec<Kernel<'_>> {
                 kernels.push(Kernel {
                     name: pkg_name.clone(),
                     repo: db_name.to_string(),
-                    raw: format!("{}/{}", db_name, pkg_name),
+                    raw: format!("{db_name}/{pkg_name}"),
 
                     alpm_pkg: Some(pkg),
                     alpm_handle: Some(alpm_handle),

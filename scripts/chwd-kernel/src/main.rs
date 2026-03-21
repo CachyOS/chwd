@@ -69,7 +69,7 @@ fn simple_shell_exec(cmd: &str) -> String {
 #[inline]
 fn get_kernel_running() -> String {
     simple_shell_exec(
-        r#"(grep -Po '(?<=initrd\=\\initramfs-)(.+)(?=\.img)|(?<=boot\/vmlinuz-)([^ $]+)' /proc/cmdline)"#,
+        r"(grep -Po '(?<=initrd\=\\initramfs-)(.+)(?=\.img)|(?<=boot\/vmlinuz-)([^ $]+)' /proc/cmdline)",
     )
 }
 
@@ -81,7 +81,7 @@ fn root_check() {
 }
 
 fn occur_err(msg: &str) {
-    eprintln!("\x1B[31mError:\x1B[0m {}", msg);
+    eprintln!("\x1B[31mError:\x1B[0m {msg}");
     std::process::exit(1);
 }
 
@@ -135,8 +135,7 @@ fn kernel_install(available_kernels: &[kernel::Kernel], kernel_names: &[String])
     let outofdate = simple_shell_exec("pacman -Qqu | tr '\n' ' '");
     if !outofdate.is_empty() {
         eprintln!(
-            "The following packages are out of date, please update your system first: {}",
-            outofdate
+            "The following packages are out of date, please update your system first: {outofdate}"
         );
         if !Confirm::new()
             .with_prompt("Do you want to continue anyway?")
@@ -148,9 +147,9 @@ fn kernel_install(available_kernels: &[kernel::Kernel], kernel_names: &[String])
         }
     }
 
-    let exit_status = Exec::shell(format!("pacman -Syu {}", pkginstall)).join().unwrap();
+    let exit_status = Exec::shell(format!("pacman -Syu {pkginstall}")).join().unwrap();
     if rmc && exit_status.success() {
-        let _ = Exec::shell(format!("pacman -R {}", current_kernel)).join();
+        let _ = Exec::shell(format!("pacman -R {current_kernel}")).join();
     } else if rmc && !exit_status.success() {
         occur_err("\n'rmc' aborted because the kernel failed to install or canceled on removal.");
     }
@@ -173,10 +172,10 @@ fn kernel_remove(available_kernels: &[kernel::Kernel], kernel_names: &[String]) 
             return false;
         }
 
-        pkgremove.push_str(&format!("{} ", kernel_name));
+        pkgremove.push_str(&format!("{kernel_name} "));
     }
 
-    let exit_status = Exec::shell(format!("pacman -R {}", pkgremove)).join().unwrap();
+    let exit_status = Exec::shell(format!("pacman -R {pkgremove}")).join().unwrap();
     exit_status.success()
 }
 
@@ -230,5 +229,5 @@ fn main() {
             kernel_remove(&kernels, &args.remove_kernels);
         },
         _ => occur_err("Invalid argument (use -h for help)."),
-    };
+    }
 }
