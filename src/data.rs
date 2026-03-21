@@ -133,7 +133,7 @@ fn fill_profiles(
         }
     }
 
-    configs.sort_by(|lhs, rhs| rhs.priority.cmp(&lhs.priority));
+    configs.sort_by_key(|rhs| std::cmp::Reverse(rhs.priority));
 }
 
 fn fill_devices() -> Option<ListOfDevicesT> {
@@ -325,7 +325,7 @@ fn add_profile_sorted(profiles: &mut Vec<Arc<Profile>>, new_profile: &Profile) {
     }
 
     profiles.push(Arc::new(new_profile.clone()));
-    profiles.sort_by(|lhs, rhs| rhs.priority.cmp(&lhs.priority));
+    profiles.sort_by_key(|rhs| std::cmp::Reverse(rhs.priority));
 }
 
 #[cfg(test)]
