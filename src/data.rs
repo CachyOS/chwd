@@ -242,7 +242,8 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
     if let Some(product_name_re) = &product_name_re {
         let product_name = fs::read_to_string("/sys/devices/virtual/dmi/id/product_name")
             .expect("Failed to read product name");
-        if !product_name_re.is_match(&product_name) {
+        let product_name = product_name.trim();
+        if !product_name_re.is_match(product_name) {
             return vec![];
         }
     }
