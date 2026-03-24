@@ -39,7 +39,7 @@ post_remove = """
 
 [handheld.rog-ally]
 desc = 'ASUS ROG Ally & Ally X'
-hwd_product_name_pattern = 'RC71L|RC72LA'
+hwd_product_name_pattern = 'RC71L|RC72LA|RC73YA|RC73XA'
 priority = 2
 post_install = """
     echo "Ally chwd installing..."
@@ -51,7 +51,7 @@ post_install = """
     if [[ "$product_name" =~ RC71L ]]; then
         ln -s /usr/share/cachyos-handheld/rog-ally/wireplumber/alsa-card0.conf \
             /etc/wireplumber/wireplumber.conf.d
-    else
+    elif [[ "$product_name" =~ RC72LA ]]; then
         ln -s /usr/share/cachyos-handheld/rog-ally/wireplumber/alsa-card0-x.conf \
             /etc/wireplumber/wireplumber.conf.d
     fi
