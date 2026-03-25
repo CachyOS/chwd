@@ -248,6 +248,19 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
         }
     }
 
+    if let Some(cpu_family) = &profile.cpu_family {
+        match crate::hwd_misc::get_cpu_info() {
+            Some(cpu_info) if cpu_info.family == *cpu_family => {
+                if let Some(cpu_models) = &profile.cpu_models {
+                    if !cpu_models.contains(&cpu_info.model) {
+                        return vec![];
+                    }
+                }
+            },
+            _ => return vec![],
+        }
+    }
+
     if let Some(gc_versions) = &profile.gc_versions {
         if let Some(hwd_gc_versions) = crate::hwd_misc::get_gc_versions() {
             return get_all_devices_from_gc_versions(devices, &hwd_gc_versions, gc_versions);

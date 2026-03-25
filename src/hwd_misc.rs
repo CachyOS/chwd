@@ -14,6 +14,42 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+pub struct CpuInfo {
+    pub vendor: String,
+    pub family: String,
+    pub model: String,
+}
+
+#[must_use]
+pub fn get_cpu_info() -> Option<CpuInfo> {
+    let content = std::fs::read_to_string("/proc/cpuinfo").ok()?;
+    parse_cpu_info(&content)
+}
+
+fn parse_cpu_info(content: &str) -> Option<CpuInfo> {
+    let mut vendor = None;
+    let mut family = None;
+    let mut model = None;
+
+    for line in content.lines() {
+        if let Some((key, value)) = line.split_once(':') {
+            let key = key.trim();
+            let value = value.trim();
+            match key {
+                "vendor_id" if vendor.is_none() => vendor = Some(value.to_owned()),
+                "cpu family" if family.is_none() => family = Some(value.to_owned()),
+                "model" if model.is_none() => model = Some(value.to_owned()),
+                _ => {},
+            }
+        }
+        if vendor.is_some() && family.is_some() && model.is_some() {
+            break;
+        }
+    }
+
+    Some(CpuInfo { vendor: vendor?, family: family?, model: model? })
+}
+
 #[must_use]
 pub fn get_sysfs_busid_from_amdgpu_path(amdgpu_path: &str) -> &str {
     amdgpu_path.split('/')
@@ -110,5 +146,43 @@ mod tests {
         );
 
         assert_eq!(hwd_misc::get_sysfs_busid_from_amdgpu_path("/sys/bus/pci/drivers/amdgpu/"), "");
+    }
+
+    #[test]
+    fn parse_cpu_info_intel() {
+        let cpuinfo = "\
+processor\t: 0
+vendor_id\t: GenuineIntel
+cpu family\t: 6
+model\t\t: 154
+model name\t: 12th Gen Intel(R) Core(TM) i7-1260P
+stepping\t: 4
+microcode\t: 0x432
+";
+        let info = super::parse_cpu_info(cpuinfo).unwrap();
+        assert_eq!(info.vendor, "GenuineIntel");
+        assert_eq!(info.family, "6");
+        assert_eq!(info.model, "154");
+    }
+
+    #[test]
+    fn parse_cpu_info_amd() {
+        let cpuinfo = "\
+processor\t: 0
+vendor_id\t: AuthenticAMD
+cpu family\t: 25
+model\t\t: 80
+model name\t: AMD Ryzen 7 5800X 8-Core Processor
+stepping\t: 2
+";
+        let info = super::parse_cpu_info(cpuinfo).unwrap();
+        assert_eq!(info.vendor, "AuthenticAMD");
+        assert_eq!(info.family, "25");
+        assert_eq!(info.model, "80");
+    }
+
+    #[test]
+    fn parse_cpu_info_empty() {
+        assert!(super::parse_cpu_info("").is_none());
     }
 }

@@ -46,6 +46,8 @@ pub struct Profile {
     pub device_name_pattern: Option<String>,
     pub hwd_product_name_pattern: Option<String>,
     pub gc_versions: Option<Vec<String>>,
+    pub cpu_family: Option<String>,
+    pub cpu_models: Option<Vec<String>>,
 
     pub hwd_ids: Vec<HardwareID>,
 }
@@ -224,11 +226,9 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         hwd_product_name_pattern: node
             .get("hwd_product_name_pattern")
             .and_then(|x| x.as_str().map(str::to_string)),
-        gc_versions: node.get("gc_versions").and_then(|x| {
-            x.as_str()
-                .map(str::split_ascii_whitespace)
-                .map(|x| x.map(str::to_string).collect::<Vec<_>>())
-        }),
+        gc_versions: parse_whitespace_list(node, "gc_versions"),
+        cpu_family: node.get("cpu_family").and_then(|x| x.as_str().map(str::to_string)),
+        cpu_models: parse_whitespace_list(node, "cpu_models"),
     };
 
     let conf_devids = node.get("device_ids").and_then(|x| x.as_str()).unwrap_or("");
@@ -300,6 +300,10 @@ fn parse_ids_file(file_path: &str) -> Result<String> {
         });
 
     Ok(parsed_ids.split_ascii_whitespace().collect::<Vec<_>>().join(" "))
+}
+
+fn parse_whitespace_list(node: &toml::Table, key: &str) -> Option<Vec<String>> {
+    node.get(key)?.as_str().map(|s| s.split_ascii_whitespace().map(str::to_string).collect())
 }
 
 fn merge_table_left(lhs: &mut toml::Table, rhs: &toml::Table) {
@@ -415,6 +419,12 @@ fn profile_into_toml(profile: &Profile) -> toml::Table {
     }
     if let Some(gc_versions) = &profile.gc_versions {
         table.insert("gc_versions".to_owned(), gc_versions.clone().into());
+    }
+    if let Some(cpu_family) = &profile.cpu_family {
+        table.insert("cpu_family".to_owned(), cpu_family.clone().into());
+    }
+    if let Some(cpu_models) = &profile.cpu_models {
+        table.insert("cpu_models".to_owned(), cpu_models.join(" ").into());
     }
 
     let last_hwd_id = profile.hwd_ids.last().unwrap();
@@ -685,5 +695,39 @@ mod tests {
         assert!(fs::remove_file(&filepath).is_ok());
 
         assert_eq!(orig_content, expected_output);
+    }
+
+    #[test]
+    fn cpu_profile_parse_test() {
+        let prof_path = "tests/profiles/cpu-profile-test.toml";
+        let parsed_profiles = parse_profiles(prof_path);
+        assert!(parsed_profiles.is_ok());
+        let parsed_profiles = parsed_profiles.unwrap();
+
+        assert_eq!(parsed_profiles.len(), 1);
+        assert_eq!(parsed_profiles[0].name, "intel-lpmd");
+        assert_eq!(
+            parsed_profiles[0].desc,
+            "Intel Low Power Mode Daemon for supported hybrid Intel CPUs"
+        );
+        assert_eq!(parsed_profiles[0].priority, 5);
+        assert_eq!(parsed_profiles[0].packages, "intel-lpmd");
+        assert_eq!(parsed_profiles[0].cpu_family, Some("6".to_owned()));
+        assert_eq!(
+            parsed_profiles[0].cpu_models,
+            Some(vec![
+                "151".to_owned(),
+                "154".to_owned(),
+                "183".to_owned(),
+                "186".to_owned(),
+                "191".to_owned(),
+                "170".to_owned(),
+                "172".to_owned(),
+                "189".to_owned(),
+                "204".to_owned(),
+            ])
+        );
+        assert!(!parsed_profiles[0].post_install.is_empty());
+        assert!(!parsed_profiles[0].post_remove.is_empty());
     }
 }
