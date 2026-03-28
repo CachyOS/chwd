@@ -66,7 +66,7 @@ pre_install = """
         esac
 
         # Skip removable GPUs (eGPU via Thunderbolt, USB4, etc.)
-        if [ "$(cat "$dev/removable" 2>/dev/null)" = "removable" ]; then
+        if [[ -e "$dev/removable" && "$(cat "$dev/removable")" = "removable" ]]; then
             continue
         fi
 
