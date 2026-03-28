@@ -123,20 +123,21 @@ fn main() -> anyhow::Result<()> {
                 anyhow::bail!("Error occurred");
             }
         } else if argstruct.remove.is_some() {
-            let working_profile = get_installed_profile(&data_obj, profile_name);
-            if working_profile.is_none() {
+            if let Some(working_profile) = &get_installed_profile(&data_obj, profile_name) {
+                if !perform_transaction(
+                    &mut data_obj,
+                    &argstruct,
+                    working_profile,
+                    Transaction::Remove,
+                    argstruct.force,
+                ) {
+                    anyhow::bail!("Error occurred");
+                }
+            } else {
                 console_writer::print_error_msg!(
                     "profile-not-installed",
                     profile_name = profile_name
                 );
-                anyhow::bail!("Error occurred");
-            } else if !perform_transaction(
-                &mut data_obj,
-                &argstruct,
-                working_profile.as_ref().unwrap(),
-                Transaction::Remove,
-                argstruct.force,
-            ) {
                 anyhow::bail!("Error occurred");
             }
         }
