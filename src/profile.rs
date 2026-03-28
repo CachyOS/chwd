@@ -418,7 +418,7 @@ fn profile_into_toml(profile: &Profile) -> toml::Table {
         table.insert("hwd_product_name_pattern".to_owned(), product_name_pattern.clone().into());
     }
     if let Some(gc_versions) = &profile.gc_versions {
-        table.insert("gc_versions".to_owned(), gc_versions.clone().into());
+        table.insert("gc_versions".to_owned(), gc_versions.join(" ").into());
     }
     if let Some(cpu_family) = &profile.cpu_family {
         table.insert("cpu_family".to_owned(), cpu_family.clone().into());
