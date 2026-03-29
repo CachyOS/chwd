@@ -1,0 +1,8 @@
+[bad-profile]
+desc = 'Invalid profile with cpu_models but no cpu_family'
+class_ids = "0600"
+vendor_ids = "8086"
+device_ids = "*"
+cpu_models = "151 154 183"
+priority = 5
+packages = 'test-pkg'

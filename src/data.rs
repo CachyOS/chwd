@@ -248,15 +248,9 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
         }
     }
 
-    if let Some(cpu_family) = &profile.cpu_family {
+    if profile.cpu_family.is_some() {
         match crate::hwd_misc::get_cpu_info() {
-            Some(cpu_info) if cpu_info.family == *cpu_family => {
-                if let Some(cpu_models) = &profile.cpu_models {
-                    if !cpu_models.contains(&cpu_info.model) {
-                        return vec![];
-                    }
-                }
-            },
+            Some(cpu_info) if matches_cpu_filter(profile, &cpu_info) => {},
             _ => return vec![],
         }
     }
@@ -331,6 +325,20 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
     }
 
     found_indices
+}
+
+fn matches_cpu_filter(profile: &Profile, cpu_info: &crate::hwd_misc::CpuInfo) -> bool {
+    if let Some(cpu_family) = &profile.cpu_family {
+        if cpu_info.family != *cpu_family {
+            return false;
+        }
+    }
+    if let Some(cpu_models) = &profile.cpu_models {
+        if !cpu_models.contains(&cpu_info.model) {
+            return false;
+        }
+    }
+    true
 }
 
 fn add_profile_sorted(profiles: &mut Vec<Arc<Profile>>, new_profile: &Profile) {
@@ -783,6 +791,63 @@ mod tests {
                 installed_profiles: vec![],
             },
         ]
+    }
+
+    fn cpu_test_profile(
+        cpu_family: Option<&str>,
+        cpu_models: Option<Vec<&str>>,
+    ) -> crate::profile::Profile {
+        crate::profile::Profile {
+            cpu_family: cpu_family.map(str::to_string),
+            cpu_models: cpu_models
+                .map(|v| v.into_iter().map(str::to_string).collect()),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn cpu_filter_matches_family_and_model() {
+        let cpu_info =
+            crate::hwd_misc::CpuInfo { vendor: "GenuineIntel".into(), family: "6".into(), model: "154".into() };
+        let profile = cpu_test_profile(Some("6"), Some(vec!["151", "154", "183"]));
+
+        assert!(data::matches_cpu_filter(&profile, &cpu_info));
+    }
+
+    #[test]
+    fn cpu_filter_rejects_wrong_family() {
+        let cpu_info =
+            crate::hwd_misc::CpuInfo { vendor: "AuthenticAMD".into(), family: "25".into(), model: "80".into() };
+        let profile = cpu_test_profile(Some("6"), Some(vec!["151", "154"]));
+
+        assert!(!data::matches_cpu_filter(&profile, &cpu_info));
+    }
+
+    #[test]
+    fn cpu_filter_rejects_wrong_model() {
+        let cpu_info =
+            crate::hwd_misc::CpuInfo { vendor: "GenuineIntel".into(), family: "6".into(), model: "142".into() };
+        let profile = cpu_test_profile(Some("6"), Some(vec!["151", "154"]));
+
+        assert!(!data::matches_cpu_filter(&profile, &cpu_info));
+    }
+
+    #[test]
+    fn cpu_filter_family_only_matches() {
+        let cpu_info =
+            crate::hwd_misc::CpuInfo { vendor: "GenuineIntel".into(), family: "6".into(), model: "999".into() };
+        let profile = cpu_test_profile(Some("6"), None);
+        // no cpu_models filter — any model in family 6 should match
+        assert!(data::matches_cpu_filter(&profile, &cpu_info));
+    }
+
+    #[test]
+    fn cpu_filter_no_filter_matches_all() {
+        let cpu_info =
+            crate::hwd_misc::CpuInfo { vendor: "AuthenticAMD".into(), family: "25".into(), model: "80".into() };
+        let profile = cpu_test_profile(None, None);
+        // no cpu_family, no cpu_models
+        assert!(data::matches_cpu_filter(&profile, &cpu_info));
     }
 
     #[test]

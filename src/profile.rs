@@ -54,14 +54,32 @@ pub struct Profile {
 
 impl Default for Profile {
     fn default() -> Self {
-        Self::new()
+        Self {
+            is_ai_sdk: false,
+            prof_path: String::new(),
+            name: String::new(),
+            desc: String::new(),
+            priority: 0,
+            packages: String::new(),
+            post_install: String::new(),
+            post_remove: String::new(),
+            pre_install: String::new(),
+            pre_remove: String::new(),
+            conditional_packages: String::new(),
+            device_name_pattern: None,
+            hwd_product_name_pattern: None,
+            gc_versions: None,
+            cpu_family: None,
+            cpu_models: None,
+            hwd_ids: vec![Default::default()],
+        }
     }
 }
 
 impl Profile {
     #[must_use]
     pub fn new() -> Self {
-        Self { hwd_ids: vec![Default::default()], ..Default::default() }
+        Self::default()
     }
 }
 
@@ -230,6 +248,12 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         cpu_family: node.get("cpu_family").and_then(|x| x.as_str().map(str::to_string)),
         cpu_models: parse_whitespace_list(node, "cpu_models"),
     };
+
+    if profile.cpu_models.is_some() && profile.cpu_family.is_none() {
+        anyhow::bail!(
+            "profile '{profile_name}' specifies cpu_models without cpu_family"
+        );
+    }
 
     let conf_devids = node.get("device_ids").and_then(|x| x.as_str()).unwrap_or("");
     let conf_vendorids = node.get("vendor_ids").and_then(|x| x.as_str()).unwrap_or("");
@@ -729,5 +753,13 @@ mod tests {
         );
         assert!(!parsed_profiles[0].post_install.is_empty());
         assert!(!parsed_profiles[0].post_remove.is_empty());
+    }
+
+    #[test]
+    fn cpu_models_without_family_is_rejected() {
+        let prof_path = "tests/profiles/cpu-models-no-family-test.toml";
+        let parsed_profiles = parse_profiles(prof_path);
+        // Should fail because cpu_models is set without cpu_family
+        assert!(parsed_profiles.is_err() || parsed_profiles.unwrap().is_empty());
     }
 }
