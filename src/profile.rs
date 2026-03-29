@@ -250,9 +250,10 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     };
 
     if profile.cpu_models.is_some() && profile.cpu_family.is_none() {
-        anyhow::bail!(
-            "profile '{profile_name}' specifies cpu_models without cpu_family"
-        );
+        let msg =
+            format!("profile '{profile_name}' specifies cpu_models without cpu_family");
+        eprintln!("Warning: skipping profile '{profile_name}': {msg}");
+        anyhow::bail!(msg);
     }
 
     let conf_devids = node.get("device_ids").and_then(|x| x.as_str()).unwrap_or("");
