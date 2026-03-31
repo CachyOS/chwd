@@ -262,6 +262,15 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
         return vec![];
     }
 
+    if let Some(chassis_types) = &profile.chassis_types {
+        let chassis_type = fs::read_to_string("/sys/devices/virtual/dmi/id/chassis_type")
+            .expect("Failed to read chassis type");
+        let chassis_type = chassis_type.trim();
+        if !chassis_types.iter().any(|x| x == chassis_type) {
+            return vec![];
+        }
+    }
+
     for hwd_id in &profile.hwd_ids {
         let mut found_device = false;
 

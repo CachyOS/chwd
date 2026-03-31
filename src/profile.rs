@@ -48,6 +48,7 @@ pub struct Profile {
     pub gc_versions: Option<Vec<String>>,
     pub cpu_family: Option<String>,
     pub cpu_models: Option<Vec<String>>,
+    pub chassis_types: Option<Vec<String>>,
 
     pub hwd_ids: Vec<HardwareID>,
 }
@@ -71,6 +72,7 @@ impl Default for Profile {
             gc_versions: None,
             cpu_family: None,
             cpu_models: None,
+            chassis_types: None,
             hwd_ids: vec![Default::default()],
         }
     }
@@ -247,6 +249,7 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         gc_versions: parse_whitespace_list(node, "gc_versions"),
         cpu_family: node.get("cpu_family").and_then(|x| x.as_str().map(str::to_string)),
         cpu_models: parse_whitespace_list(node, "cpu_models"),
+        chassis_types: parse_whitespace_list(node, "chassis_types"),
     };
 
     if profile.cpu_models.is_some() && profile.cpu_family.is_none() {
@@ -451,6 +454,9 @@ fn profile_into_toml(profile: &Profile) -> toml::Table {
     if let Some(cpu_models) = &profile.cpu_models {
         table.insert("cpu_models".to_owned(), cpu_models.join(" ").into());
     }
+    if let Some(chassis_types) = &profile.chassis_types {
+        table.insert("chassis_types".to_owned(), chassis_types.join(" ").into());
+    }
 
     let last_hwd_id = profile.hwd_ids.last().unwrap();
 
@@ -519,6 +525,7 @@ mod tests {
         assert_eq!(parsed_profiles[1].hwd_product_name_pattern, Some("(Ally)\\w+".to_owned()));
         assert_eq!(parsed_profiles[1].hwd_ids, hwd_ids);
         assert_eq!(parsed_profiles[1].gc_versions, None);
+        assert_eq!(parsed_profiles[1].chassis_types, None);
         assert!(!parsed_profiles[1].post_install.is_empty());
         assert!(!parsed_profiles[1].post_remove.is_empty());
         assert!(parsed_profiles[1].pre_install.is_empty());
@@ -559,6 +566,7 @@ mod tests {
         assert_eq!(parsed_profiles[0].hwd_product_name_pattern, None);
         assert_eq!(parsed_profiles[0].hwd_ids, hwd_ids);
         assert_eq!(parsed_profiles[0].gc_versions, None);
+        assert_eq!(parsed_profiles[0].chassis_types, None);
         assert!(!parsed_profiles[0].post_install.is_empty());
         assert!(!parsed_profiles[0].post_remove.is_empty());
         assert!(!parsed_profiles[0].pre_install.is_empty());
