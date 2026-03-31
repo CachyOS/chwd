@@ -24,28 +24,25 @@ device_ids = "*"
 priority = 10
 packages = 'nvidia-utils egl-wayland nvidia-settings opencl-nvidia lib32-opencl-nvidia lib32-nvidia-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader'
 conditional_packages = """
-    kernels="$(pacman -Qqs "^linux-cachyos")"
-    packages=""
+    modules=""
 
-    for kernel in $kernels; do
+    for kernel in $(pacman -Qqs "^linux-cachyos"); do
         case "$kernel" in
             *-nvidia-open|*-nvidia) modules+=" ${kernel}";;
             *-headers|*-zfs|*-nvidia|*-dbg);;
-            *) packages+=" ${kernel}-nvidia-open";;
+            *) modules+=" ${kernel}-nvidia-open";;
         esac
     done
 
     # Fallback if there are no kernels with pre-built modules
-    [ -z "$packages" ] && packages="nvidia-open-dkms"
+    [ -z "$modules" ] && modules="nvidia-open-dkms"
+    echo "$modules"
 
     # Trying to determine the laptop
     device_type="$(cat /sys/devices/virtual/dmi/id/chassis_type)"
     if ((device_type >= 8 && device_type <= 11)); then
-        packages+=" nvidia-prime switcheroo-control"
+        echo "nvidia-prime switcheroo-control"
     fi
-
-    echo "$packages"
-
 """
 pre_install = """
     cat <<EOF >/etc/mkinitcpio.conf.d/10-chwd.conf
@@ -106,24 +103,18 @@ priority = 12
 packages = 'nvidia-580xx-dkms nvidia-580xx-utils nvidia-580xx-settings opencl-nvidia-580xx lib32-opencl-nvidia-580xx lib32-nvidia-580xx-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader'
 device_ids = '>/var/lib/chwd/ids/nvidia-580.ids'
 conditional_packages = """
-    kernels="$(pacman -Qqs "^linux-cachyos")"
-    packages=""
-
-    for kernel in $kernels; do
+    for kernel in $(pacman -Qqs "^linux-cachyos"); do
         case "$kernel" in
             *-headers|*-zfs|*-nvidia-open|*-dbg|*-nvidia);;
-            *) packages+=" ${kernel}-headers";;
+            *) echo "${kernel}-headers";;
         esac
     done
 
     # Trying to determine the laptop
     device_type="$(cat /sys/devices/virtual/dmi/id/chassis_type)"
     if ((device_type >= 8 && device_type <= 11)); then
-        packages+=" nvidia-prime switcheroo-control"
+        echo "nvidia-prime switcheroo-control"
     fi
-
-    echo "$packages"
-
 """
 pre_install = """
     cat <<EOF >/etc/mkinitcpio.conf.d/10-chwd.conf
@@ -180,17 +171,14 @@ device_ids = '>/var/lib/chwd/ids/nvidia-470.ids'
 packages = 'nvidia-470xx-dkms nvidia-470xx-utils nvidia-470xx-settings opencl-nvidia-470xx vulkan-icd-loader lib32-nvidia-470xx-utils lib32-opencl-nvidia-470xx lib32-vulkan-icd-loader libva-nvidia-driver'
 conditional_packages = """
     # Trying to determine the laptop
-    packages=""
     device_type="$(cat /sys/devices/virtual/dmi/id/chassis_type)"
     if ((device_type >= 8 && device_type <= 11)); then
-        packages+=" nvidia-prime switcheroo-control"
+        echo "nvidia-prime switcheroo-control"
     fi
 
     if pacman -Qqs plasma-desktop &>/dev/null; then
-        packages+=" plasma-x11-session"
+        echo "plasma-x11-session"
     fi
-
-    echo "$packages"
 """
 post_install = """
     # Trying to determine the laptop
@@ -217,19 +205,15 @@ device_ids = '>/var/lib/chwd/ids/nouveau.ids'
 priority = 18
 packages = 'mesa lib32-mesa nouveau-fw'
 conditional_packages = """
-packages=""
-
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
-    packages+="opencl-mesa lib32-opencl-mesa"
+    echo "opencl-mesa lib32-opencl-mesa"
 fi
 
 # Install vulkan-nouveau and linux-firmware-nvidia only for Kepler GPUs
 device_id="$(lspci -d "10de:*:030x" -n | cut -d" " -f3 | cut -d":" -f2 | head -n1)"
 if grep -q "$device_id" /var/lib/chwd/ids/nvidia-470.ids 2>/dev/null; then
-    packages+=" vulkan-nouveau linux-firmware-nvidia"
+    echo "vulkan-nouveau linux-firmware-nvidia"
 fi
-
-echo "$packages"
 """
 post_install = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
@@ -266,27 +250,24 @@ device_ids = "*"
 priority = 4
 packages = 'mesa lib32-mesa vulkan-intel lib32-vulkan-intel gst-plugin-va linux-firmware-intel'
 conditional_packages = """
-pkgs=""
 if [ -z "$(lspci -d "10de:*:030x")" ]; then
-    pkgs+="opencl-mesa lib32-opencl-mesa"
+    echo "opencl-mesa lib32-opencl-mesa"
 fi
 
 device_id="$(lspci -d "8086:*:030x" -n | cut -d" " -f3 | cut -d":" -f2 | head -n1)"
 if grep -q "$device_id" /var/lib/chwd/ids/intel-vaapi.ids 2>/dev/null; then
-    pkgs+=" libva-intel-driver-irql"
+    echo "libva-intel-driver-irql"
 else
-    pkgs+=" intel-media-driver"
+    echo "intel-media-driver"
 fi
 
 if grep -q "$device_id" /var/lib/chwd/ids/intel-media-sdk.ids 2>/dev/null; then
-    pkgs+=" intel-media-sdk"
+    echo "intel-media-sdk"
 else
     if ! grep -q "$device_id" /var/lib/chwd/ids/intel-vaapi.ids 2>/dev/null; then
-        pkgs+=" vpl-gpu-rt"
+        echo "vpl-gpu-rt"
     fi
 fi
-
-echo "$pkgs"
 """
 post_install = """
 if [ -z "$(lspci -d "10de:*:030x")" ]; then

@@ -353,7 +353,13 @@ local function main()
         local conditional_packages = exec_hook(hooks, "conditional_packages")
 
         if conditional_packages then
-            packages = packages .. " " .. conditional_packages
+            local extra_packages = " "
+
+            for _, pkg in ipairs(split(conditional_packages)) do
+                extra_packages = extra_packages .. " " .. pkg
+            end
+
+            packages = packages .. " " .. extra_packages
         end
 
         local code = install(packages)
@@ -369,7 +375,13 @@ local function main()
         local conditional_packages = exec_hook(hooks, "conditional_packages")
 
         if conditional_packages then
-            packages = packages .. " " .. conditional_packages
+            local extra_packages = " "
+
+            for _, pkg in ipairs(split(conditional_packages)) do
+                extra_packages = extra_packages .. " " .. pkg
+            end
+
+            packages = packages .. extra_packages
         end
 
         local code = remove(packages)
