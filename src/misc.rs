@@ -74,6 +74,8 @@ pub fn check_environment() -> Vec<String> {
     if !Path::new(consts::CHWD_PCI_DATABASE_DIR).exists() {
         missing_dirs.push(consts::CHWD_PCI_DATABASE_DIR.to_owned());
     }
+    // USB directories are optional — not all installations will have them yet.
+    // fill_profiles() already handles missing directories gracefully.
 
     missing_dirs
 }

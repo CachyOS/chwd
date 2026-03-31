@@ -31,31 +31,39 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
 
     // List all profiles
     if args.list_all {
-        let all_profiles = &data.all_profiles;
-        if all_profiles.is_empty() {
+        let all_pci_profiles = &data.all_pci_profiles;
+        let all_usb_profiles = &data.all_usb_profiles;
+        if all_pci_profiles.is_empty() {
             print_warn_msg!("pci-profiles-not-found");
         } else {
-            list_profiles(all_profiles, &fl!("all-pci-profiles"));
+            list_profiles(all_pci_profiles, &fl!("all-pci-profiles"));
+        }
+        if all_usb_profiles.is_empty() {
+            print_warn_msg!("usb-profiles-not-found");
+        } else {
+            list_profiles(all_usb_profiles, &fl!("all-usb-profiles"));
         }
     }
 
     // List installed profiles
     if args.list_installed {
-        let installed_profiles = &data.installed_profiles;
+        let installed_profiles = data.installed_profiles();
         if args.detail {
-            print_installed_profiles(installed_profiles);
+            print_installed_profiles(&installed_profiles);
         } else if !installed_profiles.is_empty() {
-            list_profiles(installed_profiles, &fl!("installed-pci-profiles"));
+            list_profiles(&installed_profiles, &fl!("installed-profiles"));
         } else {
-            print_warn_msg!("no-installed-pci-profiles");
+            print_warn_msg!("no-installed-profiles");
         }
     }
 
     // List available profiles
     if args.list_available {
         let pci_devices = &data.pci_devices;
+        let usb_devices = &data.usb_devices;
         if args.detail {
-            crate::device_misc::print_available_profiles_in_detail(pci_devices);
+            crate::device_misc::print_available_profiles_in_detail("PCI", pci_devices);
+            crate::device_misc::print_available_profiles_in_detail("USB", usb_devices);
         } else {
             for pci_device in pci_devices {
                 let available_profiles = &pci_device.get_available_profiles();
@@ -73,6 +81,24 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
                         pci_device.device_id,
                         pci_device.class_name,
                         pci_device.vendor_name
+                    ),
+                );
+            }
+            for usb_device in usb_devices {
+                let available_profiles = &usb_device.get_available_profiles();
+                if available_profiles.is_empty() {
+                    continue;
+                }
+
+                list_profiles(
+                    available_profiles,
+                    &format!(
+                        "{} ({}:{}) {} {}:",
+                        usb_device.sysfs_busid,
+                        usb_device.vendor_id,
+                        usb_device.device_id,
+                        usb_device.vendor_name,
+                        usb_device.device_name
                     ),
                 );
             }

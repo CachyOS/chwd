@@ -18,12 +18,14 @@ pass-profile-no-match-install = passed profile does not match with installed pro
 available = AVAILABLE
 installed = INSTALLED
 device = Device
-no-profile-device = no profiles for PCI devices found!
+no-profile-device = no profiles for devices found!
 
 # console writer
 invalid-profile = profile '{$invalid_profile}' is invalid!
 all-pci-profiles = All PCI profiles:
-installed-pci-profiles = Installed PCI profiles:
+all-usb-profiles = All USB profiles:
+installed-profiles = Installed profiles:
 pci-profiles-not-found = No PCI profiles found!
-no-installed-pci-profiles = No installed PCI profiles!
-no-installed-profile-device = no installed profile for PCI devices found!
+usb-profiles-not-found = No USB profiles found!
+no-installed-profiles = No installed profiles!
+no-installed-profile-device = no installed profile for devices found!

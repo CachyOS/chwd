@@ -17,7 +17,7 @@
 use crate::device::Device;
 use crate::{console_writer, fl, profile_misc};
 
-pub fn print_available_profiles_in_detail(devices: &[Device]) {
+pub fn print_available_profiles_in_detail(bus_type: &str, devices: &[Device]) {
     let mut config_found = false;
     for device in devices {
         let available_profiles = &device.available_profiles;
@@ -29,7 +29,7 @@ pub fn print_available_profiles_in_detail(devices: &[Device]) {
 
         log::info!(
             "{} {}: {} ({}:{}:{})",
-            "PCI",
+            bus_type,
             fl!("device"),
             device.sysfs_id,
             device.class_id,
