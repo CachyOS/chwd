@@ -18,12 +18,14 @@ pass-profile-no-match-install = 入力されたプロファイルはインスト
 available = 利用可
 installed = インストール済
 device = デバイス
-no-profile-device = PCI デバイスのプロファイルが見つかりません。
+no-profile-device = デバイスのプロファイルが見つかりません。
 
 # console writer
 invalid-profile = プロファイル "{$invalid_profile}" は不正です。
 all-pci-profiles = 全 PCI プロファイル:
-installed-pci-profiles = インストール済みの PCI プロファイル
+all-usb-profiles = 全 USB プロファイル:
+installed-profiles = インストール済みのプロファイル:
 pci-profiles-not-found = PCI プロファイルが見つかりません。
-no-installed-pci-profiles = PCI プロファイルはインストールされていません。
-no-installed-profile-device = PCI デバイス用のインストール済みプロファイルが見つかりません。
+usb-profiles-not-found = USB プロファイルが見つかりません。
+no-installed-profiles = インストール済みのプロファイルがありません。
+no-installed-profile-device = デバイス用のインストール済みプロファイルが見つかりません。
