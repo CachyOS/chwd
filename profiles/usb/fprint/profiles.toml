@@ -24,12 +24,10 @@ priority = 5
 packages = "fprintd"
 post_install = """
     systemctl enable fprintd.service
-    mkdir -p /etc/pam.d/sudo.d /etc/pam.d/polkit-1.d
+    mkdir -p /etc/pam.d/sudo.d
     echo 'auth    sufficient    pam_fprintd.so' > /etc/pam.d/sudo.d/50-fprintd.conf
-    echo 'auth    sufficient    pam_fprintd.so' > /etc/pam.d/polkit-1.d/50-fprintd.conf
 """
 post_remove = """
     systemctl disable fprintd.service
     rm -f /etc/pam.d/sudo.d/50-fprintd.conf
-    rm -f /etc/pam.d/polkit-1.d/50-fprintd.conf
 """
