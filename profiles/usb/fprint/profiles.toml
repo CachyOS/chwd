@@ -18,16 +18,23 @@ desc = "Fingerprint reader support (fprintd)"
 #   2808  FocalTech
 #   298d  Next Biometrics
 vendor_ids = "045e 0483 04f3 05ba 06cb 08ff 0bda 10a5 138a 147e 1c7a 2541 27c6 2808 298d"
-device_ids = "*"
+device_ids = '>/var/lib/chwd/ids/fprint.ids'
 class_ids = "*"
 priority = 5
 packages = "fprintd"
 post_install = """
     systemctl enable fprintd.service
     mkdir -p /etc/pam.d/sudo.d
-    echo 'auth    sufficient    pam_fprintd.so' > /etc/pam.d/sudo.d/50-fprintd.conf
+    cat > /etc/pam.d/sudo.d/50-fprintd.conf <<'EOF'
+# Managed by chwd - DO NOT EDIT
+auth	sufficient	pam_fprintd.so
+EOF
 """
 post_remove = """
-    systemctl disable fprintd.service
-    rm -f /etc/pam.d/sudo.d/50-fprintd.conf
+    if grep -q 'Managed by chwd' /etc/pam.d/sudo.d/50-fprintd.conf 2>/dev/null; then
+        rm -f /etc/pam.d/sudo.d/50-fprintd.conf
+    fi
+    if ! systemctl list-dependencies --reverse fprintd.service 2>/dev/null | grep -q .; then
+        systemctl disable fprintd.service
+    fi
 """

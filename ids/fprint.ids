@@ -1,0 +1,68 @@
+# Fingerprint reader USB product IDs supported by libfprint
+# Source: https://fprint.freedesktop.org/supported-devices.html
+
+# 045e - Microsoft (fingerprint sensors in Surface devices)
+00bb 00bc 00bd 00ca
+
+# 0483 - STMicroelectronics / UPEK
+2015 2016 2017
+
+# 04f3 - Elan Microelectronics
+0903 0907
+0c01 0c02 0c03 0c04 0c05 0c06 0c07 0c08 0c09 0c0a 0c0b 0c0c 0c0d 0c0e 0c0f
+0c10 0c11 0c12 0c13 0c14 0c15 0c16 0c17 0c18 0c19 0c1a 0c1b 0c1c 0c1d 0c1e 0c1f
+0c20 0c21 0c22 0c23 0c24 0c25 0c26 0c27 0c28 0c29 0c2a 0c2b 0c2c 0c2d 0c2e 0c2f
+0c30 0c31 0c32 0c33
+0c3d 0c42 0c4b 0c4d 0c4f 0c58 0c63 0c6e
+0c7d 0c7e 0c7f 0c80 0c81 0c82 0c83 0c84 0c85 0c86 0c87 0c88 0c89 0c8a 0c8b 0c8c
+0c8d 0c8e 0c8f 0c90 0c91 0c92 0c93 0c94 0c95 0c96 0c97 0c98 0c99
+0c9d 0c9f 0ca3 0ca7 0ca8 0cb0
+
+# 05ba - Digital Persona
+0007 0008 000a
+
+# 06cb - Synaptics
+00bd 00c2 00c4 00c6 00df 00e9 00f0 00f9 00fc
+0100 0103 0104 0106 0107 0108 0109 010a
+0123 0124 0126 0129
+015f 0168 0169 016c 0173 0174
+019d 019f 01a0
+
+# 08ff - AuthenTec
+1600 1660
+1680 1681 1682 1683 1684 1685 1686 1687 1688 1689
+168a 168b 168c 168d 168e 168f
+2500 2550 2580 2660
+2680 2681 2682 2683 2684 2685 2686 2687 2688 2689 268a 268b 268c 268d 268e 268f
+2690 2691
+2810 5501 5731
+
+# 0bda - Realtek
+5813 5816
+
+# 10a5 - FPC (Fingerprint Cards)
+9524 9544 a305 a306 c844 d205 d805 da04 ffe0
+
+# 138a - Validity Sensors (Synaptics)
+0001 0005 0008 0010 0011 0015 0017 0018 0050 0091
+
+# 147e - UPEK
+1000 1001 2016 2020 3001
+
+# 1c7a - LighTuning / Egis Technology
+0570 0571 0582 0583 0584 0585 0586 0587 0588 05a1 0603
+
+# 2541 - Realtek
+fa03
+
+# 27c6 - Goodix Technology
+5840 6014 6092 6094 609a 609c 60a2 60a4 60bc 60c2
+6304 631c 633c 634c 6384 639c 63ac 63bc 63cc
+6496 650a 650c 6512 6582 6584 658c 6592 6594 659a 659c
+66a9 689a 6a94
+
+# 2808 - FocalTech
+077a 079a 1579 9e48 a27a a57a a78a a959 a99a d979
+
+# 298d - Next Biometrics
+1010

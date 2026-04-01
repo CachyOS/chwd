@@ -147,7 +147,11 @@ fn fill_profiles(
 ) {
     let dir_entries = match fs::read_dir(conf_path) {
         Ok(entries) => entries,
-        Err(_) => return,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return,
+        Err(e) => {
+            log::warn!("failed to read profile directory '{}': {}", conf_path, e);
+            return;
+        }
     };
     for entry in dir_entries {
         let config_file_path = format!(
