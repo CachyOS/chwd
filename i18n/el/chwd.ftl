@@ -10,7 +10,7 @@ root-operation = Δεν μπορείτε να εκτελέσετε αυτήν τ
 profile-not-exist = Το προφίλ «{$profile_name}» δεν υπάρχει!
 no-matching-device = Δεν βρέθηκε κατάλληλη συσκευή για το προφίλ «{$profile_name}»!
 profile-not-installed = Το προφίλ «{$profile_name}» δεν έχει εγκατασταθεί!
-script-failed = Το σενάριο απέτυχε!
+script-failed = Η δέσμη ενεργειών απέτυχε!
 failed-set-db = Ο ορισμός της βάσης δεδομένων απέτυχε!
 pass-profile-no-match-install = Το παρεχόμενο προφίλ δεν αντιστοιχεί στο εγκατεστημένο προφίλ!
 
