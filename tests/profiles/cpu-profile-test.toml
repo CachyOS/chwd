@@ -1,0 +1,15 @@
+[intel-lpmd]
+desc = 'Intel Low Power Mode Daemon for supported hybrid Intel CPUs'
+class_ids = "0600"
+vendor_ids = "8086"
+device_ids = "*"
+cpu_family = "6"
+cpu_models = "151 154 183 186 191 170 172 189 204"
+priority = 5
+packages = 'intel-lpmd'
+post_install = """
+    systemctl enable --now intel_lpmd.service
+"""
+post_remove = """
+    systemctl disable intel_lpmd.service
+"""
