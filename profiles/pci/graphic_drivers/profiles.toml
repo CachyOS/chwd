@@ -306,9 +306,7 @@ EOF
             mkinitcpio -P
         fi
     fi
-    if [ -e /etc/gdm/custom.conf ]; then
-        sed -i -e 's|#WaylandEnable=false|WaylandEnable=false|g' /etc/gdm/custom.conf
-    fi"""
+"""
 pre_remove = """
     rm -f /etc/mkinitcpio.conf.d/10-chwd.conf
 """
