@@ -246,20 +246,26 @@ impl<'a> USBDevice<'a> {
         }
     }
 
+    /// Try a string descriptor by index, falling back to sysfs on failure.
+    #[allow(unused_variables)]
+    fn string_descriptor_or_sysfs(&self, desc_index: u8, sysfs_attr: &str) -> String {
+        if let Some(s) = self.get_string_descriptor_ascii(desc_index) {
+            return s;
+        }
+        #[cfg(feature = "std")]
+        if let Some(s) = self.read_sysfs_attr(sysfs_attr) {
+            return s;
+        }
+        String::new()
+    }
+
     /// Get manufacturer string. Falls back to sysfs when `libusb_open` fails.
     pub fn manufacturer(&self) -> String {
         let desc = match self.device_descriptor() {
             Some(d) => d,
             None => return String::new(),
         };
-        if let Some(s) = self.get_string_descriptor_ascii(desc.iManufacturer) {
-            return s;
-        }
-        #[cfg(feature = "std")]
-        if let Some(s) = self.read_sysfs_attr("manufacturer") {
-            return s;
-        }
-        String::new()
+        self.string_descriptor_or_sysfs(desc.iManufacturer, "manufacturer")
     }
 
     /// Get product string. Falls back to sysfs when `libusb_open` fails.
@@ -268,13 +274,28 @@ impl<'a> USBDevice<'a> {
             Some(d) => d,
             None => return String::new(),
         };
-        if let Some(s) = self.get_string_descriptor_ascii(desc.iProduct) {
-            return s;
-        }
-        #[cfg(feature = "std")]
-        if let Some(s) = self.read_sysfs_attr("product") {
-            return s;
-        }
-        String::new()
+        self.string_descriptor_or_sysfs(desc.iProduct, "product")
+    }
+
+    /// Resolve vendor name using USB IDs DB, falling back to string descriptor and sysfs.
+    #[cfg(feature = "usb-ids")]
+    pub fn resolved_vendor_name(
+        &self,
+        desc: &libusb_c_sys::libusb_device_descriptor,
+        ids: Option<&usb_ids::UsbIds>,
+    ) -> String {
+        ids.and_then(|db| db.vendor_name(desc.idVendor).map(|s| s.to_owned()))
+            .unwrap_or_else(|| self.string_descriptor_or_sysfs(desc.iManufacturer, "manufacturer"))
+    }
+
+    /// Resolve product name using USB IDs DB, falling back to string descriptor and sysfs.
+    #[cfg(feature = "usb-ids")]
+    pub fn resolved_product_name(
+        &self,
+        desc: &libusb_c_sys::libusb_device_descriptor,
+        ids: Option<&usb_ids::UsbIds>,
+    ) -> String {
+        ids.and_then(|db| db.product_name(desc.idVendor, desc.idProduct).map(|s| s.to_owned()))
+            .unwrap_or_else(|| self.string_descriptor_or_sysfs(desc.iProduct, "product"))
     }
 }

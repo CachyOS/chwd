@@ -1,7 +1,6 @@
 use std::borrow::ToOwned;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
 use std::string::String;
 
 /// USB IDs database parsed from `usb.ids` (e.g. `/usr/share/hwdata/usb.ids`).
@@ -17,14 +16,7 @@ impl UsbIds {
 
     /// Load the USB IDs database from the first found default path.
     pub fn load() -> Option<Self> {
-        for path in Self::PATHS {
-            if Path::new(path).exists() {
-                if let Some(db) = Self::load_from(path) {
-                    return Some(db);
-                }
-            }
-        }
-        None
+        Self::PATHS.iter().find_map(|path| Self::load_from(path))
     }
 
     /// Load the USB IDs database from a specific file path.

@@ -11,15 +11,8 @@ fn main() {
     for device in &devices {
         let desc = device.device_descriptor().unwrap();
 
-        // Try USB IDs database first, fall back to sysfs
-        let vendor_name = usb_ids
-            .as_ref()
-            .and_then(|db| db.vendor_name(desc.idVendor).map(|s| s.to_owned()))
-            .unwrap_or_else(|| device.manufacturer());
-        let product_name = usb_ids
-            .as_ref()
-            .and_then(|db| db.product_name(desc.idVendor, desc.idProduct).map(|s| s.to_owned()))
-            .unwrap_or_else(|| device.product());
+        let vendor_name = device.resolved_vendor_name(&desc, usb_ids.as_ref());
+        let product_name = device.resolved_product_name(&desc, usb_ids.as_ref());
 
         println!(
             "Bus {:03} Device {:03}: ID {:04x}:{:04x} {}{}{}",
