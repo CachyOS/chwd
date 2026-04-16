@@ -31,8 +31,11 @@ pub struct Data {
     pub sync_package_manager_database: bool,
     pub is_ai_sdk_target: bool,
     pub pci_devices: ListOfDevicesT,
-    pub installed_profiles: ListOfProfilesT,
-    pub all_profiles: ListOfProfilesT,
+    pub usb_devices: ListOfDevicesT,
+    pub installed_pci_profiles: ListOfProfilesT,
+    pub installed_usb_profiles: ListOfProfilesT,
+    pub all_pci_profiles: ListOfProfilesT,
+    pub all_usb_profiles: ListOfProfilesT,
     pub invalid_profiles: Vec<String>,
 }
 
@@ -41,6 +44,7 @@ impl Data {
     pub fn new(is_ai_sdk: bool) -> Self {
         let mut res = Self {
             pci_devices: fill_devices().expect("Failed to init"),
+            usb_devices: fill_usb_devices(),
             sync_package_manager_database: true,
             is_ai_sdk_target: is_ai_sdk,
             ..Default::default()
@@ -50,44 +54,86 @@ impl Data {
         res
     }
 
+    /// Returns combined list of all installed profiles (PCI + USB).
+    #[must_use]
+    pub fn installed_profiles(&self) -> Vec<Profile> {
+        self.installed_pci_profiles
+            .iter()
+            .chain(self.installed_usb_profiles.iter())
+            .cloned()
+            .collect()
+    }
+
+    /// Returns combined list of all available profiles (PCI + USB).
+    #[must_use]
+    pub fn all_profiles(&self) -> Vec<Profile> {
+        self.all_pci_profiles.iter().chain(self.all_usb_profiles.iter()).cloned().collect()
+    }
+
     pub fn update_installed_profile_data(&mut self) {
         // Clear profile Vec's in each device element
         for pci_device in &mut self.pci_devices {
             pci_device.installed_profiles.clear();
         }
+        for usb_device in &mut self.usb_devices {
+            usb_device.installed_profiles.clear();
+        }
 
-        self.installed_profiles.clear();
+        self.installed_pci_profiles.clear();
+        self.installed_usb_profiles.clear();
 
         // Refill data
         self.fill_installed_profiles();
 
-        set_matching_profiles(&mut self.pci_devices, &self.installed_profiles, true);
+        set_matching_profiles(&mut self.pci_devices, &self.installed_pci_profiles, true);
+        set_matching_profiles(&mut self.usb_devices, &self.installed_usb_profiles, true);
     }
 
     fn fill_installed_profiles(&mut self) {
-        let conf_path = crate::consts::CHWD_PCI_DATABASE_DIR;
-        let configs = &mut self.installed_profiles;
-
-        fill_profiles(configs, &mut self.invalid_profiles, conf_path, self.is_ai_sdk_target);
+        fill_profiles(
+            &mut self.installed_pci_profiles,
+            &mut self.invalid_profiles,
+            crate::consts::CHWD_PCI_DATABASE_DIR,
+            self.is_ai_sdk_target,
+        );
+        fill_profiles(
+            &mut self.installed_usb_profiles,
+            &mut self.invalid_profiles,
+            crate::consts::CHWD_USB_DATABASE_DIR,
+            self.is_ai_sdk_target,
+        );
     }
 
     fn fill_all_profiles(&mut self) {
-        let conf_path = crate::consts::CHWD_PCI_CONFIG_DIR;
-        let configs = &mut self.all_profiles;
-
-        fill_profiles(configs, &mut self.invalid_profiles, conf_path, self.is_ai_sdk_target);
+        fill_profiles(
+            &mut self.all_pci_profiles,
+            &mut self.invalid_profiles,
+            crate::consts::CHWD_PCI_CONFIG_DIR,
+            self.is_ai_sdk_target,
+        );
+        fill_profiles(
+            &mut self.all_usb_profiles,
+            &mut self.invalid_profiles,
+            crate::consts::CHWD_USB_CONFIG_DIR,
+            self.is_ai_sdk_target,
+        );
     }
 
     fn update_profiles_data(&mut self) {
         for pci_device in &mut self.pci_devices {
             pci_device.available_profiles.clear();
         }
+        for usb_device in &mut self.usb_devices {
+            usb_device.available_profiles.clear();
+        }
 
-        self.all_profiles.clear();
+        self.all_pci_profiles.clear();
+        self.all_usb_profiles.clear();
 
         self.fill_all_profiles();
 
-        set_matching_profiles(&mut self.pci_devices, &self.all_profiles, false);
+        set_matching_profiles(&mut self.pci_devices, &self.all_pci_profiles, false);
+        set_matching_profiles(&mut self.usb_devices, &self.all_usb_profiles, false);
 
         self.update_installed_profile_data();
     }
@@ -99,7 +145,15 @@ fn fill_profiles(
     conf_path: &str,
     is_ai_sdk: bool,
 ) {
-    for entry in fs::read_dir(conf_path).expect("Failed to read directory!") {
+    let dir_entries = match fs::read_dir(conf_path) {
+        Ok(entries) => entries,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return,
+        Err(e) => {
+            log::warn!("failed to read profile directory '{}': {}", conf_path, e);
+            return;
+        }
+    };
+    for entry in dir_entries {
         let config_file_path = format!(
             "{}/{}",
             entry.as_ref().unwrap().path().as_os_str().to_str().unwrap(),
@@ -179,6 +233,59 @@ fn fill_devices() -> Option<ListOfDevicesT> {
     }
 
     Some(devices)
+}
+
+fn fill_usb_devices() -> ListOfDevicesT {
+    let usb_devices_path = Path::new("/sys/bus/usb/devices");
+    let dir_entries = match fs::read_dir(usb_devices_path) {
+        Ok(entries) => entries,
+        Err(_) => return vec![],
+    };
+
+    let read_sysfs = |path: &Path, attr: &str| -> Option<String> {
+        fs::read_to_string(path.join(attr)).ok().map(|s| s.trim().to_owned())
+    };
+
+    let mut devices = vec![];
+
+    for entry in dir_entries.filter_map(Result::ok) {
+        let path = entry.path();
+
+        // Only consider actual USB devices (have idVendor)
+        let vendor_id = match read_sysfs(&path, "idVendor") {
+            Some(v) => v,
+            None => continue,
+        };
+        let device_id = match read_sysfs(&path, "idProduct") {
+            Some(v) => v,
+            None => continue,
+        };
+
+        // Skip USB root hubs (vendor 1d6b = Linux Foundation)
+        if vendor_id == "1d6b" {
+            continue;
+        }
+
+        let vendor_name = read_sysfs(&path, "manufacturer").unwrap_or_default();
+        let device_name = read_sysfs(&path, "product").unwrap_or_default();
+        let class_id = read_sysfs(&path, "bDeviceClass").unwrap_or_default();
+        let sysfs_busid = entry.file_name().to_string_lossy().into_owned();
+
+        devices.push(Device {
+            class_name: String::new(),
+            device_name,
+            vendor_name,
+            class_id,
+            device_id,
+            vendor_id,
+            sysfs_busid,
+            sysfs_id: String::new(),
+            available_profiles: vec![],
+            installed_profiles: vec![],
+        });
+    }
+
+    devices
 }
 
 fn set_matching_profile(profile: &Profile, devices: &mut ListOfDevicesT, set_as_installed: bool) {

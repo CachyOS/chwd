@@ -157,11 +157,13 @@ fn prepare_autoconfigure(
 
     let mut profiles_with_priority: Vec<(i32, String)> = vec![];
 
-    let devices = &data.pci_devices;
-    let installed_profiles = &data.installed_profiles;
+    let installed_profiles = data.installed_profiles();
+
+    let all_devices =
+        data.pci_devices.iter().chain(data.usb_devices.iter()).collect::<Vec<_>>();
 
     let mut found_device = false;
-    for device in devices {
+    for device in &all_devices {
         if autoconf_class_id != "any" && device.class_id != autoconf_class_id {
             continue;
         }
@@ -212,9 +214,8 @@ fn prepare_autoconfigure(
 }
 
 fn get_available_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Profile>> {
-    // Get the right devices
-    let devices = &data.pci_devices;
-    for device in devices {
+    // Search both PCI and USB devices
+    for device in data.pci_devices.iter().chain(data.usb_devices.iter()) {
         let available_profiles = &device.available_profiles;
         if available_profiles.is_empty() {
             continue;
@@ -229,15 +230,13 @@ fn get_available_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Pr
 }
 
 fn get_db_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Profile>> {
-    // Get the right profiles
-    let all_profiles = &data.all_profiles;
-    misc::find_profile(profile_name, all_profiles)
+    let all_profiles = data.all_profiles();
+    misc::find_profile(profile_name, &all_profiles)
 }
 
 fn get_installed_profile(data: &data::Data, profile_name: &str) -> Option<Arc<Profile>> {
-    // Get the right profiles
-    let installed_profiles = &data.installed_profiles;
-    misc::find_profile(profile_name, installed_profiles)
+    let installed_profiles = data.installed_profiles();
+    misc::find_profile(profile_name, &installed_profiles)
 }
 
 fn get_working_profile(data: &data::Data, profile_name: &str) -> anyhow::Result<Arc<Profile>> {
@@ -364,12 +363,20 @@ fn perform_transaction_type(
     status
 }
 
+fn db_dir_for_profile(profile: &Profile) -> &'static str {
+    if profile.prof_path.contains("/usb/") {
+        consts::CHWD_USB_DATABASE_DIR
+    } else {
+        consts::CHWD_PCI_DATABASE_DIR
+    }
+}
+
 fn install_profile(data: &mut data::Data, args: &args::Args, profile: &Profile) -> misc::Status {
     if !run_script(data, args, profile, Transaction::Install) {
         return misc::Status::ErrorScriptFailed;
     }
 
-    let db_dir = consts::CHWD_PCI_DATABASE_DIR;
+    let db_dir = db_dir_for_profile(profile);
     let working_dir = format!(
         "{}/{}",
         db_dir,

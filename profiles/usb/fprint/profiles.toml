@@ -1,0 +1,40 @@
+[fprint]
+desc = "Fingerprint reader support (fprintd)"
+# Vendor IDs of known fingerprint sensor manufacturers supported by libfprint.
+# Source: https://fprint.freedesktop.org/supported-devices.html
+#   045e  Microsoft (fingerprint sensors in Surface devices)
+#   0483  STMicroelectronics / UPEK
+#   04f3  Elan Microelectronics
+#   05ba  Digital Persona
+#   06cb  Synaptics
+#   08ff  AuthenTec
+#   0bda  Realtek
+#   10a5  FPC (Fingerprint Cards)
+#   138a  Validity Sensors (Synaptics)
+#   147e  UPEK
+#   1c7a  LighTuning / Egis Technology
+#   2541  Realtek
+#   27c6  Goodix Technology
+#   2808  FocalTech
+#   298d  Next Biometrics
+vendor_ids = "045e 0483 04f3 05ba 06cb 08ff 0bda 10a5 138a 147e 1c7a 2541 27c6 2808 298d"
+device_ids = '>/var/lib/chwd/ids/fprint.ids'
+class_ids = "*"
+priority = 5
+packages = "fprintd"
+post_install = """
+    systemctl enable fprintd.service
+    mkdir -p /etc/pam.d/sudo.d
+    cat > /etc/pam.d/sudo.d/50-fprintd.conf <<'EOF'
+# Managed by chwd - DO NOT EDIT
+auth	sufficient	pam_fprintd.so
+EOF
+"""
+post_remove = """
+    if grep -q 'Managed by chwd' /etc/pam.d/sudo.d/50-fprintd.conf 2>/dev/null; then
+        rm -f /etc/pam.d/sudo.d/50-fprintd.conf
+    fi
+    if ! systemctl list-dependencies --reverse fprintd.service 2>/dev/null | grep -q .; then
+        systemctl disable fprintd.service
+    fi
+"""

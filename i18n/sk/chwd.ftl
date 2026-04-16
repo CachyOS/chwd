@@ -18,12 +18,14 @@ pass-profile-no-match-install = uvedený profil sa nezhoduje s nainštalovaným 
 available = DOSTUPNÉ
 installed = NAINŠTALOVANÉ
 device = Zariadenie
-no-profile-device = neboli nájdené žiadne profily pre zariadenia PCI!
+no-profile-device = neboli nájdené žiadne profily pre zariadenia!
 
 # Výstup v konzoly
 invalid-profile = profil '{$invalid_profile}' je neplatný!
 all-pci-profiles = Všetky PCI profily:
-installed-pci-profiles = Inštalované PCI profily:
+all-usb-profiles = Všetky USB profily:
+installed-profiles = Inštalované profily:
 pci-profiles-not-found = Žiadne PCI profily neboli nájdené!
-no-installed-pci-profiles = Žiadne PCI profily nie sú nainštalované!
-no-installed-profile-device = žiadny nainštalovaný profil pre zariadenie PCI nebol nájdený !
+usb-profiles-not-found = Žiadne USB profily neboli nájdené!
+no-installed-profiles = Žiadne profily nie sú nainštalované!
+no-installed-profile-device = žiadny nainštalovaný profil pre zariadenia nebol nájdený!

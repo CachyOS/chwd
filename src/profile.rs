@@ -166,8 +166,8 @@ pub fn get_available_profiles(is_ai_sdk: bool) -> Vec<Profile> {
     // populate data
     let data_obj = crate::data::Data::new(is_ai_sdk);
 
-    // extract for each device
-    for device in &data_obj.pci_devices {
+    // extract for each device (PCI + USB)
+    for device in data_obj.pci_devices.iter().chain(data_obj.usb_devices.iter()) {
         if device.available_profiles.is_empty() {
             continue;
         }

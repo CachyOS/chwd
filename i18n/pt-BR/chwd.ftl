@@ -18,12 +18,14 @@ pass-profile-no-match-install = O perfil informado não corresponde ao perfil in
 available = DISPONÍVEL
 installed = INSTALADO
 device = Dispositivo
-no-profile-device = Nenhum perfil para dispositivos PCI foi encontrado!
+no-profile-device = Nenhum perfil para dispositivos foi encontrado!
 
 # console writer
 invalid-profile = O perfil '{$invalid_profile}' é inválido!
 all-pci-profiles = Todos os perfis PCI:
-installed-pci-profiles = Perfis PCI instalados:
+all-usb-profiles = Todos os perfis USB:
+installed-profiles = Perfis instalados:
 pci-profiles-not-found = Nenhum perfil PCI foi encontrado!
-no-installed-pci-profiles = Nenhum perfil PCI está instalado!
-no-installed-profile-device = Nenhum perfil instalado para dispositivos PCI foi encontrado!
+usb-profiles-not-found = Nenhum perfil USB foi encontrado!
+no-installed-profiles = Nenhum perfil está instalado!
+no-installed-profile-device = Nenhum perfil instalado para dispositivos foi encontrado!
