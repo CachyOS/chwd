@@ -20,9 +20,8 @@ use crate::profile::Profile;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
-
+use subprocess::Exec;
 use regex::Regex;
-
 pub type ListOfProfilesT = Vec<Profile>;
 pub type ListOfDevicesT = Vec<Device>;
 
@@ -374,6 +373,18 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
             .expect("Failed to read chassis type");
         let chassis_type = chassis_type.trim();
         if !chassis_types.iter().any(|x| x == chassis_type) {
+            return vec![];
+        }
+    }
+
+    if let Some(environment_types) = &profile.environment_types {
+        let environment_type = Exec::cmd("systemd-detect-virt")
+            .capture()
+            .expect("Failed to detect environment type")
+            .stdout_str()
+            .trim()
+            .to_string();
+        if !environment_types.contains(&environment_type) {
             return vec![];
         }
     }
