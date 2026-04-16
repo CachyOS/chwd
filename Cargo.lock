@@ -172,6 +172,7 @@ dependencies = [
  "i18n-embed",
  "i18n-embed-fl",
  "libpci",
+ "libusb",
  "log",
  "nix",
  "once_cell",
@@ -560,6 +561,22 @@ version = "0.1.3"
 dependencies = [
  "bindgen",
  "cc",
+ "libc",
+]
+
+[[package]]
+name = "libusb"
+version = "0.1.0"
+dependencies = [
+ "libc",
+ "libusb-c-sys",
+]
+
+[[package]]
+name = "libusb-c-sys"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
  "libc",
 ]
 

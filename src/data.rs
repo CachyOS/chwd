@@ -190,11 +190,12 @@ fn fill_profiles(
     configs.sort_by_key(|rhs| std::cmp::Reverse(rhs.priority));
 }
 
-fn fill_devices() -> Option<ListOfDevicesT> {
-    #[allow(clippy::uninlined_format_args)]
-    let from_hex =
-        |hex_number: u32, fill: usize| -> String { format!("{:01$x}", hex_number, fill) };
+#[allow(clippy::uninlined_format_args)]
+fn from_hex(hex_number: u32, fill: usize) -> String {
+    format!("{:01$x}", hex_number, fill)
+}
 
+fn fill_devices() -> Option<ListOfDevicesT> {
     // Initialize
     let mut pacc = libpci::PCIAccess::new(true);
 
@@ -236,49 +237,38 @@ fn fill_devices() -> Option<ListOfDevicesT> {
 }
 
 fn fill_usb_devices() -> ListOfDevicesT {
-    let usb_devices_path = Path::new("/sys/bus/usb/devices");
-    let dir_entries = match fs::read_dir(usb_devices_path) {
-        Ok(entries) => entries,
-        Err(_) => return vec![],
+    let ctx = match libusb::USBContext::try_new() {
+        Some(ctx) => ctx,
+        None => return vec![],
+    };
+    let device_list = match ctx.get_device_list() {
+        Some(list) => list,
+        None => return vec![],
     };
 
-    let read_sysfs = |path: &Path, attr: &str| -> Option<String> {
-        fs::read_to_string(path.join(attr)).ok().map(|s| s.trim().to_owned())
-    };
+    let usb_ids = libusb::usb_ids::UsbIds::load();
 
     let mut devices = vec![];
 
-    for entry in dir_entries.filter_map(Result::ok) {
-        let path = entry.path();
-
-        // Only consider actual USB devices (have idVendor)
-        let vendor_id = match read_sysfs(&path, "idVendor") {
-            Some(v) => v,
-            None => continue,
-        };
-        let device_id = match read_sysfs(&path, "idProduct") {
-            Some(v) => v,
+    for usb_dev in device_list.iter() {
+        let desc = match usb_dev.device_descriptor() {
+            Some(d) => d,
             None => continue,
         };
 
-        // Skip USB root hubs (vendor 1d6b = Linux Foundation)
-        if vendor_id == "1d6b" {
+        // Skip USB Linux root hubs
+        if desc.idVendor == 0x1d6b {
             continue;
         }
 
-        let vendor_name = read_sysfs(&path, "manufacturer").unwrap_or_default();
-        let device_name = read_sysfs(&path, "product").unwrap_or_default();
-        let class_id = read_sysfs(&path, "bDeviceClass").unwrap_or_default();
-        let sysfs_busid = entry.file_name().to_string_lossy().into_owned();
-
         devices.push(Device {
             class_name: String::new(),
-            device_name,
-            vendor_name,
-            class_id,
-            device_id,
-            vendor_id,
-            sysfs_busid,
+            device_name: usb_dev.resolved_product_name(&desc, usb_ids.as_ref()),
+            vendor_name: usb_dev.resolved_vendor_name(&desc, usb_ids.as_ref()),
+            class_id: from_hex(desc.bDeviceClass as u32, 2),
+            device_id: from_hex(desc.idProduct as u32, 4),
+            vendor_id: from_hex(desc.idVendor as u32, 4),
+            sysfs_busid: usb_dev.sysfs_busid(),
             sysfs_id: String::new(),
             available_profiles: vec![],
             installed_profiles: vec![],
