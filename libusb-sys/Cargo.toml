@@ -1,0 +1,23 @@
+[package]
+name = "libusb-c-sys"
+version = "0.1.0"
+edition = "2021"
+authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
+license = "GPL-3.0-only"
+rust-version = "1.81.0"
+
+description = "Raw bindings for libusb-1.0"
+homepage = "https://github.com/CachyOS/chwd"
+repository = "https://github.com/CachyOS/chwd"
+categories = ["api-bindings"]
+
+[dependencies]
+libc = { default-features = false, version = "0.2" }
+
+[build-dependencies]
+bindgen = { version = "0.72", default-features = false, features = ["runtime"] }
+
+[features]
+default = []
+
+std = [] # Use std types instead of libc in bindgen
