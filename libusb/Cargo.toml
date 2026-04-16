@@ -19,6 +19,7 @@ libc = { default-features = false, version = "0.2" }
 default = []
 
 std = ["libusb-c-sys/std"]
+usb-ids = ["std"]
 
 [[example]]
 name = "example1"

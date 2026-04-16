@@ -24,6 +24,9 @@ use std::format;
 #[cfg(feature = "std")]
 use std::borrow::ToOwned;
 
+#[cfg(feature = "usb-ids")]
+pub mod usb_ids;
+
 use core::marker::PhantomData;
 use core::ptr;
 
@@ -70,8 +73,7 @@ impl USBContext {
     /// Get the list of USB devices.
     pub fn get_device_list(&self) -> Option<USBDeviceList<'_>> {
         let mut list: *mut *mut libusb_c_sys::libusb_device = ptr::null_mut();
-        let count =
-            unsafe { libusb_c_sys::libusb_get_device_list(self.handle, &mut list) };
+        let count = unsafe { libusb_c_sys::libusb_get_device_list(self.handle, &mut list) };
         if count < 0 || list.is_null() {
             None
         } else {
@@ -136,17 +138,17 @@ unsafe impl<'a> Send for USBDevice<'a> {}
 
 impl<'a> USBDevice<'a> {
     /// Get the device descriptor.
-    pub fn device_descriptor(
-        &self,
-    ) -> Option<libusb_c_sys::libusb_device_descriptor> {
+    pub fn device_descriptor(&self) -> Option<libusb_c_sys::libusb_device_descriptor> {
         if self.dev.is_null() {
             return None;
         }
-        let mut desc: libusb_c_sys::libusb_device_descriptor =
-            unsafe { core::mem::zeroed() };
-        let ret =
-            unsafe { libusb_c_sys::libusb_get_device_descriptor(self.dev, &mut desc) };
-        if ret < 0 { None } else { Some(desc) }
+        let mut desc: libusb_c_sys::libusb_device_descriptor = unsafe { core::mem::zeroed() };
+        let ret = unsafe { libusb_c_sys::libusb_get_device_descriptor(self.dev, &mut desc) };
+        if ret < 0 {
+            None
+        } else {
+            Some(desc)
+        }
     }
 
     /// Get bus number.
