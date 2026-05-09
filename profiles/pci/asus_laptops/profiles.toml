@@ -132,14 +132,41 @@ case "${1:-}" in
 esac
 EOF
 
+    install -Dm644 /dev/stdin /etc/systemd/system/g733zw-audio-profile-change-fix.service <<'EOF'
+[Unit]
+Description=Re-apply ASUS G733ZW audio routing after platform profile changes
+After=sound.target
+ConditionPathExists=/sys/firmware/acpi/platform_profile
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash -lc '/usr/bin/sleep 1; /usr/local/sbin/g733zw-audio-live-fix'
+EOF
+
+    install -Dm644 /dev/stdin /etc/systemd/system/g733zw-audio-profile-change-fix.path <<'EOF'
+[Unit]
+Description=Watch platform profile changes and restore ASUS G733ZW audio routing
+
+[Path]
+PathModified=/sys/firmware/acpi/platform_profile
+Unit=g733zw-audio-profile-change-fix.service
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
     systemctl daemon-reload
     systemctl disable g733zw-audio-live-fix.service || true
     systemctl enable --now g733zw-audio-live-fix.timer
+    systemctl enable --now g733zw-audio-profile-change-fix.path
 """
 post_remove = """
     echo "ASUS G733ZW ALC285 chwd removing..."
     systemctl disable --now g733zw-audio-live-fix.service || true
     systemctl disable --now g733zw-audio-live-fix.timer || true
+    systemctl disable --now g733zw-audio-profile-change-fix.path || true
+    rm -f /etc/systemd/system/g733zw-audio-profile-change-fix.path
+    rm -f /etc/systemd/system/g733zw-audio-profile-change-fix.service
     rm -f /etc/systemd/system/g733zw-audio-live-fix.service
     rm -f /etc/systemd/system/g733zw-audio-live-fix.timer
     rm -f /usr/local/sbin/g733zw-audio-live-fix
