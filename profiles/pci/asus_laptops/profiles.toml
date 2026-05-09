@@ -80,7 +80,7 @@ hda-verb "$hwdev" 0x17 SET_CONNECT_SEL 0x00
 hda-verb "$hwdev" 0x14 SET_PIN_WIDGET_CONTROL 0x40
 hda-verb "$hwdev" 0x14 SET_EAPD_BTLENABLE 0x02
 hda-verb "$hwdev" 0x14 SET_AMP_GAIN_MUTE 0xb000
-hda-verb "$hwdev" 0x1e SET_PIN_WIDGET_CONTROL 0x40
+hda-verb "$hwdev" 0x1e SET_PIN_WIDGET_CONTROL 0x00
 hda-verb "$hwdev" 0x16 SET_PIN_WIDGET_CONTROL 0x00
 hda-verb "$hwdev" 0x1b SET_PIN_WIDGET_CONTROL 0x00
 EOF
