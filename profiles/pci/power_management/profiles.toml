@@ -13,3 +13,20 @@ post_install = """
 post_remove = """
     systemctl disable intel_lpmd.service
 """
+
+[thermald]
+desc = 'Intel Thermal Daemon for supported mobile hybrid Intel CPUs'
+class_ids = "0600"
+vendor_ids = "8086"
+device_ids = "*"
+cpu_family = "6"
+cpu_models = "151 154 183 186 191 170 172 189 204"
+chassis_types = "8 9 10 11"
+priority = 4
+packages = 'thermald'
+post_install = """
+    systemctl enable --now thermald.service
+"""
+post_remove = """
+    systemctl disable thermald.service
+"""
