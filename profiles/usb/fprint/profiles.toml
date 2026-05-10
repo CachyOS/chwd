@@ -23,7 +23,6 @@ class_ids = "*"
 priority = 5
 packages = "fprintd"
 post_install = """
-    systemctl enable fprintd.service
     if [ -f /etc/pam.d/sudo ] && ! grep -q 'chwd-fprintd' /etc/pam.d/sudo; then
         sed -i '0,/^auth/{s//auth sufficient pam_fprintd.so # chwd-fprintd\n&/}' /etc/pam.d/sudo
     fi
@@ -31,8 +30,5 @@ post_install = """
 post_remove = """
     if [ -f /etc/pam.d/sudo ]; then
         sed -i '/# chwd-fprintd/d' /etc/pam.d/sudo
-    fi
-    if ! systemctl list-dependencies --reverse fprintd.service 2>/dev/null | grep -q .; then
-        systemctl disable fprintd.service
     fi
 """
