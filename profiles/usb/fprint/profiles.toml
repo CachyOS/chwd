@@ -24,6 +24,21 @@ priority = 5
 packages = "fprintd"
 post_install = """
     systemctl enable fprintd.service
+    if grep -qi '^27c6' /var/lib/chwd/ids/fprint.ids; then
+        tee /etc/systemd/system/fprintd-Goodix-fix.service > /dev/null <<EOF
+            [Unit]
+            Description=Restart fprint when using Goodix reader 
+            After=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+
+            [Service]
+            Type=oneshot
+            ExecStart=/usr/bin/systemctl restart fprintd.service
+
+            [Install]
+            WantedBy=suspend.target hibernate.target hybrid-sleep.target suspend-then-hibernate.target
+            EOF
+        systemctl enable fprintd-Goodix-fix.service
+    fi
     if [ -f /etc/pam.d/sudo ] && ! grep -q 'chwd-fprintd' /etc/pam.d/sudo; then
         sed -i '0,/^auth/{s//auth sufficient pam_fprintd.so # chwd-fprintd\n&/}' /etc/pam.d/sudo
     fi
