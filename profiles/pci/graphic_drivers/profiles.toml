@@ -279,7 +279,7 @@ priority = 3
 packages = 'mesa lib32-mesa vulkan-swrast xf86-video-vesa'
 
 [virtualbox]
-vendor_ids = "15AD"
+vendor_ids = "80EE"
 device_ids = "*"
 class_ids = "0300"
 desc = 'VirtualBox tools'
@@ -295,7 +295,7 @@ post_remove = """
 """
 
 [vmware]
-vendor_ids = "80ee"
+vendor_ids = "15AD"
 device_ids = "*"
 class_ids = "0300"
 desc = 'X.org vmware video driver and open-vm-tools'
