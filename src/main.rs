@@ -151,6 +151,8 @@ fn prepare_autoconfigure(
     args: &mut args::Args,
     autoconf_class_id: &str,
 ) -> Vec<String> {
+    use std::collections::{HashMap, HashSet};
+
     if args.autoconfigure.is_none() {
         return vec![];
     }
@@ -159,8 +161,18 @@ fn prepare_autoconfigure(
 
     let installed_profiles = data.installed_profiles();
 
-    let all_devices =
-        data.pci_devices.iter().chain(data.usb_devices.iter()).collect::<Vec<_>>();
+    let all_devices = data.pci_devices.iter().chain(data.usb_devices.iter()).collect::<Vec<_>>();
+
+    // Pre-compute conflict group resolution for all devices.
+    // This determines the correct single driver when multiple devices share a conflict group.
+    let resolution = data::resolve_conflict_groups(&data.pci_devices);
+    let resolved_map: HashMap<&str, &str> = resolution
+        .device_profile_map
+        .iter()
+        .map(|(busid, name)| (busid.as_str(), name.as_str()))
+        .collect();
+    let skipped_busids: HashSet<&str> =
+        resolution.skipped_devices.iter().map(|s| s.as_str()).collect();
 
     let mut found_device = false;
     for device in &all_devices {
@@ -179,23 +191,54 @@ fn prepare_autoconfigure(
         }
         let profile = profile.unwrap();
 
+        // Check if this device was skipped due to conflict group incompatibility
+        if skipped_busids.contains(device.sysfs_busid.as_str()) {
+            log::warn!("Skipping device {}. incompatible driver conflict group", device_info);
+            continue;
+        }
+
+        // Determine the effective profile: use conflict resolution if applicable
+        let effective_profile_name =
+            resolved_map.get(device.sysfs_busid.as_str()).copied().unwrap_or(&profile.name);
+
+        // Find the effective profile from device's available profiles (or use the best one)
+        let effective_profile = device
+            .available_profiles
+            .iter()
+            .find(|p| p.name == effective_profile_name)
+            .unwrap_or(profile);
+
         // If force is not set, then we skip found profile
-        let skip = !args.force && installed_profiles.iter().any(|x| x.name == profile.name);
+        let skip =
+            !args.force && installed_profiles.iter().any(|x| x.name == effective_profile.name);
 
         // Print found profile
         if skip {
             log::info!(
                 "Skipping already installed profile '{}' for device: {device_info}",
+                effective_profile.name
+            );
+        } else if effective_profile.name != profile.name {
+            log::info!(
+                "Using profile '{}' (conflict group resolution) for device: {device_info} \
+                 (per-device best was '{}')",
+                effective_profile.name,
                 profile.name
             );
         } else {
-            log::info!("Using profile '{}' for device: {device_info}", profile.name);
+            log::info!("Using profile '{}' for device: {device_info}", effective_profile.name);
         }
 
-        let profile_exists = profiles_with_priority.iter().any(|x| x.1 == profile.name);
+        let profile_exists = profiles_with_priority.iter().any(|x| x.1 == effective_profile.name);
         if !profile_exists && !skip {
-            profiles_with_priority.push((profile.priority, profile.name.clone()));
+            profiles_with_priority
+                .push((effective_profile.priority, effective_profile.name.clone()));
         }
+    }
+
+    // Print conflict group warnings
+    for warning in &resolution.warnings {
+        log::warn!("{warning}");
     }
 
     // Sort by priority descending so higher-priority profiles (e.g. GPU)
