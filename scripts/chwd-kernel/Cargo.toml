@@ -10,7 +10,7 @@ alpm = { default-features = false, version = "5" }
 alpm-utils = { features = ["conf"], default-features = false, version = "5" }
 pacmanconf = "3.1"
 
-subprocess = "1.0"
+subprocess = "1.1"
 clap = { features = ["derive"], version = "4" }
 nix = { features = ["user"], default-features = false, version = "0.31" }
 dialoguer = { default-features = false, version = "0.12" }
