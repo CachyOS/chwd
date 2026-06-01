@@ -50,6 +50,7 @@ pub struct Profile {
     pub cpu_models: Option<Vec<String>>,
     pub chassis_types: Option<Vec<String>>,
     pub environment_types: Option<Vec<String>>,
+    pub driver_conflict_group: Option<String>,
 
     pub hwd_ids: Vec<HardwareID>,
 }
@@ -75,6 +76,7 @@ impl Default for Profile {
             cpu_models: None,
             chassis_types: None,
             environment_types: None,
+            driver_conflict_group: None,
             hwd_ids: vec![Default::default()],
         }
     }
@@ -253,11 +255,13 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         cpu_models: parse_whitespace_list(node, "cpu_models"),
         chassis_types: parse_whitespace_list(node, "chassis_types"),
         environment_types: parse_whitespace_list(node, "environment_types"),
+        driver_conflict_group: node
+            .get("driver_conflict_group")
+            .and_then(|x| x.as_str().map(str::to_string)),
     };
 
     if profile.cpu_models.is_some() && profile.cpu_family.is_none() {
-        let msg =
-            format!("profile '{profile_name}' specifies cpu_models without cpu_family");
+        let msg = format!("profile '{profile_name}' specifies cpu_models without cpu_family");
         eprintln!("Warning: skipping profile '{profile_name}': {msg}");
         anyhow::bail!(msg);
     }
@@ -462,6 +466,9 @@ fn profile_into_toml(profile: &Profile) -> toml::Table {
     }
     if let Some(environment_types) = &profile.environment_types {
         table.insert("environment_types".to_owned(), environment_types.join(" ").into());
+    }
+    if let Some(conflict_group) = &profile.driver_conflict_group {
+        table.insert("driver_conflict_group".to_owned(), conflict_group.clone().into());
     }
 
     let last_hwd_id = profile.hwd_ids.last().unwrap();
