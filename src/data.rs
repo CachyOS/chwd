@@ -150,7 +150,7 @@ fn fill_profiles(
         Ok(entries) => entries,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return,
         Err(e) => {
-            log::warn!("failed to read profile directory '{}': {}", conf_path, e);
+            log::warn!("failed to read profile directory '{conf_path}': {e}");
             return;
         },
     };
@@ -266,9 +266,9 @@ fn fill_usb_devices() -> ListOfDevicesT {
             class_name: String::new(),
             device_name: usb_dev.resolved_product_name(&desc, usb_ids.as_ref()),
             vendor_name: usb_dev.resolved_vendor_name(&desc, usb_ids.as_ref()),
-            class_id: from_hex(desc.bDeviceClass as u32, 2),
-            device_id: from_hex(desc.idProduct as u32, 4),
-            vendor_id: from_hex(desc.idVendor as u32, 4),
+            class_id: from_hex(u32::from(desc.bDeviceClass), 2),
+            device_id: from_hex(u32::from(desc.idProduct), 4),
+            vendor_id: from_hex(u32::from(desc.idVendor), 4),
             sysfs_busid: usb_dev.sysfs_busid(),
             sysfs_id: String::new(),
             available_profiles: vec![],

@@ -172,7 +172,7 @@ fn prepare_autoconfigure(
         .map(|(busid, name)| (busid.as_str(), name.as_str()))
         .collect();
     let skipped_busids: HashSet<&str> =
-        resolution.skipped_devices.iter().map(|s| s.as_str()).collect();
+        resolution.skipped_devices.iter().map(std::string::String::as_str).collect();
 
     let mut found_device = false;
     for device in &all_devices {
@@ -193,7 +193,7 @@ fn prepare_autoconfigure(
 
         // Check if this device was skipped due to conflict group incompatibility
         if skipped_busids.contains(device.sysfs_busid.as_str()) {
-            log::warn!("Skipping device {}. incompatible driver conflict group", device_info);
+            log::warn!("Skipping device {device_info}. incompatible driver conflict group");
             continue;
         }
 
@@ -427,7 +427,7 @@ fn install_profile(data: &mut data::Data, args: &args::Args, profile: &Profile) 
     );
     let _ = fs::create_dir_all(&working_dir);
     if !profile::write_profile_to_file(
-        &format!("{}/{}", &working_dir, consts::CHWD_CONFIG_FILE),
+        &format!("{}/{}", working_dir, consts::CHWD_CONFIG_FILE),
         profile,
     ) {
         return misc::Status::ErrorSetDatabase;
