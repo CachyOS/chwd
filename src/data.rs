@@ -17,11 +17,13 @@
 use crate::device::Device;
 use crate::profile::Profile;
 
+use regex::Regex;
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::sync::Arc;
 use subprocess::Exec;
-use regex::Regex;
+
 pub type ListOfProfilesT = Vec<Profile>;
 pub type ListOfDevicesT = Vec<Device>;
 
@@ -148,9 +150,9 @@ fn fill_profiles(
         Ok(entries) => entries,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return,
         Err(e) => {
-            log::warn!("failed to read profile directory '{}': {}", conf_path, e);
+            log::warn!("failed to read profile directory '{conf_path}': {e}");
             return;
-        }
+        },
     };
     for entry in dir_entries {
         let config_file_path = format!(
@@ -264,9 +266,9 @@ fn fill_usb_devices() -> ListOfDevicesT {
             class_name: String::new(),
             device_name: usb_dev.resolved_product_name(&desc, usb_ids.as_ref()),
             vendor_name: usb_dev.resolved_vendor_name(&desc, usb_ids.as_ref()),
-            class_id: from_hex(desc.bDeviceClass as u32, 2),
-            device_id: from_hex(desc.idProduct as u32, 4),
-            vendor_id: from_hex(desc.idVendor as u32, 4),
+            class_id: from_hex(u32::from(desc.bDeviceClass), 2),
+            device_id: from_hex(u32::from(desc.idProduct), 4),
+            vendor_id: from_hex(u32::from(desc.idVendor), 4),
             sysfs_busid: usb_dev.sysfs_busid(),
             sysfs_id: String::new(),
             available_profiles: vec![],
@@ -465,6 +467,114 @@ fn add_profile_sorted(profiles: &mut Vec<Arc<Profile>>, new_profile: &Profile) {
 
     profiles.push(Arc::new(new_profile.clone()));
     profiles.sort_by_key(|rhs| std::cmp::Reverse(rhs.priority));
+}
+
+/// Result of conflict group resolution for a set of devices.
+#[derive(Debug, Default)]
+pub struct ConflictResolution {
+    /// Map from device `sysfs_busid` → profile name to install.
+    pub device_profile_map: Vec<(String, String)>,
+    /// Device bus IDs that were skipped due to incompatibility.
+    pub skipped_devices: Vec<String>,
+    /// Human-readable warnings for skipped devices.
+    pub warnings: Vec<String>,
+}
+
+/// Resolves conflict groups across all devices.
+///
+/// For each conflict group, finds a single profile that matches ALL devices
+/// needing a profile from that group. If no single profile covers all devices,
+/// picks the primary (highest-priority) device's profile and skips the rest.
+#[must_use]
+pub fn resolve_conflict_groups(devices: &[Device]) -> ConflictResolution {
+    let mut result = ConflictResolution::default();
+    let groups = group_by_conflict(devices);
+
+    for (group_name, indices) in &groups {
+        if indices.len() == 1 {
+            let device = &devices[indices[0]];
+            let profile = &device.available_profiles[0];
+            result.device_profile_map.push((device.sysfs_busid.clone(), profile.name.clone()));
+            continue;
+        }
+
+        if let Some(name) = find_common_profile(devices, indices, group_name) {
+            for &idx in indices {
+                result.device_profile_map.push((devices[idx].sysfs_busid.clone(), name.clone()));
+            }
+        } else {
+            resolve_incompatible(&mut result, devices, indices, group_name);
+        }
+    }
+
+    result
+}
+
+fn group_by_conflict(devices: &[Device]) -> HashMap<String, Vec<usize>> {
+    let mut groups: HashMap<String, Vec<usize>> = HashMap::new();
+    for (idx, device) in devices.iter().enumerate() {
+        if let Some(group) =
+            device.available_profiles.first().and_then(|p| p.driver_conflict_group.clone())
+        {
+            groups.entry(group).or_default().push(idx);
+        }
+    }
+    groups
+}
+
+/// Walks the first device's `available_profiles` (already priority-sorted desc),
+/// returning the first profile that also appears in every other device's list.
+fn find_common_profile(devices: &[Device], indices: &[usize], group_name: &str) -> Option<String> {
+    let first = &devices[indices[0]];
+    for candidate in &first.available_profiles {
+        if candidate.driver_conflict_group.as_deref() != Some(group_name) {
+            continue;
+        }
+        let all_match = indices[1..]
+            .iter()
+            .all(|&idx| devices[idx].available_profiles.iter().any(|p| p.name == candidate.name));
+        if all_match {
+            return Some(candidate.name.clone());
+        }
+    }
+    None
+}
+
+fn resolve_incompatible(
+    result: &mut ConflictResolution,
+    devices: &[Device],
+    indices: &[usize],
+    group_name: &str,
+) {
+    let primary_idx = indices
+        .iter()
+        .copied()
+        .max_by_key(|i| devices[*i].available_profiles.first().map_or(0, |p| p.priority))
+        .unwrap();
+
+    let primary = &devices[primary_idx];
+    let primary_profile = &primary.available_profiles[0];
+    result.device_profile_map.push((primary.sysfs_busid.clone(), primary_profile.name.clone()));
+
+    for &idx in indices {
+        if idx == primary_idx {
+            continue;
+        }
+        let secondary = &devices[idx];
+        let secondary_profile = &secondary.available_profiles[0];
+        result.skipped_devices.push(secondary.sysfs_busid.clone());
+        result.warnings.push(format!(
+            "Skipping {} ({}): no single '{}' driver covers both this device and {} ({}). Primary \
+             uses '{}', secondary requires '{}'.",
+            secondary.device_info(),
+            secondary.sysfs_busid,
+            group_name,
+            primary.device_info(),
+            primary.sysfs_busid,
+            primary_profile.name,
+            secondary_profile.name,
+        ));
+    }
 }
 
 #[cfg(test)]
@@ -916,16 +1026,18 @@ mod tests {
     ) -> crate::profile::Profile {
         crate::profile::Profile {
             cpu_family: cpu_family.map(str::to_string),
-            cpu_models: cpu_models
-                .map(|v| v.into_iter().map(str::to_string).collect()),
+            cpu_models: cpu_models.map(|v| v.into_iter().map(str::to_string).collect()),
             ..Default::default()
         }
     }
 
     #[test]
     fn cpu_filter_matches_family_and_model() {
-        let cpu_info =
-            crate::hwd_misc::CpuInfo { vendor: "GenuineIntel".into(), family: "6".into(), model: "154".into() };
+        let cpu_info = crate::hwd_misc::CpuInfo {
+            vendor: "GenuineIntel".into(),
+            family: "6".into(),
+            model: "154".into(),
+        };
         let profile = cpu_test_profile(Some("6"), Some(vec!["151", "154", "183"]));
 
         assert!(data::matches_cpu_filter(&profile, &cpu_info));
@@ -933,8 +1045,11 @@ mod tests {
 
     #[test]
     fn cpu_filter_rejects_wrong_family() {
-        let cpu_info =
-            crate::hwd_misc::CpuInfo { vendor: "AuthenticAMD".into(), family: "25".into(), model: "80".into() };
+        let cpu_info = crate::hwd_misc::CpuInfo {
+            vendor: "AuthenticAMD".into(),
+            family: "25".into(),
+            model: "80".into(),
+        };
         let profile = cpu_test_profile(Some("6"), Some(vec!["151", "154"]));
 
         assert!(!data::matches_cpu_filter(&profile, &cpu_info));
@@ -942,8 +1057,11 @@ mod tests {
 
     #[test]
     fn cpu_filter_rejects_wrong_model() {
-        let cpu_info =
-            crate::hwd_misc::CpuInfo { vendor: "GenuineIntel".into(), family: "6".into(), model: "142".into() };
+        let cpu_info = crate::hwd_misc::CpuInfo {
+            vendor: "GenuineIntel".into(),
+            family: "6".into(),
+            model: "142".into(),
+        };
         let profile = cpu_test_profile(Some("6"), Some(vec!["151", "154"]));
 
         assert!(!data::matches_cpu_filter(&profile, &cpu_info));
@@ -951,17 +1069,23 @@ mod tests {
 
     #[test]
     fn cpu_filter_family_only_matches() {
-        let cpu_info =
-            crate::hwd_misc::CpuInfo { vendor: "GenuineIntel".into(), family: "6".into(), model: "999".into() };
+        let cpu_info = crate::hwd_misc::CpuInfo {
+            vendor: "GenuineIntel".into(),
+            family: "6".into(),
+            model: "999".into(),
+        };
         let profile = cpu_test_profile(Some("6"), None);
-        // no cpu_models filter — any model in family 6 should match
+        // any model in family 6 should match
         assert!(data::matches_cpu_filter(&profile, &cpu_info));
     }
 
     #[test]
     fn cpu_filter_no_filter_matches_all() {
-        let cpu_info =
-            crate::hwd_misc::CpuInfo { vendor: "AuthenticAMD".into(), family: "25".into(), model: "80".into() };
+        let cpu_info = crate::hwd_misc::CpuInfo {
+            vendor: "AuthenticAMD".into(),
+            family: "25".into(),
+            model: "80".into(),
+        };
         let profile = cpu_test_profile(None, None);
         // no cpu_family, no cpu_models
         assert!(data::matches_cpu_filter(&profile, &cpu_info));
@@ -985,5 +1109,151 @@ mod tests {
             ),
             vec![35, 26]
         );
+    }
+
+    fn nvidia_profile(
+        name: &str,
+        priority: i32,
+        conflict_group: Option<&str>,
+    ) -> crate::profile::Profile {
+        crate::profile::Profile {
+            name: name.to_owned(),
+            priority,
+            packages: "nvidia-utils".to_owned(),
+            driver_conflict_group: conflict_group.map(str::to_string),
+            hwd_ids: vec![crate::profile::HardwareID {
+                class_ids: vec!["0300".to_owned()],
+                vendor_ids: vec!["10de".to_owned()],
+                device_ids: vec!["*".to_owned()],
+                ..Default::default()
+            }],
+            ..Default::default()
+        }
+    }
+
+    fn gpu_device(bus_id: &str, profiles: Vec<crate::profile::Profile>) -> Device {
+        let profiles: Vec<std::sync::Arc<crate::profile::Profile>> =
+            profiles.into_iter().map(std::sync::Arc::new).collect();
+        Device {
+            class_name: "VGA compatible controller".to_string(),
+            device_name: "NVIDIA GPU".to_string(),
+            vendor_name: "NVIDIA".to_string(),
+            class_id: "0300".to_string(),
+            device_id: "1234".to_string(),
+            vendor_id: "10de".to_string(),
+            sysfs_busid: bus_id.to_string(),
+            sysfs_id: String::new(),
+            available_profiles: profiles,
+            installed_profiles: vec![],
+        }
+    }
+
+    #[test]
+    fn conflict_resolution_single_device_uses_best_profile() {
+        let open_profile = nvidia_profile("nvidia-open-dkms", 10, Some("nvidia"));
+        let devices = vec![gpu_device("0000:01:00.0", vec![open_profile.clone()])];
+
+        let result = data::resolve_conflict_groups(&devices);
+
+        assert_eq!(result.device_profile_map.len(), 1);
+        assert_eq!(
+            result.device_profile_map[0],
+            ("0000:01:00.0".into(), "nvidia-open-dkms".into())
+        );
+        assert!(result.skipped_devices.is_empty());
+        assert!(result.warnings.is_empty());
+    }
+
+    #[test]
+    fn conflict_resolution_common_driver_found() {
+        // Two GPUs that both support nvidia-580xx
+        let open_profile = nvidia_profile("nvidia-open-dkms", 10, Some("nvidia"));
+        let closed_profile = nvidia_profile("nvidia-dkms-580xx", 12, Some("nvidia"));
+
+        // GPU A: both profiles match, closed wins (higher priority)
+        let gpu_a = gpu_device("0000:01:00.0", vec![closed_profile.clone(), open_profile.clone()]);
+        // GPU B: both profiles match, closed wins
+        let gpu_b = gpu_device("0000:02:00.0", vec![closed_profile.clone(), open_profile.clone()]);
+
+        let devices = vec![gpu_a, gpu_b];
+
+        let result = data::resolve_conflict_groups(&devices);
+
+        // Common driver: nvidia-dkms-580xx (highest priority that matches both)
+        assert_eq!(result.device_profile_map.len(), 2);
+        assert_eq!(
+            result.device_profile_map[0],
+            ("0000:01:00.0".into(), "nvidia-dkms-580xx".into())
+        );
+        assert_eq!(
+            result.device_profile_map[1],
+            ("0000:02:00.0".into(), "nvidia-dkms-580xx".into())
+        );
+        assert!(result.skipped_devices.is_empty());
+    }
+
+    #[test]
+    fn conflict_resolution_incompatible_skips_secondary() {
+        // GPU A only matches closed (580xx), GPU B only matches open — no common driver
+        let closed_profile = nvidia_profile("nvidia-dkms-580xx", 12, Some("nvidia"));
+        let open_profile = nvidia_profile("nvidia-open-dkms", 10, Some("nvidia"));
+
+        // GPU A: only closed matches (GTX 1080 scenario)
+        let gpu_a = gpu_device("0000:01:00.0", vec![closed_profile.clone()]);
+        // GPU B: only open matches (RTX 5080 scenario)
+        let gpu_b = gpu_device("0000:09:00.0", vec![open_profile.clone()]);
+
+        let devices = vec![gpu_a, gpu_b];
+
+        let result = data::resolve_conflict_groups(&devices);
+
+        // Primary (highest priority) = gpu_a with nvidia-dkms-580xx
+        assert_eq!(result.device_profile_map.len(), 1);
+        assert_eq!(
+            result.device_profile_map[0],
+            ("0000:01:00.0".into(), "nvidia-dkms-580xx".into())
+        );
+        assert_eq!(result.skipped_devices.len(), 1);
+        assert_eq!(result.skipped_devices[0], "0000:09:00.0");
+        assert_eq!(result.warnings.len(), 1);
+        assert!(result.warnings[0].contains("0000:09:00.0"));
+    }
+
+    #[test]
+    fn conflict_resolution_open_fallback_when_common() {
+        // GPU A matches both closed and open; GPU B matches only open.
+        // The algorithm walks GPU A's profiles in priority order, rejects closed
+        // (GPU B doesn't have it), then accepts open as the common driver.
+        let closed_profile = nvidia_profile("nvidia-dkms-580xx", 12, Some("nvidia"));
+        let open_profile = nvidia_profile("nvidia-open-dkms", 10, Some("nvidia"));
+
+        let gpu_a = gpu_device("0000:01:00.0", vec![closed_profile, open_profile.clone()]);
+        let gpu_b = gpu_device("0000:09:00.0", vec![open_profile.clone()]);
+
+        let devices = vec![gpu_a, gpu_b];
+
+        let result = data::resolve_conflict_groups(&devices);
+
+        assert_eq!(result.device_profile_map.len(), 2);
+        assert_eq!(result.device_profile_map[0].1, "nvidia-open-dkms");
+        assert_eq!(result.device_profile_map[1].1, "nvidia-open-dkms");
+        assert!(result.skipped_devices.is_empty());
+    }
+
+    #[test]
+    fn conflict_resolution_no_conflict_group_unaffected() {
+        let amd_profile = crate::profile::Profile {
+            name: "amd".to_owned(),
+            priority: 4,
+            packages: "mesa".to_owned(),
+            driver_conflict_group: None,
+            ..Default::default()
+        };
+        let device = gpu_device("0000:01:00.0", vec![amd_profile]);
+
+        let result = data::resolve_conflict_groups(&[device]);
+
+        assert!(result.device_profile_map.is_empty());
+        assert!(result.skipped_devices.is_empty());
     }
 }
