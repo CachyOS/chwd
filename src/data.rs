@@ -371,6 +371,7 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
 
     if let Some(environment_types) = &profile.environment_types {
         let environment_type = Exec::cmd("systemd-detect-virt")
+            .arg("--vm")
             .capture()
             .expect("Failed to detect environment type")
             .stdout_str()
