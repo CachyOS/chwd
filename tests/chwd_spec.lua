@@ -118,6 +118,18 @@ EOF
         end)
     end)
 
+    describe("shell_quote", function()
+        it("wraps values in single quotes", function()
+            assert.are.equals(chwd.shell_quote("/var/cache/pacman/pkg"), "'/var/cache/pacman/pkg'")
+        end)
+        it("escapes embedded single quotes", function()
+            assert.are.equals(chwd.shell_quote("a'b"), "'a'\\''b'")
+        end)
+        it("leaves shell metacharacters as literals inside the quotes", function()
+            assert.are.equals(chwd.shell_quote("/tmp/x; id #"), "'/tmp/x; id #'")
+        end)
+    end)
+
     describe("Invalid cases", function()
         it("Profiles are not available", function()
             assert.are.same(chwd.parse_profiles("/dev/null"), {})
