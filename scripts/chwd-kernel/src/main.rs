@@ -128,7 +128,7 @@ fn kernel_install(available_kernels: &[kernel::Kernel], kernel_names: &[String])
             return false;
         }
 
-        pkginstall.push_str(&format!("{} ", &kernel_name));
+        pkginstall.push_str(&format!("{kernel_name} "));
     }
     let _ = Exec::shell("pacman -Syy").join();
 

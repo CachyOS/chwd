@@ -51,14 +51,11 @@ impl USBContext {
     /// Tries to create a new USB context.
     ///
     /// Returns `None` if `libusb_init` fails.
+    #[must_use]
     pub fn try_new() -> Option<Self> {
         let mut ctx: *mut libusb_c_sys::libusb_context = ptr::null_mut();
-        let ret = unsafe { libusb_c_sys::libusb_init(&mut ctx) };
-        if ret < 0 || ctx.is_null() {
-            None
-        } else {
-            Some(Self { handle: ctx })
-        }
+        let ret = unsafe { libusb_c_sys::libusb_init(&raw mut ctx) };
+        if ret < 0 || ctx.is_null() { None } else { Some(Self { handle: ctx }) }
     }
 
     /// Create a new USB context.
@@ -66,14 +63,16 @@ impl USBContext {
     /// # Panics
     ///
     /// Panics if `libusb_init` fails.
+    #[must_use]
     pub fn new() -> Self {
         Self::try_new().expect("Failed to initialize libusb")
     }
 
     /// Get the list of USB devices.
+    #[must_use]
     pub fn get_device_list(&self) -> Option<USBDeviceList<'_>> {
         let mut list: *mut *mut libusb_c_sys::libusb_device = ptr::null_mut();
-        let count = unsafe { libusb_c_sys::libusb_get_device_list(self.handle, &mut list) };
+        let count = unsafe { libusb_c_sys::libusb_get_device_list(self.handle, &raw mut list) };
         if count < 0 || list.is_null() {
             None
         } else {
@@ -89,7 +88,7 @@ pub struct USBDeviceList<'a> {
     _phantom: PhantomData<&'a ()>,
 }
 
-impl<'a> Drop for USBDeviceList<'a> {
+impl Drop for USBDeviceList<'_> {
     fn drop(&mut self) {
         if !self.list.is_null() {
             // 1 = unref all devices
@@ -101,6 +100,7 @@ impl<'a> Drop for USBDeviceList<'a> {
 }
 
 impl<'a> USBDeviceList<'a> {
+    #[must_use]
     pub fn iter(&self) -> USBDeviceIter<'a> {
         USBDeviceIter { list: self.list, index: 0, count: self.count, _phantom: PhantomData }
     }
@@ -134,24 +134,22 @@ pub struct USBDevice<'a> {
     _phantom: PhantomData<&'a ()>,
 }
 
-unsafe impl<'a> Send for USBDevice<'a> {}
+unsafe impl Send for USBDevice<'_> {}
 
-impl<'a> USBDevice<'a> {
+impl USBDevice<'_> {
     /// Get the device descriptor.
+    #[must_use]
     pub fn device_descriptor(&self) -> Option<libusb_c_sys::libusb_device_descriptor> {
         if self.dev.is_null() {
             return None;
         }
         let mut desc: libusb_c_sys::libusb_device_descriptor = unsafe { core::mem::zeroed() };
-        let ret = unsafe { libusb_c_sys::libusb_get_device_descriptor(self.dev, &mut desc) };
-        if ret < 0 {
-            None
-        } else {
-            Some(desc)
-        }
+        let ret = unsafe { libusb_c_sys::libusb_get_device_descriptor(self.dev, &raw mut desc) };
+        if ret < 0 { None } else { Some(desc) }
     }
 
     /// Get bus number.
+    #[must_use]
     pub fn bus_number(&self) -> u8 {
         if self.dev.is_null() {
             return 0;
@@ -160,6 +158,7 @@ impl<'a> USBDevice<'a> {
     }
 
     /// Get device address.
+    #[must_use]
     pub fn device_address(&self) -> u8 {
         if self.dev.is_null() {
             return 0;
@@ -183,11 +182,7 @@ impl<'a> USBDevice<'a> {
                 ports.len() as core::ffi::c_int,
             )
         };
-        if count < 0 {
-            Vec::new()
-        } else {
-            ports[..count as usize].to_vec()
-        }
+        if count < 0 { Vec::new() } else { ports[..count as usize].to_vec() }
     }
 
     /// Construct the sysfs bus ID from bus number and port numbers.
@@ -222,7 +217,7 @@ impl<'a> USBDevice<'a> {
             return None;
         }
         let mut handle: *mut libusb_c_sys::libusb_device_handle = ptr::null_mut();
-        let ret = unsafe { libusb_c_sys::libusb_open(self.dev, &mut handle) };
+        let ret = unsafe { libusb_c_sys::libusb_open(self.dev, &raw mut handle) };
         if ret < 0 || handle.is_null() {
             return None;
         }
@@ -260,6 +255,7 @@ impl<'a> USBDevice<'a> {
     }
 
     /// Get manufacturer string. Falls back to sysfs when `libusb_open` fails.
+    #[must_use]
     pub fn manufacturer(&self) -> String {
         let desc = match self.device_descriptor() {
             Some(d) => d,
@@ -269,6 +265,7 @@ impl<'a> USBDevice<'a> {
     }
 
     /// Get product string. Falls back to sysfs when `libusb_open` fails.
+    #[must_use]
     pub fn product(&self) -> String {
         let desc = match self.device_descriptor() {
             Some(d) => d,

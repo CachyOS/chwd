@@ -16,12 +16,9 @@ include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 /// # Safety
 ///
 /// The caller must take care of null ptr.
+#[must_use]
 pub unsafe fn pci_get_next_device(data: *const pci_dev) -> *const pci_dev {
-    if data.is_null() {
-        data
-    } else {
-        (*data).next
-    }
+    unsafe { if data.is_null() { data } else { (*data).next } }
 }
 
 /// This function returns either ptr to next element or null if data is null.
@@ -30,9 +27,5 @@ pub unsafe fn pci_get_next_device(data: *const pci_dev) -> *const pci_dev {
 ///
 /// The caller must take care of null ptr.
 pub unsafe fn pci_get_next_device_mut(data: *mut pci_dev) -> *mut pci_dev {
-    if data.is_null() {
-        data
-    } else {
-        (*data).next
-    }
+    unsafe { if data.is_null() { data } else { (*data).next } }
 }
