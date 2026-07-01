@@ -1,10 +1,10 @@
 [package]
 name = "libusb-c-sys"
-version = "0.1.0"
-edition = "2021"
+version = "0.2.0"
+edition = "2024"
 authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
 license = "GPL-3.0-only"
-rust-version = "1.81.0"
+rust-version = "1.85.0"
 
 description = "Raw bindings for libusb-1.0"
 homepage = "https://github.com/CachyOS/chwd"
