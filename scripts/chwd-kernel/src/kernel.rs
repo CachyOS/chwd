@@ -41,7 +41,6 @@ pub struct KernelPkg {
     pub zfs_pkg: String,
     pub nvidia_pkg: String,
     pub nvidia_open_pkg: String,
-    pub is_aur: bool,
 }
 
 /// The packages a transaction should install/remove.
@@ -49,7 +48,6 @@ pub struct KernelPkg {
 pub struct TransactionPlan {
     pub pacman_install: Vec<String>,
     pub pacman_remove: Vec<String>,
-    pub aur_install: Vec<String>,
 }
 
 /// Open an alpm handle from the system pacman configuration.
@@ -201,9 +199,6 @@ pub fn get_kernels(handle: &alpm::Alpm) -> Vec<KernelPkg> {
         }
     }
 
-    #[cfg(feature = "aur")]
-    append_aur_kernels(&mut kernels);
-
     kernels
 }
 
@@ -261,11 +256,6 @@ fn installed_cachyos_nvidia_modules(handle: &alpm::Alpm) -> (bool, bool) {
 
 /// Queue packages to install for one kernel.
 fn resolve_install_one(kernel: &KernelPkg, ctx: &InstallContext, plan: &mut TransactionPlan) {
-    if kernel.is_aur {
-        plan.aur_install.push(kernel.name.clone());
-        return;
-    }
-
     if ctx.root_on_zfs && !kernel.zfs_pkg.is_empty() {
         plan.pacman_install.push(kernel.zfs_pkg.clone());
     }
@@ -369,108 +359,4 @@ pub fn running_kernel() -> String {
     shell_capture(
         r"grep -Po '(?<=initrd\=\\initramfs-)(.+)(?=\.img)|(?<=boot\/vmlinuz-)([^ $]+)' /proc/cmdline",
     )
-}
-
-/// Append AUR kernels not already provided by the official repos. Requires
-/// `paru` and `awk`, and only runs once official kernels have been found.
-#[cfg(feature = "aur")]
-fn append_aur_kernels(kernels: &mut Vec<KernelPkg>) {
-    use std::path::Path;
-
-    if kernels.is_empty() {
-        return;
-    }
-    if !Path::new("/sbin/paru").exists() {
-        eprintln!("Paru is not installed! Disabling AUR kernels support");
-        return;
-    }
-
-    let headers = shell_capture("paru --aur -Sl | grep ' linux[^ ]*-headers' | awk '{print $2}'");
-    for header in headers.lines() {
-        let name = header.replace("-headers", "");
-        if kernels.iter().any(|k| k.name == name) {
-            continue;
-        }
-        kernels.push(KernelPkg {
-            name: name.clone(),
-            repo: "aur".to_owned(),
-            raw: format!("aur/{name}"),
-            version: "unknown-version".to_owned(),
-            category: category_of(&name).to_owned(),
-            headers_pkg: header.to_owned(),
-            is_aur: true,
-            ..Default::default()
-        });
-    }
-}
-
-/// Clone or refresh an AUR package.
-#[cfg(feature = "aur")]
-fn prepare_git_repo(parent_dir: &std::path::Path, repo_path: &std::path::Path, clone_url: &str) {
-    use std::process::Command;
-
-    let _ = std::fs::create_dir_all(parent_dir);
-
-    // A leftover non-git directory would make `git clone` fail; drop it.
-    if repo_path.exists() && !repo_path.join(".git").exists() {
-        let _ = std::fs::remove_dir_all(repo_path);
-    }
-
-    let git = |dir: &std::path::Path, args: &[&str]| {
-        Command::new("git")
-            .current_dir(dir)
-            .args(args)
-            .status()
-            .map(|s| s.success())
-            .unwrap_or(false)
-    };
-
-    if !repo_path.exists() {
-        let basename = repo_path.file_name().and_then(|n| n.to_str()).unwrap_or_default();
-        if !git(parent_dir, &["clone", clone_url, basename]) {
-            eprintln!("prepare_git_repo: 'git clone {clone_url}' failed");
-            return;
-        }
-    }
-
-    if !git(repo_path, &["checkout", "--force", "master"])
-        || !git(repo_path, &["clean", "-fd"])
-        || !git(repo_path, &["pull"])
-    {
-        eprintln!("prepare_git_repo: failed to refresh checkout at '{}'", repo_path.display());
-    }
-}
-
-/// Clone and `makepkg` each of the given AUR kernels.
-#[cfg(feature = "aur")]
-pub fn install_aur_kernels(kernel_names: &[String]) {
-    use std::path::PathBuf;
-    use std::process::Command;
-
-    let home = std::env::var("HOME").unwrap_or_default();
-    let pkgbuilds_dir = PathBuf::from(&home).join(".cache/cachyos-km/aur_pkgbuilds");
-
-    for kernel_name in kernel_names {
-        if kernel_name.contains("headers") {
-            continue;
-        }
-
-        let package_path = pkgbuilds_dir.join(kernel_name);
-        prepare_git_repo(
-            &pkgbuilds_dir,
-            &package_path,
-            &format!("https://aur.archlinux.org/{kernel_name}.git"),
-        );
-
-        let _ = Command::new("makepkg")
-            .current_dir(&package_path)
-            .args(["-sicf", "--cleanbuild", "--skipchecksums"])
-            .status();
-    }
-}
-
-/// No-op stand-in so callers don't need their own `cfg`s when AUR is disabled.
-#[cfg(not(feature = "aur"))]
-pub fn install_aur_kernels(_kernel_names: &[String]) {
-    eprintln!("AUR kernel installation is not supported in this build");
 }

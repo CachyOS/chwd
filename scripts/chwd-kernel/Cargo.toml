@@ -16,10 +16,6 @@ nix = { features = ["user"], default-features = false, version = "0.31" }
 dialoguer = { default-features = false, version = "0.12" }
 itertools = "0.15"
 
-[features]
-# AUR kernel discovery
-aur = []
-
 [lib]
 name = "chwd_kernel"
 
