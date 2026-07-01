@@ -1,6 +1,6 @@
 [package]
 name = "chwd-kernel"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
 license = "GPLv3"
 edition = "2024"
@@ -15,6 +15,13 @@ clap = { features = ["derive"], version = "4" }
 nix = { features = ["user"], default-features = false, version = "0.31" }
 dialoguer = { default-features = false, version = "0.12" }
 itertools = "0.15"
+
+[features]
+# AUR kernel discovery
+aur = []
+
+[lib]
+name = "chwd_kernel"
 
 [profile.release]
 strip = "symbols"
