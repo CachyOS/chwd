@@ -487,7 +487,7 @@ fn profile_into_toml(profile: &Profile) -> toml::Table {
 mod tests {
     use std::fs;
 
-    use crate::profile::{parse_profiles, HardwareID};
+    use crate::profile::{HardwareID, parse_profiles};
 
     #[test]
     fn graphics_profiles_correct() {

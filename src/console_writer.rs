@@ -62,12 +62,10 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
         let pci_devices = &data.pci_devices;
         let usb_devices = &data.usb_devices;
         if args.detail {
-            let pci_has_profiles = pci_devices
-                .iter()
-                .any(|device| !device.get_available_profiles().is_empty());
-            let usb_has_profiles = usb_devices
-                .iter()
-                .any(|device| !device.get_available_profiles().is_empty());
+            let pci_has_profiles =
+                pci_devices.iter().any(|device| !device.get_available_profiles().is_empty());
+            let usb_has_profiles =
+                usb_devices.iter().any(|device| !device.get_available_profiles().is_empty());
 
             if pci_has_profiles {
                 crate::device_misc::print_available_profiles_in_detail("PCI", pci_devices);
@@ -178,4 +176,5 @@ macro_rules! print_warn_msg {
         log::warn!("{}", fl!($message_id, $($args), *));
     }};
 }
-pub(crate) use {print_error_msg, print_warn_msg};
+pub(crate) use print_error_msg;
+pub(crate) use print_warn_msg;

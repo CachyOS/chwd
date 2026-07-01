@@ -449,13 +449,15 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
 
 fn matches_cpu_filter(profile: &Profile, cpu_info: &crate::hwd_misc::CpuInfo) -> bool {
     if let Some(cpu_family) = &profile.cpu_family
-        && cpu_info.family != *cpu_family {
-            return false;
-        }
+        && cpu_info.family != *cpu_family
+    {
+        return false;
+    }
     if let Some(cpu_models) = &profile.cpu_models
-        && !cpu_models.contains(&cpu_info.model) {
-            return false;
-        }
+        && !cpu_models.contains(&cpu_info.model)
+    {
+        return false;
+    }
     true
 }
 

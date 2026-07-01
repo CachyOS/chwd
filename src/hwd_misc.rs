@@ -83,11 +83,7 @@ pub fn get_gc_versions() -> Option<Vec<(String, String)>> {
         .collect::<Vec<_>>();
 
     // Correctly check for empty Vec:
-    if gc_versions.is_empty() {
-        None
-    } else {
-        Some(gc_versions)
-    }
+    if gc_versions.is_empty() { None } else { Some(gc_versions) }
 }
 
 #[cfg(test)]
