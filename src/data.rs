@@ -337,11 +337,25 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
         .as_ref()
         .map(|product_pattern| Regex::new(product_pattern).expect("Failed to initialize regex"));
 
+    let board_name_re: Option<Regex> = profile
+        .board_name_pattern
+        .as_ref()
+        .map(|board_pattern| Regex::new(board_pattern).expect("Failed to initialize regex"));
+
     if let Some(product_name_re) = &product_name_re {
         let product_name = fs::read_to_string("/sys/devices/virtual/dmi/id/product_name")
             .expect("Failed to read product name");
         let product_name = product_name.trim();
         if !product_name_re.is_match(product_name) {
+            return vec![];
+        }
+    }
+
+    if let Some(board_name_re) = &board_name_re {
+        let board_name = fs::read_to_string("/sys/devices/virtual/dmi/id/board_name")
+            .expect("Failed to read board name");
+        let board_name = board_name.trim();
+        if !board_name_re.is_match(board_name) {
             return vec![];
         }
     }
