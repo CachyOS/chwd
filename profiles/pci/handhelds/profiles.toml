@@ -12,7 +12,7 @@ conditional_packages = """
 
 [handheld.steam-deck]
 desc = 'Valve Steam Deck'
-hwd_product_name_pattern = '(Jupiter|Galileo)'
+hwd_product_name_pattern = '^(Jupiter|Galileo)$'
 priority = 2
 packages = 'steamos-manager steamos-powerbuttond jupiter-fan-control steamdeck-dsp'
 conditional_packages = """
