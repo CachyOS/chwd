@@ -39,7 +39,8 @@ post_remove = """
 
 [handheld.rog-ally]
 desc = 'ASUS ROG Ally & Ally X'
-hwd_product_name_pattern = 'RC71L|RC72LA|RC73YA|RC73XA'
+hwd_product_name_pattern = '.*'
+board_name_pattern = '^(RC71L|RC72LA|RC73XA|RC73YA)$'
 priority = 2
 post_install = """
     echo "Ally chwd installing..."
