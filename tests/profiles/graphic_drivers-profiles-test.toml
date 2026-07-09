@@ -63,3 +63,4 @@ post_remove = """
 """
 device_ids = '>tests/profiles/nvidia-test-ids.ids'
 hwd_product_name_pattern = '(Ally)\w+'
+board_name_pattern = '(MS-1T)\w+'
