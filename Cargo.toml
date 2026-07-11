@@ -16,7 +16,7 @@ clap = { features = ["derive"], version = "4" }
 anyhow = "1"
 nix = { features = ["user"], default-features = false, version = "0.31" }
 comfy-table = { default-features = false, version = "7" }
-regex = "1.12"
+regex = "1.13"
 once_cell = { features = ["std"], default-features = false, version = "1" }
 i18n-embed = { version = "0.16", features = ["fluent-system", "desktop-requester"] }
 i18n-embed-fl = "0.10"
