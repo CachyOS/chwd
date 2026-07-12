@@ -352,10 +352,13 @@ pub fn get_all_devices_of_profile(devices: &ListOfDevicesT, profile: &Profile) -
     }
 
     if let Some(board_name_re) = &board_name_re {
-        let board_name = fs::read_to_string("/sys/devices/virtual/dmi/id/board_name")
-            .expect("Failed to read board name");
-        let board_name = board_name.trim();
-        if !board_name_re.is_match(board_name) {
+        if let Ok(board_name) = fs::read_to_string("/sys/devices/virtual/dmi/id/board_name") {
+            let board_name = board_name.trim();
+            if !board_name_re.is_match(board_name) {
+                return vec![];
+            }
+        } else {
+            // Safely skip if the DMI file is missing (e.g., default QEMU/Proxmox VMs)
             return vec![];
         }
     }
