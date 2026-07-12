@@ -1,6 +1,6 @@
 // Copyright (C) 2022-2026 Vladislav Nepogodin
 //
-// This file is part of CachyOS kernel manager.
+// This file is part of CachyOS chwd.
 //
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,81 +16,347 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-const IGNORED_PKG: &str = "linux-api-headers";
-const REPLACE_PART: &str = "-headers";
-// const NEEDLE: &str = "linux[^ ]*-headers";
+use std::cmp::Ordering;
+use std::process::Command;
 
-#[derive(Debug)]
-pub struct Kernel<'a> {
+const IGNORED_PKG: &str = "linux-api-headers";
+const HEADERS_SUFFIX: &str = "-headers";
+
+/// A kernel package.
+#[derive(Debug, Default, Clone)]
+pub struct KernelPkg {
     pub name: String,
     pub repo: String,
+    /// `repo/name`
     pub raw: String,
-    alpm_pkg: Option<&'a alpm::Package>,
-    alpm_handle: Option<&'a alpm::Alpm>,
+    /// Display version, prefixed with `∨` (older) or `∧` (update available).
+    pub version: String,
+    pub category: String,
+    pub installed: bool,
+    pub update_available: bool,
+    /// Repo the package was installed from; empty when not installed.
+    pub installed_db: String,
+    pub headers_pkg: String,
+    /// Module packages; empty when the sync db has no such package.
+    pub zfs_pkg: String,
+    pub nvidia_pkg: String,
+    pub nvidia_open_pkg: String,
 }
 
-impl Kernel<'_> {
-    // Name must be without any repo name (e.g. core/linux)
-    pub fn is_installed(&self) -> Option<bool> {
-        let local_db = self.alpm_handle.as_ref()?.localdb();
-        Some(local_db.pkg(self.name.as_bytes()).is_ok())
-    }
+/// The packages a transaction should install/remove.
+#[derive(Debug, Default, Clone)]
+pub struct TransactionPlan {
+    pub pacman_install: Vec<String>,
+    pub pacman_remove: Vec<String>,
+}
 
-    pub fn version(&self) -> Option<String> {
-        if !self.is_installed().unwrap() {
-            return Some(self.alpm_pkg.as_ref()?.version().to_string());
+/// Open an alpm handle from the system pacman configuration.
+pub fn open_alpm() -> alpm::Result<alpm::Alpm> {
+    let pacman = pacmanconf::Config::with_opts(None, Some("/etc/pacman.conf"), Some("/")).unwrap();
+    alpm_utils::alpm_with_conf(&pacman)
+}
+
+/// Human-readable category inferred from the kernel name.
+pub fn category_of(name: &str) -> &'static str {
+    const TABLE: &[(&str, &str)] = &[
+        ("lto", "lto optimized"),
+        ("lts", "longterm"),
+        ("zen", "zen-kernel"),
+        ("hardened", "hardened kernel"),
+        ("deckify", "handheld kernel"),
+        ("server", "server kernel"),
+        ("next", "next release"),
+        ("mainline", "mainline branch"),
+        ("git", "master branch"),
+        ("rc", "release candidate"),
+    ];
+    for (needle, label) in TABLE {
+        if name.contains(needle) {
+            return label;
         }
+    }
+    "stable"
+}
 
-        let local_db = self.alpm_handle.as_ref()?.localdb();
-        let local_pkg = local_db.pkg(self.name.as_bytes());
-
-        Some(local_pkg.ok()?.version().to_string())
+/// Compare the installed version (if any) against the sync version, returning
+/// the display string and whether an update is available.
+fn decorated_version(handle: &alpm::Alpm, name: &str, sync_ver: &str) -> (String, bool) {
+    let Ok(local_pkg) = handle.localdb().pkg(name.as_bytes()) else {
+        return (sync_ver.to_owned(), false);
+    };
+    let local_ver = local_pkg.version().as_str().to_owned();
+    match alpm::vercmp(local_ver.as_str(), sync_ver) {
+        Ordering::Greater => (format!("\u{2228}{local_ver}"), false),
+        Ordering::Less => (format!("\u{2227}{sync_ver}"), true),
+        Ordering::Equal => (sync_ver.to_owned(), false),
     }
 }
 
-/// Find kernel packages by finding packages which have words 'linux' and 'headers'.
-/// From the output of 'pacman -Sl'
-/// - find lines that have words: 'linux' and 'headers'
-/// - drop lines containing 'testing' (=testing repo, causes duplicates) and 'linux-api-headers'
-///   (=not a kernel header)
-/// - show the (header) package names
-/// Now we have names of the kernel headers.
-/// Then add the kernel packages to proper places and output the result.
-/// Then display possible kernels and headers added by the user.
+#[inline]
+fn syncdb_has(db: &alpm::Db, name: &str) -> bool {
+    db.pkg(name.as_bytes()).is_ok()
+}
 
-/// The output consists of a list of reponame and a package name formatted as: "reponame/pkgname"
-/// For example:
-///    reponame/linux-xxx reponame/linux-xxx-headers
-///    reponame/linux-yyy reponame/linux-yyy-headers
-///    ...
-pub fn get_kernels(alpm_handle: &alpm::Alpm) -> Vec<Kernel<'_>> {
+#[inline]
+fn localdb_has(handle: &alpm::Alpm, name: &str) -> bool {
+    handle.localdb().pkg(name.as_bytes()).is_ok()
+}
+
+mod alpm_ffi {
+    use std::os::raw::{c_char, c_void};
+
+    unsafe extern "C" {
+        pub fn alpm_db_get_pkg(db: *mut c_void, name: *const c_char) -> *mut c_void;
+        pub fn alpm_pkg_get_installed_db(pkg: *mut c_void) -> *const c_char;
+    }
+}
+
+/// Repo a package was InstalledFrom.
+fn installed_db_name(local_db: &alpm::Db, name: &str) -> String {
+    let Ok(cname) = std::ffi::CString::new(name) else {
+        return String::new();
+    };
+    // SAFETY: localdb owned by the alpm handle. Both calls
+    // return borrowed pointers owned by libalpm, and the
+    // returned C string outlives this call.
+    unsafe {
+        let pkg = alpm_ffi::alpm_db_get_pkg(local_db.as_ptr().cast(), cname.as_ptr());
+        if pkg.is_null() {
+            return String::new();
+        }
+        let db_name = alpm_ffi::alpm_pkg_get_installed_db(pkg);
+        if db_name.is_null() {
+            return String::new();
+        }
+        std::ffi::CStr::from_ptr(db_name).to_string_lossy().into_owned()
+    }
+}
+
+/// alpm version comparison exposed.
+pub fn vercmp(a: &str, b: &str) -> i32 {
+    match alpm::vercmp(a, b) {
+        Ordering::Less => -1,
+        Ordering::Equal => 0,
+        Ordering::Greater => 1,
+    }
+}
+
+/// Fill in the zfs/nvidia module packages that actually exist for kern.
+fn attach_modules(kernel: &mut KernelPkg, db: &alpm::Db) {
+    // keep the name only if the sync db actually has that package
+    let module = |pkgname: String| if syncdb_has(db, &pkgname) { pkgname } else { String::new() };
+
+    let name = &kernel.name;
+    if name.starts_with("linux-cachyos") {
+        kernel.zfs_pkg = module(format!("{name}-zfs"));
+        kernel.nvidia_pkg = module(format!("{name}-nvidia"));
+        kernel.nvidia_open_pkg = module(format!("{name}-nvidia-open"));
+    } else if name == "linux" || name == "linux-lts" {
+        let suffix = &name["linux".len()..];
+        kernel.nvidia_pkg = module(format!("nvidia{suffix}"));
+        kernel.nvidia_open_pkg = module(format!("nvidia-open{suffix}"));
+    }
+}
+
+/// Discover every kernel across the sync databases.
+pub fn get_kernels(handle: &alpm::Alpm) -> Vec<KernelPkg> {
+    let needles: &[String] = &["linux[^ ]*-headers".into()];
     let mut kernels = Vec::new();
-    let needles: &[String] = &["linux-[a-z]".into(), "headers".into()];
-    // let needles: &[String] = &["linux[^ ]*-headers".into()];
 
-    for db in alpm_handle.syncdbs() {
+    for db in handle.syncdbs() {
         let db_name = db.name();
-        // search each database for packages matching the regex "linux-[a-z]" AND "headers"
-        for pkg_headers in db.search(needles.iter()).unwrap() {
-            let mut pkg_name = pkg_headers.name().to_owned();
-            if pkg_name.contains(IGNORED_PKG) {
+        let Ok(found) = db.search(needles.iter()) else {
+            continue;
+        };
+
+        for header_pkg in found.iter() {
+            let header_name = header_pkg.name();
+            if header_name.contains(IGNORED_PKG) {
                 continue;
             }
-            pkg_name = pkg_name.replace(REPLACE_PART, "");
+            let base_name = header_name.strip_suffix(HEADERS_SUFFIX).unwrap_or(header_name);
 
-            // Skip if the actual kernel package is not found
-            if let Ok(pkg) = db.pkg(pkg_name.as_bytes()) {
-                kernels.push(Kernel {
-                    name: pkg_name.clone(),
-                    repo: db_name.to_string(),
-                    raw: format!("{db_name}/{pkg_name}"),
+            let Ok(base_pkg) = db.pkg(base_name.as_bytes()) else {
+                continue;
+            };
+            let sync_ver = base_pkg.version().as_str().to_owned();
+            let (version, update_available) = decorated_version(handle, base_name, &sync_ver);
 
-                    alpm_pkg: Some(pkg),
-                    alpm_handle: Some(alpm_handle),
-                });
-            }
+            let mut kernel = KernelPkg {
+                name: base_name.to_owned(),
+                repo: db_name.to_owned(),
+                raw: format!("{db_name}/{base_name}"),
+                version,
+                category: category_of(base_name).to_owned(),
+                installed: localdb_has(handle, base_name),
+                update_available,
+                installed_db: installed_db_name(handle.localdb(), base_name),
+                headers_pkg: header_name.to_owned(),
+                ..Default::default()
+            };
+            attach_modules(&mut kernel, db);
+            kernels.push(kernel);
         }
     }
 
     kernels
+}
+
+/// The prebuilt nvidia that chwd reports as an installed profile.
+struct NvidiaPrebuilt {
+    dkms: bool,
+    open: bool,
+}
+
+pub fn shell_capture(cmd: &str) -> String {
+    Command::new("sh")
+        .arg("-c")
+        .arg(cmd)
+        .output()
+        .map(|out| String::from_utf8_lossy(&out.stdout).trim().to_owned())
+        .unwrap_or_default()
+}
+
+fn is_root_on_zfs() -> bool {
+    shell_capture("findmnt -ln -o FSTYPE /") == "zfs"
+}
+
+/// Ask chwd which nvidia driver profile is installed.
+fn nvidia_prebuilt() -> NvidiaPrebuilt {
+    let profiles =
+        shell_capture("chwd --list-installed -d 2>/dev/null | grep Name | awk '{print $4}'");
+    let mut result = NvidiaPrebuilt { dkms: false, open: false };
+    for profile in profiles.lines() {
+        if profile.starts_with("nvidia-open-dkms") {
+            result.open = true;
+        } else if profile.starts_with("nvidia-dkms") {
+            result.dkms = true;
+        }
+    }
+    result
+}
+
+/// Whether an installed `linux-cachyos*` nvidia module of each kern exists,
+/// in a single scan.
+fn installed_cachyos_nvidia_modules(handle: &alpm::Alpm) -> (bool, bool) {
+    let (mut has_nvidia, mut has_open) = (false, false);
+    for pkg in handle.localdb().pkgs() {
+        let name = pkg.name();
+        if !name.starts_with("linux-cachyos") {
+            continue;
+        }
+        if name.ends_with("-nvidia-open") {
+            has_open = true;
+        } else if name.ends_with("-nvidia") {
+            has_nvidia = true;
+        }
+    }
+    (has_nvidia, has_open)
+}
+
+/// Queue packages to install for one kernel.
+fn resolve_install_one(kernel: &KernelPkg, ctx: &InstallContext, plan: &mut TransactionPlan) {
+    if ctx.root_on_zfs && !kernel.zfs_pkg.is_empty() {
+        plan.pacman_install.push(kernel.zfs_pkg.clone());
+    }
+
+    let dkms_modules_not_installed = !ctx.nvidia_dkms_installed && !ctx.nvidia_open_dkms_installed;
+
+    // Prefer already installed fallback to the chwd-detected prebuilt.
+    let (should_install_nvidia, should_install_nvidia_open) =
+        if ctx.nvidia_open_modules_installed && !kernel.nvidia_open_pkg.is_empty() {
+            (false, true)
+        } else if ctx.nvidia_modules_installed && !kernel.nvidia_pkg.is_empty() {
+            (true, false)
+        } else {
+            (
+                ctx.prebuilt.dkms && !kernel.nvidia_pkg.is_empty(),
+                ctx.prebuilt.open && !kernel.nvidia_open_pkg.is_empty(),
+            )
+        };
+
+    if dkms_modules_not_installed && should_install_nvidia_open {
+        plan.pacman_install.push(kernel.nvidia_open_pkg.clone());
+    } else if dkms_modules_not_installed && should_install_nvidia {
+        plan.pacman_install.push(kernel.nvidia_pkg.clone());
+    }
+
+    plan.pacman_install.push(kernel.name.clone());
+    plan.pacman_install.push(kernel.headers_pkg.clone());
+}
+
+/// Queue packages to remove for one kernel.
+fn resolve_remove_one(handle: &alpm::Alpm, kernel: &KernelPkg, plan: &mut TransactionPlan) {
+    if !kernel.installed {
+        return;
+    }
+    plan.pacman_remove.push(kernel.name.clone());
+
+    for module in
+        [&kernel.headers_pkg, &kernel.zfs_pkg, &kernel.nvidia_pkg, &kernel.nvidia_open_pkg]
+    {
+        if !module.is_empty() && localdb_has(handle, module) {
+            plan.pacman_remove.push(module.clone());
+        }
+    }
+}
+
+/// State per transaction.
+struct InstallContext {
+    root_on_zfs: bool,
+    prebuilt: NvidiaPrebuilt,
+    nvidia_dkms_installed: bool,
+    nvidia_open_dkms_installed: bool,
+    nvidia_modules_installed: bool,
+    nvidia_open_modules_installed: bool,
+}
+
+impl InstallContext {
+    fn probe(handle: &alpm::Alpm) -> Self {
+        let (nvidia_modules_installed, nvidia_open_modules_installed) =
+            installed_cachyos_nvidia_modules(handle);
+        Self {
+            root_on_zfs: is_root_on_zfs(),
+            prebuilt: nvidia_prebuilt(),
+            nvidia_dkms_installed: localdb_has(handle, "nvidia-dkms"),
+            nvidia_open_dkms_installed: localdb_has(handle, "nvidia-open-dkms"),
+            nvidia_modules_installed,
+            nvidia_open_modules_installed,
+        }
+    }
+}
+
+/// Build the full transaction plan for the given install/remove selections.
+pub fn resolve_transaction(
+    handle: &alpm::Alpm,
+    kernels: &[KernelPkg],
+    install_raws: &[String],
+    remove_raws: &[String],
+) -> TransactionPlan {
+    let mut plan = TransactionPlan::default();
+    let find = |raw: &str| kernels.iter().find(|k| k.raw == raw);
+
+    if !install_raws.is_empty() {
+        let ctx = InstallContext::probe(handle);
+        for raw in install_raws {
+            if let Some(kernel) = find(raw) {
+                resolve_install_one(kernel, &ctx, &mut plan);
+            }
+        }
+    }
+
+    for raw in remove_raws {
+        if let Some(kernel) = find(raw) {
+            resolve_remove_one(handle, kernel, &mut plan);
+        }
+    }
+
+    plan
+}
+
+/// Extract the running kernel name from `/proc/cmdline`.
+pub fn running_kernel() -> String {
+    shell_capture(
+        r"grep -Po '(?<=initrd\=\\initramfs-)(.+)(?=\.img)|(?<=boot\/vmlinuz-)([^ $]+)' /proc/cmdline",
+    )
 }

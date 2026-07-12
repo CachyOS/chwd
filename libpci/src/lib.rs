@@ -21,6 +21,7 @@ use core::marker::PhantomData;
 use core::{mem, ptr, str};
 
 /// Returns the LIBPCI version.
+#[must_use]
 pub fn version_number() -> u32 {
     libpci_c_sys::PCI_LIB_VERSION as u32
 }
@@ -94,14 +95,14 @@ pub struct PCIAccess<'a> {
 /// Holds device data found on this bus.
 pub struct PCIDevice<'a>(*mut libpci_c_sys::pci_dev, PhantomData<&'a ()>);
 
-unsafe impl<'a> Send for PCIAccess<'a> {}
-unsafe impl<'a> Send for PCIDevice<'a> {}
+unsafe impl Send for PCIAccess<'_> {}
+unsafe impl Send for PCIDevice<'_> {}
 
-impl<'a> Drop for PCIDevice<'a> {
+impl Drop for PCIDevice<'_> {
     fn drop(&mut self) {}
 }
 
-impl<'a> Drop for PCIAccess<'a> {
+impl Drop for PCIAccess<'_> {
     fn drop(&mut self) {
         if self.handle.is_null() {
             return;
@@ -113,13 +114,14 @@ impl<'a> Drop for PCIAccess<'a> {
     }
 }
 
-impl<'a> PCIAccess<'a> {
+impl PCIAccess<'_> {
     /// Tries to create a new data.
     ///
     /// Safety: Just FFI
     ///
-    /// Returns `None` if libpci_c_sys::pci_alloc returns a NULL pointer - may happen if allocation
-    /// fails.
+    /// Returns `None` if `libpci_c_sys::pci_alloc` returns a NULL pointer - may happen if
+    /// allocation fails.
+    #[must_use]
     pub fn try_new(do_scan: bool) -> Option<Self> {
         let ptr: *mut libpci_c_sys::pci_access = unsafe { libpci_c_sys::pci_alloc() };
         if ptr.is_null() {
@@ -142,6 +144,7 @@ impl<'a> PCIAccess<'a> {
     /// # Panics
     ///
     /// Panics if failed to allocate required memory.
+    #[must_use]
     pub fn new(do_scan: bool) -> Self {
         // Safety: Just FFI
         Self::try_new(do_scan).expect("returned null pointer when allocating memory")
@@ -166,14 +169,15 @@ impl<'a> PCIAccess<'a> {
     }
 }
 
-impl<'a> Default for PCIDevice<'a> {
+impl Default for PCIDevice<'_> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<'a> PCIDevice<'a> {
+impl PCIDevice<'_> {
     /// Create a new data.
+    #[must_use]
     pub fn new() -> Self {
         // Safety: Just FFI
         Self(ptr::null_mut::<libpci_c_sys::pci_dev>(), PhantomData)
@@ -199,6 +203,7 @@ impl<'a> PCIDevice<'a> {
     }
 
     /// Get class str.
+    #[must_use]
     pub fn class(&self) -> Option<String> {
         if self.0.is_null() {
             None
@@ -209,16 +214,17 @@ impl<'a> PCIDevice<'a> {
             unsafe {
                 libpci_c_sys::pci_lookup_class_helper(
                     (*self.0).access,
-                    class.as_mut_ptr() as _,
+                    class.as_mut_ptr().cast(),
                     size,
                     self.0,
                 );
             }
-            Some(String::from(unsafe { c_char_to_str(class.as_ptr() as _) }))
+            Some(String::from(unsafe { c_char_to_str(class.as_ptr().cast()) }))
         }
     }
 
     /// Get vendor str.
+    #[must_use]
     pub fn vendor(&self) -> Option<String> {
         if self.0.is_null() {
             None
@@ -229,16 +235,17 @@ impl<'a> PCIDevice<'a> {
             unsafe {
                 libpci_c_sys::pci_lookup_vendor_helper(
                     (*self.0).access,
-                    vendor.as_mut_ptr() as _,
+                    vendor.as_mut_ptr().cast(),
                     size,
                     self.0,
                 );
             }
-            Some(String::from(unsafe { c_char_to_str(vendor.as_ptr() as _) }))
+            Some(String::from(unsafe { c_char_to_str(vendor.as_ptr().cast()) }))
         }
     }
 
     /// Get device str.
+    #[must_use]
     pub fn device(&self) -> Option<String> {
         if self.0.is_null() {
             None
@@ -249,16 +256,17 @@ impl<'a> PCIDevice<'a> {
             unsafe {
                 libpci_c_sys::pci_lookup_device_helper(
                     (*self.0).access,
-                    device.as_mut_ptr() as _,
+                    device.as_mut_ptr().cast(),
                     size,
                     self.0,
                 );
             }
-            Some(String::from(unsafe { c_char_to_str(device.as_ptr() as _) }))
+            Some(String::from(unsafe { c_char_to_str(device.as_ptr().cast()) }))
         }
     }
 
     /// Class ID.
+    #[must_use]
     pub fn class_id(&self) -> Option<u16> {
         if self.0.is_null() {
             None
@@ -269,6 +277,7 @@ impl<'a> PCIDevice<'a> {
     }
 
     /// Vendor ID.
+    #[must_use]
     pub fn vendor_id(&self) -> Option<u16> {
         if self.0.is_null() {
             None
@@ -279,6 +288,7 @@ impl<'a> PCIDevice<'a> {
     }
 
     /// Device ID.
+    #[must_use]
     pub fn device_id(&self) -> Option<u16> {
         if self.0.is_null() {
             None
@@ -289,6 +299,7 @@ impl<'a> PCIDevice<'a> {
     }
 
     /// Domain (host bridge).
+    #[must_use]
     pub fn domain(&self) -> Option<i32> {
         if self.0.is_null() {
             None
@@ -299,6 +310,7 @@ impl<'a> PCIDevice<'a> {
     }
 
     /// Bus inside domain.
+    #[must_use]
     pub fn bus(&self) -> Option<u8> {
         if self.0.is_null() {
             None
@@ -309,6 +321,7 @@ impl<'a> PCIDevice<'a> {
     }
 
     /// Bus inside device.
+    #[must_use]
     pub fn dev(&self) -> Option<u8> {
         if self.0.is_null() {
             None
@@ -319,6 +332,7 @@ impl<'a> PCIDevice<'a> {
     }
 
     /// Bus inside func.
+    #[must_use]
     pub fn func(&self) -> Option<u8> {
         if self.0.is_null() {
             None
@@ -328,8 +342,9 @@ impl<'a> PCIDevice<'a> {
         }
     }
 
+    #[must_use]
     pub fn iter_mut(&self) -> IterMut<'_> {
-        IterMut { ptr: self.0 as _, _phantom: PhantomData }
+        IterMut { ptr: self.0.cast(), _phantom: PhantomData }
     }
 }
 
@@ -345,30 +360,28 @@ impl<'a> Iterator for IterMut<'a> {
     fn next(&mut self) -> Option<PCIDevice<'a>> {
         let ptr = self.ptr;
         self.ptr = unsafe { libpci_c_sys::pci_get_next_device_mut(self.ptr) };
-        if ptr.is_null() {
-            None
-        } else {
-            Some(unsafe { PCIDevice::from_raw(ptr) })
-        }
+        if ptr.is_null() { None } else { Some(unsafe { PCIDevice::from_raw(ptr) }) }
     }
 }
 
 unsafe fn c_char_to_str(text: *const c_char) -> &'static str {
-    if text.is_null() {
-        return "";
-    }
-    #[cfg(not(feature = "std"))]
-    {
-        // To be safe, we need to compute right now its length
-        let len = libc::strlen(text);
-        // Cast it to a slice
-        let slice = core::slice::from_raw_parts(text as *mut u8, len);
-        // And hope it's still text.
-        str::from_utf8(slice).expect("bad error message from libpci")
-    }
+    unsafe {
+        if text.is_null() {
+            return "";
+        }
+        #[cfg(not(feature = "std"))]
+        {
+            // To be safe, we need to compute right now its length
+            let len = libc::strlen(text);
+            // Cast it to a slice
+            let slice = core::slice::from_raw_parts(text as *mut u8, len);
+            // And hope it's still text.
+            str::from_utf8(slice).expect("bad error message from libpci")
+        }
 
-    #[cfg(feature = "std")]
-    {
-        std::ffi::CStr::from_ptr(text).to_str().expect("bad error message from libpci")
+        #[cfg(feature = "std")]
+        {
+            std::ffi::CStr::from_ptr(text).to_str().expect("bad error message from libpci")
+        }
     }
 }

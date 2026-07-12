@@ -1,10 +1,10 @@
 [package]
 name = "libpci"
-version = "0.1.3"
-edition = "2021"
+version = "0.2.0"
+edition = "2024"
 authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
 license = "GPL-3.0-only"
-rust-version = "1.81.0"
+rust-version = "1.85.0"
 
 description = "Rust bindings for libpci"
 homepage = "https://github.com/CachyOS/chwd"
@@ -12,7 +12,7 @@ repository = "https://github.com/CachyOS/chwd"
 categories = ["api-bindings"]
 
 [dependencies]
-libpci-c-sys = { path = "../libpci-sys", default-features = false, version = "0.1.3" }
+libpci-c-sys = { path = "../libpci-sys", default-features = false, version = "0.2.0" }
 libc = { default-features = false, version = "0.2" }
 
 [features]

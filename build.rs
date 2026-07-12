@@ -2,7 +2,7 @@ use std::env;
 use std::path::PathBuf;
 
 use clap::CommandFactory;
-use clap_complete::{generate_to, Shell};
+use clap_complete::{Shell, generate_to};
 
 include!("src/args.rs");
 

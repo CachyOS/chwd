@@ -16,7 +16,9 @@ You should have received a copy of the GNU General Public License along
 with this program; if not, write to the Free Software Foundation, Inc.,
 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 --]]
-local pacman, pmconfig, pmroot, cachedir, sync
+---@type string[]
+local pacman
+local pmconfig, pmroot, cachedir, sync
 
 ---@alias hookAlias {pre_install: string?, post_install: string?, post_remove: string?, pre_remove: string?, conditional_packages: string?}
 
@@ -66,6 +68,13 @@ local function split(str)
     return t
 end
 
+---Quote a string for safe interpolation into a shell command.
+---@param s string
+---@return string
+local function shell_quote(s)
+    return "'" .. s:gsub("'", "'\\''") .. "'"
+end
+
 ---@param args string[]
 ---@return table<string, integer>
 local function get_opts(args)
@@ -86,7 +95,7 @@ end
 ---@param package_name string
 ---@return boolean
 local function is_installed(package_name)
-    local handle = io.popen("/bin/pacman -Qi " .. package_name)
+    local handle = io.popen("/bin/pacman -Qi " .. shell_quote(package_name))
 
     if handle then
         ---@type string?
@@ -113,8 +122,12 @@ end
 ---@param pkgs string
 ---@return number?
 local function pacman_handle(action, pkgs)
-    local cmd = table.concat({ pacman, action, pkgs }, " ")
-    local _, _, code = os.execute(cmd)
+    local cmd = {}
+    for _, v in ipairs(pacman) do cmd[#cmd + 1] = shell_quote(v) end
+    for _, v in ipairs(split(action)) do cmd[#cmd + 1] = shell_quote(v) end
+    for _, v in ipairs(split(pkgs)) do cmd[#cmd + 1] = shell_quote(v) end
+
+    local _, _, code = os.execute(table.concat(cmd, " "))
     return code
 end
 
@@ -311,7 +324,7 @@ local function main()
     cachedir = get_opt_argument(options, "cachedir", "/var/cache/pacman/pkg")
     pmroot = get_opt_argument(options, "pmroot", "/")
     pmconfig = get_opt_argument(options, "pmconfig", "/etc/pacman.conf")
-    pacman = table.concat({ "pacman --noconfirm", "--cachedir", cachedir, "-r", pmroot, "--config", pmconfig }, " ")
+    pacman = { "pacman", "--noconfirm", "--cachedir", cachedir, "-r", pmroot, "--config", pmconfig }
     local profile_name = get_opt_argument(options, "profile")
     local path = get_opt_argument(options, "path")
 
@@ -399,7 +412,8 @@ end
 if _TEST then -- luacheck: ignore
     return {
         get_profile = get_profile,
-        parse_profiles = parse_profiles
+        parse_profiles = parse_profiles,
+        shell_quote = shell_quote
     }
 else
     main()

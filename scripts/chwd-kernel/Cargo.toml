@@ -1,6 +1,6 @@
 [package]
 name = "chwd-kernel"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Vladislav Nepogodin <nepogodin.vlad@gmail.com>"]
 license = "GPLv3"
 edition = "2024"
@@ -10,11 +10,14 @@ alpm = { default-features = false, version = "5" }
 alpm-utils = { features = ["conf"], default-features = false, version = "5" }
 pacmanconf = "3.1"
 
-subprocess = "1.1"
+subprocess = "1.2"
 clap = { features = ["derive"], version = "4" }
 nix = { features = ["user"], default-features = false, version = "0.31" }
 dialoguer = { default-features = false, version = "0.12" }
-itertools = "0.14"
+itertools = "0.15"
+
+[lib]
+name = "chwd_kernel"
 
 [profile.release]
 strip = "symbols"

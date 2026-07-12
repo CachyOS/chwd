@@ -16,12 +16,12 @@
 // with this program; if not, write to the Free Software Foundation, Inc.,
 // 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-mod kernel;
+use chwd_kernel::kernel::{self, KernelPkg};
 
 use clap::Parser;
 use dialoguer::Confirm;
 use itertools::Itertools;
-use subprocess::{Exec, Redirection};
+use subprocess::Exec;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -53,26 +53,6 @@ enum WorkingMode {
     KernelRemove,
 }
 
-fn new_alpm() -> alpm::Result<alpm::Alpm> {
-    let pacman = pacmanconf::Config::with_opts(None, Some("/etc/pacman.conf"), Some("/")).unwrap();
-    let alpm = alpm_utils::alpm_with_conf(&pacman)?;
-
-    Ok(alpm)
-}
-
-fn simple_shell_exec(cmd: &str) -> String {
-    let mut exec_out = Exec::shell(cmd).stdout(Redirection::Pipe).capture().unwrap().stdout_str();
-    exec_out.pop();
-    exec_out
-}
-
-#[inline]
-fn get_kernel_running() -> String {
-    simple_shell_exec(
-        r"(grep -Po '(?<=initrd\=\\initramfs-)(.+)(?=\.img)|(?<=boot\/vmlinuz-)([^ $]+)' /proc/cmdline)",
-    )
-}
-
 fn root_check() {
     if nix::unistd::geteuid().is_root() {
         return;
@@ -85,57 +65,97 @@ fn occur_err(msg: &str) {
     std::process::exit(1);
 }
 
-fn show_installed_kernels(kernels: &[kernel::Kernel]) {
-    let current_kernel = get_kernel_running();
+fn show_installed_kernels(kernels: &[KernelPkg]) {
     println!(
         "\x1B[32mCurrently running:\x1B[0m {} ({})",
-        simple_shell_exec("uname -r"),
-        current_kernel
+        kernel::shell_capture("uname -r"),
+        kernel::running_kernel()
     );
     println!("The following kernels are installed in your system:");
-    for kernel in kernels.iter().unique_by(|p| &p.name) {
-        if !kernel.is_installed().unwrap() {
-            continue;
-        }
-        println!("local/{} {}", kernel.name, kernel.version().unwrap());
+    for kernel in kernels.iter().filter(|k| k.installed).unique_by(|k| &k.name) {
+        println!("local/{} {}", kernel.name, kernel.version);
     }
 }
 
-fn show_available_kernels(kernels: &[kernel::Kernel]) {
+fn show_available_kernels(kernels: &[KernelPkg]) {
     println!("\x1B[32mavailable kernels:\x1B[0m");
     for kernel in kernels {
-        println!("{} {}", kernel.raw, kernel.version().unwrap());
+        println!("{} {}", kernel.raw, kernel.version);
     }
 }
 
-fn kernel_install(available_kernels: &[kernel::Kernel], kernel_names: &[String]) -> bool {
-    let mut pkginstall = String::new();
-    let mut rmc = false;
-
-    let current_kernel = get_kernel_running();
+/// Validate the requested kernel names and map them to `repo/name` identities.
+fn resolve_selection(
+    available_kernels: &[KernelPkg],
+    kernel_names: &[String],
+    removing: bool,
+    current_kernel: &str,
+) -> Option<Vec<String>> {
+    let mut raws = Vec::new();
     for kernel_name in kernel_names {
-        if kernel_name == "rmc" {
-            rmc = true;
+        if !removing && kernel_name == "rmc" {
             continue;
-        } else if &current_kernel == kernel_name {
-            occur_err(
-                "You can't reinstall your current kernel. Please use 'pacman -Syu' instead to \
-                 update.",
-            );
-        } else if available_kernels.iter().all(|elem| &elem.name != kernel_name) {
-            eprintln!("\x1B[31mError:\x1B[0m Please make sure if the given kernel(s) exist(s).");
-            show_available_kernels(available_kernels);
-            return false;
+        }
+        if current_kernel == kernel_name {
+            let current_installed =
+                available_kernels.iter().any(|k| k.name == *kernel_name && k.installed);
+            if removing {
+                occur_err("You can't remove your current kernel.");
+            } else if current_installed {
+                // Reinstalling the running kernel is a noop
+                occur_err(
+                    "You can't reinstall your current kernel. Please use 'pacman -Syu' instead to \
+                     update.",
+                );
+            }
         }
 
-        pkginstall.push_str(&format!("{} ", &kernel_name));
-    }
-    let _ = Exec::shell("pacman -Syy").join();
+        let matched = if removing {
+            available_kernels.iter().find(|k| k.installed && k.name == *kernel_name)
+        } else {
+            available_kernels.iter().find(|k| k.name == *kernel_name)
+        };
 
-    let outofdate = simple_shell_exec("pacman -Qqu | tr '\n' ' '");
+        match matched {
+            Some(kernel) => raws.push(kernel.raw.clone()),
+            None if removing => {
+                eprintln!("\x1B[31mError:\x1B[0m Kernel is not installed.");
+                show_installed_kernels(available_kernels);
+                return None;
+            },
+            None => {
+                eprintln!(
+                    "\x1B[31mError:\x1B[0m Please make sure if the given kernel(s) exist(s)."
+                );
+                show_available_kernels(available_kernels);
+                return None;
+            },
+        }
+    }
+    Some(raws)
+}
+
+fn kernel_install(
+    handle: &alpm::Alpm,
+    available_kernels: &[KernelPkg],
+    kernel_names: &[String],
+) -> bool {
+    let current_kernel = kernel::running_kernel();
+    let rmc = kernel_names.iter().any(|name| name == "rmc");
+
+    let Some(install_raws) =
+        resolve_selection(available_kernels, kernel_names, false, &current_kernel)
+    else {
+        return false;
+    };
+
+    let plan = kernel::resolve_transaction(handle, available_kernels, &install_raws, &[]);
+    let pkginstall = plan.pacman_install.join(" ");
+
+    let outofdate = kernel::shell_capture("checkupdates");
     if !outofdate.is_empty() {
         eprintln!(
-            "The following packages are out of date, please update your system first: {outofdate}"
+            "The following packages are out of date, please update your system first:\n{outofdate}"
         );
         if !Confirm::new()
             .with_prompt("Do you want to continue anyway?")
@@ -149,38 +169,35 @@ fn kernel_install(available_kernels: &[kernel::Kernel], kernel_names: &[String])
 
     let exit_status = Exec::shell(format!("pacman -Syu {pkginstall}")).join().unwrap();
     if rmc && exit_status.success() {
-        let _ = Exec::shell(format!("pacman -R {current_kernel}")).join();
+        let _ = Exec::shell(format!("pacman -Rsn {current_kernel}")).join();
     } else if rmc && !exit_status.success() {
         occur_err("\n'rmc' aborted because the kernel failed to install or canceled on removal.");
     }
     true
 }
 
-fn kernel_remove(available_kernels: &[kernel::Kernel], kernel_names: &[String]) -> bool {
-    let mut pkgremove = String::new();
+fn kernel_remove(
+    handle: &alpm::Alpm,
+    available_kernels: &[KernelPkg],
+    kernel_names: &[String],
+) -> bool {
+    let current_kernel = kernel::running_kernel();
 
-    let current_kernel = get_kernel_running();
-    for kernel_name in kernel_names {
-        if &current_kernel == kernel_name {
-            occur_err("You can't remove your current kernel.");
-        } else if !available_kernels
-            .iter()
-            .any(|elem| elem.is_installed().unwrap() && (&elem.name == kernel_name))
-        {
-            eprintln!("\x1B[31mError:\x1B[0m Kernel is not installed.");
-            show_installed_kernels(available_kernels);
-            return false;
-        }
+    let Some(remove_raws) =
+        resolve_selection(available_kernels, kernel_names, true, &current_kernel)
+    else {
+        return false;
+    };
 
-        pkgremove.push_str(&format!("{kernel_name} "));
-    }
+    let plan = kernel::resolve_transaction(handle, available_kernels, &[], &remove_raws);
+    let pkgremove = plan.pacman_remove.join(" ");
 
-    let exit_status = Exec::shell(format!("pacman -R {pkgremove}")).join().unwrap();
+    let exit_status = Exec::shell(format!("pacman -Rsn {pkgremove}")).join().unwrap();
     exit_status.success()
 }
 
 fn init_alpm_handle() -> alpm::Alpm {
-    new_alpm().expect("Unable to initialize Alpm")
+    kernel::open_alpm().expect("Unable to initialize Alpm")
 }
 
 fn main() {
@@ -201,7 +218,7 @@ fn main() {
     }
 
     if args.running_kernel {
-        println!("\x1B[32mrunning kernel:\x1B[0m '{}'", get_kernel_running());
+        println!("\x1B[32mrunning kernel:\x1B[0m '{}'", kernel::running_kernel());
         return;
     }
 
@@ -219,14 +236,14 @@ fn main() {
 
             let alpm_handle = init_alpm_handle();
             let kernels = kernel::get_kernels(&alpm_handle);
-            kernel_install(&kernels, &args.install_kernels);
+            kernel_install(&alpm_handle, &kernels, &args.install_kernels);
         },
         Some(WorkingMode::KernelRemove) => {
             root_check();
 
             let alpm_handle = init_alpm_handle();
             let kernels = kernel::get_kernels(&alpm_handle);
-            kernel_remove(&kernels, &args.remove_kernels);
+            kernel_remove(&alpm_handle, &kernels, &args.remove_kernels);
         },
         _ => occur_err("Invalid argument (use -h for help)."),
     }
