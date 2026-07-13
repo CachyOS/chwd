@@ -85,7 +85,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
 
                 list_profiles(
                     available_profiles,
-                    &format!(
+                    &crate::localization::terminal_text(format!(
                         "{} ({}:{}:{}) {} {}:",
                         pci_device.sysfs_busid,
                         pci_device.class_id,
@@ -93,7 +93,7 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
                         pci_device.device_id,
                         pci_device.class_name,
                         pci_device.vendor_name
-                    ),
+                    )),
                 );
             }
             for usb_device in usb_devices {
@@ -104,14 +104,14 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
 
                 list_profiles(
                     available_profiles,
-                    &format!(
+                    &crate::localization::terminal_text(format!(
                         "{} ({}:{}) {} {}:",
                         usb_device.sysfs_busid,
                         usb_device.vendor_id,
                         usb_device.device_id,
                         usb_device.vendor_name,
                         usb_device.device_name
-                    ),
+                    )),
                 );
             }
         }
@@ -119,21 +119,45 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
 }
 
 pub fn list_profiles(profiles: &[Profile], header_msg: &str) {
-    log::info!("{header_msg}");
+    log::info!("{}", crate::localization::terminal_text(header_msg));
     println!();
 
     let mut table = Table::new();
     table
         .load_preset(UTF8_FULL)
         .apply_modifier(UTF8_ROUND_CORNERS)
-        .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec![&fl!("name-header"), &fl!("priority-header")]);
+        .set_content_arrangement(ContentArrangement::Dynamic);
 
     for profile in profiles {
-        table.add_row(vec![&profile.name, &profile.priority.to_string()]);
+        let name = crate::localization::terminal_text(&profile.name);
+        let priority = crate::localization::terminal_text(profile.priority.to_string());
+        if crate::localization::is_rtl() {
+            table.add_row(vec![priority, name]);
+        } else {
+            table.add_row(vec![name, priority]);
+        }
     }
 
-    println!("{table}\n");
+    let name_header = crate::localization::terminal_text(fl!("name-header"));
+    let priority_header = crate::localization::terminal_text(fl!("priority-header"));
+    if crate::localization::is_rtl() {
+        table.set_header(vec![priority_header, name_header]);
+    } else {
+        table.set_header(vec![name_header, priority_header]);
+    }
+
+    print_table(&table);
+}
+
+pub fn print_table(table: &Table) {
+    if crate::localization::is_rtl() {
+        for line in table.to_string().lines() {
+            println!("\u{202d}{line}\u{202c}");
+        }
+        println!();
+    } else {
+        println!("{table}\n");
+    }
 }
 
 pub fn print_installed_profiles(installed_profiles: &[Profile]) {
@@ -160,20 +184,20 @@ pub fn print_message(msg_type: Message, msg_str: &str) {
 #[macro_export]
 macro_rules! print_error_msg {
     ($message_id:literal) => {{
-        log::error!("{}", fl!($message_id));
+        log::error!("{}", crate::localization::terminal_text(fl!($message_id)));
     }};
     ($message_id:literal, $($args:expr),*) => {{
-        log::error!("{}", fl!($message_id, $($args), *));
+        log::error!("{}", crate::localization::terminal_text(fl!($message_id, $($args), *)));
     }};
 }
 
 #[macro_export]
 macro_rules! print_warn_msg {
     ($message_id:literal) => {{
-        log::warn!("{}", fl!($message_id));
+        log::warn!("{}", crate::localization::terminal_text(fl!($message_id)));
     }};
     ($message_id:literal, $($args:expr),*) => {{
-        log::warn!("{}", fl!($message_id, $($args), *));
+        log::warn!("{}", crate::localization::terminal_text(fl!($message_id, $($args), *)));
     }};
 }
 pub(crate) use print_error_msg;

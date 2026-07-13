@@ -30,17 +30,29 @@ pub fn print_profile_details(profile: &Profile) {
     }
 
     let desc_formatted = if profile.desc.is_empty() { "-" } else { &profile.desc };
+    let rows = [
+        (fl!("name-header"), profile.name.clone()),
+        (fl!("desc-header"), desc_formatted.to_owned()),
+        (fl!("priority-header"), profile.priority.to_string()),
+        (fl!("classids-header"), class_ids),
+        (fl!("vendorids-header"), vendor_ids),
+    ];
 
     let mut table = Table::new();
     table
         .load_preset(UTF8_FULL)
         .apply_modifier(UTF8_ROUND_CORNERS)
-        .set_content_arrangement(ContentArrangement::Dynamic)
-        .add_row(vec![&fl!("name-header"), &profile.name])
-        .add_row(vec![&fl!("desc-header"), desc_formatted])
-        .add_row(vec![&fl!("priority-header"), &profile.priority.to_string()])
-        .add_row(vec![&fl!("classids-header"), &class_ids])
-        .add_row(vec![&fl!("vendorids-header"), &vendor_ids]);
+        .set_content_arrangement(ContentArrangement::Dynamic);
 
-    println!("{table}\n");
+    for (header, value) in rows {
+        let header = crate::localization::terminal_text(header);
+        let value = crate::localization::terminal_text(value);
+        if crate::localization::is_rtl() {
+            table.add_row(vec![value, header]);
+        } else {
+            table.add_row(vec![header, value]);
+        }
+    }
+
+    crate::console_writer::print_table(&table);
 }
