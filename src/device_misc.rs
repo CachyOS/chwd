@@ -30,29 +30,23 @@ pub fn print_available_profiles_in_detail(bus_type: &str, devices: &[Device]) {
         log::info!(
             "{} {}: {} ({}:{}:{})",
             bus_type,
-            crate::localization::terminal_text(fl!("device")),
+            fl!("device"),
             device.sysfs_id,
             device.class_id,
             device.vendor_id,
             device.device_id
         );
-        println!(
-            "  {}",
-            crate::localization::terminal_text(format!(
-                "{} {} {}",
-                device.class_name, device.vendor_name, device.device_name
-            ))
-        );
+        println!("  {} {} {}", device.class_name, device.vendor_name, device.device_name);
         println!();
         if !installed_profiles.is_empty() {
-            println!("  > {}:\n", crate::localization::terminal_text(fl!("installed")));
+            println!("  > {}:\n", fl!("installed"));
             for installed_profile in installed_profiles {
                 profile_misc::print_profile_details(installed_profile);
             }
             println!("\n");
         }
         if !available_profiles.is_empty() {
-            println!("  > {}:\n", crate::localization::terminal_text(fl!("available")));
+            println!("  > {}:\n", fl!("available"));
             for available_profile in available_profiles {
                 profile_misc::print_profile_details(available_profile);
             }
