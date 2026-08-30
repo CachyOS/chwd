@@ -232,11 +232,11 @@ local function parse_profiles(path)
             }
         else
             if profile then
+                local hooks = profiles[profile]["hooks"]
                 if captured_hook == nil then
                     if not profiles[profile].packages then
                         profiles[profile].packages = line:match(packages_pattern)
                     end
-                    local hooks = profiles[profile]["hooks"]
                     for hook in pairs(hooks) do
                         local hook_pattern = '^' .. escape_pattern(hook) .. '%s*=%s*"""'
                         if line:match(hook_pattern) then
@@ -245,7 +245,6 @@ local function parse_profiles(path)
                         end
                     end
                 else
-                    local hooks = profiles[profile]["hooks"]
                     local hook_end = line:match('(.*)"""')
                     if hook_end then
                         hooks[captured_hook] = hooks[captured_hook] .. hook_end
