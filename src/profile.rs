@@ -796,4 +796,18 @@ mod tests {
         // Should fail because cpu_models is set without cpu_family
         assert!(parsed_profiles.is_err() || parsed_profiles.unwrap().is_empty());
     }
+
+    #[test]
+    fn handheld_profile_parse_test() {
+        let prof_path = "profiles/pci/handhelds/profiles.toml";
+        let parsed_profiles = parse_profiles(prof_path).expect("failed to parse handheld profiles");
+        let rog_ally = parsed_profiles
+            .iter()
+            .find(|p| p.name == "handheld.rog-ally")
+            .expect("handheld.rog-ally profile not found");
+        assert_eq!(rog_ally.packages, "steamos-manager inputplumber steamos-powerbuttond");
+        assert!(rog_ally.post_install.contains("Ally chwd installing..."));
+        assert!(rog_ally.post_install.contains("/etc/wireplumber/wireplumber.conf.d"));
+        assert!(rog_ally.post_remove.contains("Ally chwd removing..."));
+    }
 }
