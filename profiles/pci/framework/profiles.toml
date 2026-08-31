@@ -1,0 +1,6 @@
+[framework-laptop-12]
+desc = 'Framework Laptop 12 tablet-mode sensor support'
+class_ids = '0601'
+hwd_product_name_pattern = '^Laptop 12 \(.*\)$'
+priority = 5
+packages = 'iio-sensor-proxy'
