@@ -10,7 +10,6 @@ root-operation = この操作は root 以外が行うことはできません。
 profile-not-exist = プロファイル "{$profile_name}" は存在しません。
 no-matching-device = プロファイル "{$profile_name}" に対応するデバイスが見つかりません。
 profile-not-installed = プロファイル "{$profile_name}" はインストールされていません。
-script-failed = スクリプトでエラーが発生しました。
 failed-set-db = データベースの設定に失敗しました。
 pass-profile-no-match-install = 入力されたプロファイルはインストールされているプロファイルと一致しません。
 

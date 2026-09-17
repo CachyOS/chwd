@@ -10,7 +10,6 @@ root-operation = Tuto akci nemůžete provést pokud nejste root!
 profile-not-exist = profil '{$profile_name}' neexistuje!
 no-matching-device = Žádné nalezené zařízení pro '{$profile_name}'!
 profile-not-installed = profil '{$profile_name}' není nainstalovaný!
-script-failed = script selhal!
 failed-set-db = nepodařilo se nastavit databázy!
 pass-profile-no-match-install = uvedený profil se neshoduje s nainstalovaným profilem!
 

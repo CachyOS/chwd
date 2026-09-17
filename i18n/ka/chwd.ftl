@@ -10,7 +10,6 @@ root-operation = ამ ოპერაციის ჩატარება ა
 profile-not-exist = პროფილი '{$profile_name}' არ არსებობს!
 no-matching-device = პროფილისთვის '{$profile_name}' შესაბამისი მოწყობილობა აღმოჩენილი არაა!
 profile-not-installed = პროფილი '{$profile_name}' დაყენებული არაა!
-script-failed = სკრიპტი ჩავარდა!
 failed-set-db = მონაცემთა ბაზის დაყენება ჩავარდა!
 pass-profile-no-match-install = გადმოცემული პროფილი დაყენებულ პროფილს არ ემთხვევა!
 
