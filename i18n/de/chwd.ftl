@@ -10,7 +10,6 @@ root-operation = Sie können diese Operation nur durchführen, wenn Sie root sin
 profile-not-exist = Das Profil '{$profile_name}' existiert nicht!
 no-matching-device = Kein passendes Gerät für Profil '{$profile_name}' gefunden!
 profile-not-installed = Das Profil '{$profile_name}' ist nicht installiert!
-script-failed = Skript fehlgeschlagen!
 failed-set-db = Datenbank kann nicht gesetzt werden!
 pass-profile-no-match-install = Das eingegebene Profil stimmt nicht mit dem installierten Profil überein!
 

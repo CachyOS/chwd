@@ -10,7 +10,6 @@ root-operation = Você não pode realizar esta operação a menos que seja o usu
 profile-not-exist = O perfil '{$profile_name}' não existe!
 no-matching-device = Nenhum dispositivo correspondente para o perfil '{$profile_name}' foi encontrado!
 profile-not-installed = O perfil '{$profile_name}' não está instalado!
-script-failed = Falha ao executar o script!
 failed-set-db = Falha ao configurar o banco de dados!
 pass-profile-no-match-install = O perfil informado não corresponde ao perfil instalado!
 
