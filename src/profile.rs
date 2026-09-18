@@ -783,6 +783,7 @@ mod tests {
                 "172".to_owned(),
                 "189".to_owned(),
                 "204".to_owned(),
+                "213".to_owned(),
             ])
         );
         assert!(!parsed_profiles[0].post_install.is_empty());
