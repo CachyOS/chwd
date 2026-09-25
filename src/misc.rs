@@ -34,7 +34,7 @@ pub enum Status {
     ErrorNotInstalled,
     ErrorAlreadyInstalled,
     ErrorNoMatchLocalConfig,
-    ErrorScriptFailed,
+    ErrorPacmanFailed,
     ErrorSetDatabase,
 }
 

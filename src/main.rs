@@ -24,17 +24,18 @@ pub mod logger;
 pub mod misc;
 pub mod profile_misc;
 
+use alpm_utils::alpm_with_conf;
 use chwd::profile::Profile;
 use chwd::{consts, data, device, profile};
 use misc::Transaction;
-
-use std::path::Path;
-use std::sync::Arc;
-use std::{fs, str};
+use pacmanconf::Config;
 
 use clap::Parser;
 use i18n_embed::DesktopLanguageRequester;
 use nix::unistd::Uid;
+use std::path::Path;
+use std::sync::Arc;
+use std::{fs, str};
 use subprocess::{Exec, Redirection};
 
 fn main() -> anyhow::Result<()> {
@@ -296,41 +297,6 @@ fn get_working_profile(data: &data::Data, profile_name: &str) -> anyhow::Result<
     Ok(working_profile.unwrap())
 }
 
-pub fn run_script(
-    data: &mut data::Data,
-    args: &args::Args,
-    profile: &Profile,
-    transaction: Transaction,
-) -> bool {
-    let mut cmd_args: Vec<String> = if Transaction::Remove == transaction {
-        vec!["--remove".into()]
-    } else {
-        vec!["--install".into()]
-    };
-
-    if data.sync_package_manager_database {
-        cmd_args.push("--sync".into());
-    }
-
-    cmd_args.extend_from_slice(&["--cachedir".into(), args.pmcachedir.clone()]);
-    cmd_args.extend_from_slice(&["--pmconfig".into(), args.pmconfig.clone()]);
-    cmd_args.extend_from_slice(&["--pmroot".into(), args.pmroot.clone()]);
-    cmd_args.extend_from_slice(&["--profile".into(), profile.name.clone()]);
-    cmd_args.extend_from_slice(&["--path".into(), profile.prof_path.clone()]);
-
-    let status =
-        Exec::cmd(consts::CHWD_SCRIPT_PATH).args(&cmd_args).stderr(Redirection::Merge).join();
-    if status.is_err() || !status.unwrap().success() {
-        return false;
-    }
-
-    // Only one database sync is required
-    if Transaction::Install == transaction {
-        data.sync_package_manager_database = false;
-    }
-    true
-}
-
 fn perform_transaction(
     data: &mut data::Data,
     args: &args::Args,
@@ -352,7 +318,7 @@ fn perform_transaction(
         misc::Status::ErrorNoMatchLocalConfig => {
             console_writer::print_error_msg!("pass-profile-no-match-install");
         },
-        misc::Status::ErrorScriptFailed => console_writer::print_error_msg!("script-failed"),
+        misc::Status::ErrorPacmanFailed => console_writer::print_error_msg!("pacman-failed"),
         misc::Status::ErrorSetDatabase => console_writer::print_error_msg!("failed-set-db"),
         _ => (),
     }
@@ -414,9 +380,100 @@ fn db_dir_for_profile(profile: &Profile) -> &'static str {
     }
 }
 
+fn run_hook(hook: String, name: String) -> bool {
+    if hook.is_empty() {
+        return false;
+    }
+
+    let status = Exec::shell(hook).stderr(Redirection::Merge).join();
+    if status.is_err() || !status.unwrap().success() {
+        console_writer::print_error_msg!(
+            "failed-hook",
+            hook_name = name
+        );
+        return false;
+    }
+    return true;
+}
+
+fn run_pacman(
+    data: &mut data::Data,
+    args: &args::Args,
+    profile: &Profile,
+    transaction: Transaction,
+) -> bool {
+    let conf = Config::options()
+        .root_dir(args.pmroot.clone())
+        .pacman_conf(args.pmconfig.clone())
+        .read()
+        .expect("Failed to parse pacman config");
+    let alpm = alpm_with_conf(&conf).unwrap();
+    let multilib = alpm.syncdbs().iter().any(|db| db.name() == "multilib");
+
+    let conditional_pkgs =
+        if let Ok(res) = Exec::shell(profile.conditional_packages.clone()).capture() {
+            res.stdout_str()
+        } else {
+            "".to_string()
+        };
+
+    let pkgs: Vec<String> = (format!("{} {}", profile.packages.clone(), conditional_pkgs))
+        .split_whitespace()
+        .map(|pkg| pkg.trim())
+        .filter(|pkg| (pkg.starts_with("lib32") && multilib) || !pkg.starts_with("lib32"))
+        .filter(|pkg| {
+            if Transaction::Remove == transaction {
+                if let Ok(_) = alpm.localdb().pkg(*pkg) {
+                    true
+                } else {
+                    false
+                }
+            } else {
+                true
+            }
+        })
+        .map(|pkg| pkg.into())
+        .collect();
+
+    let mut cmd_args: Vec<String> = if Transaction::Install == transaction {
+        vec!["-S".into()]
+    } else {
+        vec!["-Rdd".into()]
+    };
+
+    if data.sync_package_manager_database && Transaction::Install == transaction  {
+        cmd_args.push("-y".into());
+    }
+
+    cmd_args.push("--noconfirm".into());
+    cmd_args.extend_from_slice(&["--cachedir".into(), args.pmcachedir.clone()]);
+    cmd_args.extend_from_slice(&["--config".into(), args.pmconfig.clone()]);
+    cmd_args.extend_from_slice(&["--root".into(), args.pmroot.clone()]);
+    cmd_args.extend_from_slice(&pkgs);
+
+    if Transaction::Install == transaction {
+        run_hook(profile.pre_install.clone(), "pre_install".to_string());
+    } else if Transaction::Remove == transaction {
+        run_hook(profile.pre_remove.clone(), "pre_remove".to_string());
+    }
+
+    let status = Exec::cmd("pacman").args(&cmd_args).stderr(Redirection::Merge).join();
+    if status.is_err() || !status.unwrap().success() {
+        return false;
+    }
+
+    if Transaction::Install == transaction {
+        run_hook(profile.post_install.clone(), "post_install".to_string());
+    } else if Transaction::Remove == transaction {
+        run_hook(profile.post_remove.clone(), "post_remove".to_string());
+    }
+
+    true
+}
+
 fn install_profile(data: &mut data::Data, args: &args::Args, profile: &Profile) -> misc::Status {
-    if !run_script(data, args, profile, Transaction::Install) {
-        return misc::Status::ErrorScriptFailed;
+    if !run_pacman(data, args, profile, Transaction::Install) {
+        return misc::Status::ErrorPacmanFailed;
     }
 
     let db_dir = db_dir_for_profile(profile);
@@ -445,9 +502,9 @@ fn remove_profile(data: &mut data::Data, args: &args::Args, profile: &Profile) -
     if installed_profile.is_none() {
         return misc::Status::ErrorNotInstalled;
     }
-    // Run script
-    if !run_script(data, args, installed_profile.as_ref().unwrap(), Transaction::Remove) {
-        return misc::Status::ErrorScriptFailed;
+    // Run pacman and hooks
+    if !run_pacman(data, args, installed_profile.as_ref().unwrap(), Transaction::Remove) {
+        return misc::Status::ErrorPacmanFailed;
     }
 
     if !profile::remove_profile_from_file(&profile.prof_path, &profile.name) {

@@ -7,6 +7,9 @@ edition = "2024"
 
 [dependencies]
 toml = "1.1"
+alpm = "5.0.2"
+alpm-utils = "5.0.0"
+pacmanconf = "3.1.0"
 libpci = { path = "libpci", version = "0.2.0" }
 libusb = { path = "libusb", version = "0.2.0", features = ["std", "usb-ids"] }
 subprocess = "1.2"
