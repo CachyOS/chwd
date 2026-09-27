@@ -10,7 +10,6 @@ root-operation = Не може да извършите тази операция
 profile-not-exist = Профилът '{$profile_name}' не съществува!
 no-matching-device = Не е открито съвпадащо устройство за профил '{$profile_name}'!
 profile-not-installed = Профилът '{$profile_name}' не е инсталиран!
-script-failed = Скриптът не успя!
 failed-set-db = Неуспешно задаване на база данни!
 pass-profile-no-match-install = Подаденият профил не съвпада с инсталирания профил!
 

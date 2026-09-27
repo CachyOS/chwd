@@ -10,7 +10,6 @@ root-operation = Du kan inte utföra denna åtgärd om du inte är root!
 profile-not-exist = profilen '{$profile_name}' finns inte!
 no-matching-device = ingen matchande enhet för profilen '{$profile_name}' hittades!
 profile-not-installed = profilen '{$profile_name}' är inte installerad!
-script-failed = skriptet misslyckades!
 failed-set-db = misslyckades med att ställa in databas!
 pass-profile-no-match-install = angiven profil matchar inte med installerad profil!
 

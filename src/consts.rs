@@ -19,7 +19,6 @@ pub const CHWD_PCI_CONFIG_DIR: &str = "/var/lib/chwd/db/pci/";
 pub const CHWD_PCI_DATABASE_DIR: &str = "/var/lib/chwd/local/pci/";
 pub const CHWD_USB_CONFIG_DIR: &str = "/var/lib/chwd/db/usb/";
 pub const CHWD_USB_DATABASE_DIR: &str = "/var/lib/chwd/local/usb/";
-pub const CHWD_SCRIPT_PATH: &str = "/var/lib/chwd/scripts/chwd";
 
 pub const CHWD_PM_CACHE_DIR: &str = "/var/cache/pacman/pkg";
 pub const CHWD_PM_CONFIG: &str = "/etc/pacman.conf";

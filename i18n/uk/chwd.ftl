@@ -10,7 +10,6 @@ root-operation = Цю дію можна виконати лише з права�
 profile-not-exist = профіль '{$profile_name}' не існує!
 no-matching-device = не знайдено відповідного пристрою для профілю '{$profile_name}'!
 profile-not-installed = профіль '{$profile_name}' не встановлено!
-script-failed = помилка виконання скрипта!
 failed-set-db = не вдалося оновити базу даних!
 pass-profile-no-match-install = вказаний профіль не відповідає встановленому профілю!
 

@@ -10,7 +10,6 @@ root-operation = Bu işlemi gerçekleştirmek için root olmanız gerekiyor!
 profile-not-exist = '{$profile_name}' profili mevcut değil!
 no-matching-device = '{$profile_name}' profili için eşleşen cihaz bulunamadı!
 profile-not-installed = '{$profile_name}' profili yüklü değil!
-script-failed = komut dosyası başarısız oldu!
 failed-set-db = veritabanı ayarlanamadı!
 pass-profile-no-match-install = girilen profil, yüklü profille eşleşmiyor!
 
