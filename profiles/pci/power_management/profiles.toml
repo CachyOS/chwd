@@ -3,6 +3,10 @@ desc = 'Intel Low Power Mode Daemon for supported hybrid Intel CPUs'
 class_ids = "0600"
 vendor_ids = "8086"
 device_ids = "*"
+# Exclude Alder Lake-S desktop processors without E-Cores (Host Bridge 4650):
+# i5-12600, i5-12600T, i5-12500, i5-12500T, i5-12490F, i5-12400, i5-12400F, i5-12400T,
+# i3-12300, i3-12300T, i3-12100, i3-12100F, i3-12100T, Pentium Gold G7400/G7400T, Celeron G6900/G6900T
+blacklisted_device_ids = "4650"
 cpu_family = "6"
 cpu_models = "151 154 183 186 191 170 172 189 204 213"
 priority = 5

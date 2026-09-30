@@ -838,6 +838,7 @@ mod tests {
                 "213".to_owned(),
             ])
         );
+        assert_eq!(parsed_profiles[0].hwd_ids[0].blacklisted_device_ids, vec!["4650".to_owned()]);
         assert!(!parsed_profiles[0].post_install.is_empty());
         assert!(!parsed_profiles[0].post_remove.is_empty());
     }
