@@ -1110,6 +1110,38 @@ mod tests {
     }
 
     #[test]
+    fn blacklisted_device_id_rejects_matching_device() {
+        let devices = vec![crate::device::Device {
+            class_id: "0600".into(),
+            vendor_id: "8086".into(),
+            device_id: "4650".into(),
+            class_name: "Host bridge".into(),
+            device_name: "12th Gen Core Processor Host Bridge".into(),
+            vendor_name: "Intel Corporation".into(),
+            sysfs_busid: "0000:00:00.0".into(),
+            sysfs_id: "".into(),
+            available_profiles: vec![],
+            installed_profiles: vec![],
+        }];
+        let mut profile = crate::profile::Profile {
+            hwd_ids: vec![crate::profile::HardwareID {
+                class_ids: vec!["0600".into()],
+                vendor_ids: vec!["8086".into()],
+                device_ids: vec!["*".into()],
+                blacklisted_device_ids: vec!["4650".into()],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+
+        assert!(data::get_all_devices_of_profile(&devices, &profile).is_empty());
+
+        // Without blacklist, it matches
+        profile.hwd_ids[0].blacklisted_device_ids.clear();
+        assert_eq!(data::get_all_devices_of_profile(&devices, &profile), vec![0]);
+    }
+
+    #[test]
     fn get_devices_from_gc_versions() {
         let devices = test_data();
         let hwd_gc_versions = vec![
