@@ -274,6 +274,12 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     let conf_devids = node.get("device_ids").and_then(|x| x.as_str()).unwrap_or("");
     let conf_vendorids = node.get("vendor_ids").and_then(|x| x.as_str()).unwrap_or("");
     let conf_classids = node.get("class_ids").and_then(|x| x.as_str()).unwrap_or("");
+    let conf_blacklisted_devids =
+        node.get("blacklisted_device_ids").and_then(|x| x.as_str()).unwrap_or("");
+    let conf_blacklisted_vendorids =
+        node.get("blacklisted_vendor_ids").and_then(|x| x.as_str()).unwrap_or("");
+    let conf_blacklisted_classids =
+        node.get("blacklisted_class_ids").and_then(|x| x.as_str()).unwrap_or("");
 
     // Read ids in extern file
     let devids_val = if !conf_devids.is_empty() && conf_devids.as_bytes()[0] == b'>' {
@@ -281,6 +287,12 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
     } else {
         conf_devids.to_owned()
     };
+    let blacklisted_devids_val =
+        if !conf_blacklisted_devids.is_empty() && conf_blacklisted_devids.as_bytes()[0] == b'>' {
+            parse_ids_file(&conf_blacklisted_devids[1..])?
+        } else {
+            conf_blacklisted_devids.to_owned()
+        };
 
     // Add new HardwareIDs group to vector if vector is not empty
     if !profile.hwd_ids.last().unwrap().device_ids.is_empty() {
@@ -306,6 +318,28 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
             profile.hwd_ids.push(Default::default());
         }
         profile.hwd_ids.last_mut().unwrap().vendor_ids = conf_vendorids
+            .split(' ')
+            .filter(|x| !x.is_empty())
+            .map(std::borrow::ToOwned::to_owned)
+            .collect::<Vec<_>>();
+    }
+
+    if !blacklisted_devids_val.is_empty() {
+        profile.hwd_ids.last_mut().unwrap().blacklisted_device_ids = blacklisted_devids_val
+            .split(' ')
+            .filter(|x| !x.is_empty())
+            .map(std::borrow::ToOwned::to_owned)
+            .collect::<Vec<_>>();
+    }
+    if !conf_blacklisted_classids.is_empty() {
+        profile.hwd_ids.last_mut().unwrap().blacklisted_class_ids = conf_blacklisted_classids
+            .split(' ')
+            .filter(|x| !x.is_empty())
+            .map(std::borrow::ToOwned::to_owned)
+            .collect::<Vec<_>>();
+    }
+    if !conf_blacklisted_vendorids.is_empty() {
+        profile.hwd_ids.last_mut().unwrap().blacklisted_vendor_ids = conf_blacklisted_vendorids
             .split(' ')
             .filter(|x| !x.is_empty())
             .map(std::borrow::ToOwned::to_owned)
@@ -487,6 +521,24 @@ fn profile_into_toml(profile: &Profile) -> toml::Table {
     table.insert("device_ids".to_owned(), device_ids.join(" ").into());
     table.insert("vendor_ids".to_owned(), vendor_ids.join(" ").into());
     table.insert("class_ids".to_owned(), class_ids.join(" ").into());
+    if !last_hwd_id.blacklisted_device_ids.is_empty() {
+        table.insert(
+            "blacklisted_device_ids".to_owned(),
+            last_hwd_id.blacklisted_device_ids.join(" ").into(),
+        );
+    }
+    if !last_hwd_id.blacklisted_class_ids.is_empty() {
+        table.insert(
+            "blacklisted_class_ids".to_owned(),
+            last_hwd_id.blacklisted_class_ids.join(" ").into(),
+        );
+    }
+    if !last_hwd_id.blacklisted_vendor_ids.is_empty() {
+        table.insert(
+            "blacklisted_vendor_ids".to_owned(),
+            last_hwd_id.blacklisted_vendor_ids.join(" ").into(),
+        );
+    }
 
     table
 }
@@ -786,6 +838,7 @@ mod tests {
                 "213".to_owned(),
             ])
         );
+        assert_eq!(parsed_profiles[0].hwd_ids[0].blacklisted_device_ids, vec!["4650".to_owned()]);
         assert!(!parsed_profiles[0].post_install.is_empty());
         assert!(!parsed_profiles[0].post_remove.is_empty());
     }
@@ -796,5 +849,37 @@ mod tests {
         let parsed_profiles = parse_profiles(prof_path);
         // Should fail because cpu_models is set without cpu_family
         assert!(parsed_profiles.is_err() || parsed_profiles.unwrap().is_empty());
+    }
+
+    #[test]
+    fn parse_and_serialize_blacklisted_ids() {
+        let toml_content = r#"
+[test-profile]
+desc = "Test profile"
+class_ids = "0600"
+vendor_ids = "8086"
+device_ids = "*"
+blacklisted_device_ids = "4650 4651"
+blacklisted_class_ids = "0300"
+blacklisted_vendor_ids = "10de"
+packages = "test-pkg"
+"#;
+        let table = toml_content.parse::<toml::Table>().unwrap();
+        let profile = super::parse_profile(
+            table.get("test-profile").unwrap().as_table().unwrap(),
+            "test-profile",
+        )
+        .unwrap();
+        assert_eq!(profile.hwd_ids[0].blacklisted_device_ids, vec!["4650", "4651"]);
+        assert_eq!(profile.hwd_ids[0].blacklisted_class_ids, vec!["0300"]);
+        assert_eq!(profile.hwd_ids[0].blacklisted_vendor_ids, vec!["10de"]);
+
+        let serialized = super::profile_into_toml(&profile);
+        assert_eq!(
+            serialized.get("blacklisted_device_ids").unwrap().as_str().unwrap(),
+            "4650 4651"
+        );
+        assert_eq!(serialized.get("blacklisted_class_ids").unwrap().as_str().unwrap(), "0300");
+        assert_eq!(serialized.get("blacklisted_vendor_ids").unwrap().as_str().unwrap(), "10de");
     }
 }
