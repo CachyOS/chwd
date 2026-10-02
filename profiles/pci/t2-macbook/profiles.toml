@@ -14,6 +14,7 @@ MODULES+=(t2bce_dma t2bce_core t2bce_vhci)
 EOF
     mkinitcpio -P
 
+    echo t2bce_vhci > /etc/modules-load.d/t2.conf
     kernelparams="intel_iommu=on iommu=pt pcie_ports=compat"
     echo "Adding required kernel parameters..."
 
