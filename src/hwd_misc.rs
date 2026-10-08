@@ -50,6 +50,17 @@ fn parse_cpu_info(content: &str) -> Option<CpuInfo> {
     Some(CpuInfo { vendor: vendor?, family: family?, model: model? })
 }
 
+/// Checks whether the CPU is hybrid, i.e. has E-cores.
+///
+/// The kernel registers the Atom (E-core) perf PMU under `/sys/devices/cpu_atom` on hybrid CPUs.
+/// Non-hybrid dies of hybrid SoCs (e.g. Alder Lake-S without E-cores) still expose the PMU, but
+/// without any Atom CPU in its `cpus` list, so the file has to contain a CPU number.
+#[must_use]
+pub(crate) fn is_hybrid_cpu() -> bool {
+    std::fs::read_to_string("/sys/devices/cpu_atom/cpus")
+        .is_ok_and(|s| s.bytes().any(|b| b.is_ascii_digit()))
+}
+
 #[must_use]
 pub fn get_sysfs_busid_from_amdgpu_path(amdgpu_path: &str) -> &str {
     amdgpu_path.split('/')
