@@ -49,6 +49,7 @@ pub struct Profile {
     pub gc_versions: Option<Vec<String>>,
     pub cpu_family: Option<String>,
     pub cpu_models: Option<Vec<String>>,
+    pub cpu_hybrid: Option<bool>,
     pub chassis_types: Option<Vec<String>>,
     pub environment_types: Option<Vec<String>>,
     pub driver_conflict_group: Option<String>,
@@ -76,6 +77,7 @@ impl Default for Profile {
             gc_versions: None,
             cpu_family: None,
             cpu_models: None,
+            cpu_hybrid: None,
             chassis_types: None,
             environment_types: None,
             driver_conflict_group: None,
@@ -258,6 +260,7 @@ fn parse_profile(node: &toml::Table, profile_name: &str) -> Result<Profile> {
         gc_versions: parse_whitespace_list(node, "gc_versions"),
         cpu_family: node.get("cpu_family").and_then(|x| x.as_str().map(str::to_string)),
         cpu_models: parse_whitespace_list(node, "cpu_models"),
+        cpu_hybrid: node.get("cpu_hybrid").and_then(toml::Value::as_bool),
         chassis_types: parse_whitespace_list(node, "chassis_types"),
         environment_types: parse_whitespace_list(node, "environment_types"),
         driver_conflict_group: node
@@ -468,6 +471,9 @@ fn profile_into_toml(profile: &Profile) -> toml::Table {
     }
     if let Some(cpu_models) = &profile.cpu_models {
         table.insert("cpu_models".to_owned(), cpu_models.join(" ").into());
+    }
+    if let Some(cpu_hybrid) = profile.cpu_hybrid {
+        table.insert("cpu_hybrid".to_owned(), cpu_hybrid.into());
     }
     if let Some(chassis_types) = &profile.chassis_types {
         table.insert("chassis_types".to_owned(), chassis_types.join(" ").into());
@@ -771,6 +777,7 @@ mod tests {
         assert_eq!(parsed_profiles[0].priority, 5);
         assert_eq!(parsed_profiles[0].packages, "intel-lpmd");
         assert_eq!(parsed_profiles[0].cpu_family, Some("6".to_owned()));
+        assert_eq!(parsed_profiles[0].cpu_hybrid, Some(true));
         assert_eq!(
             parsed_profiles[0].cpu_models,
             Some(vec![
