@@ -17,7 +17,6 @@
 use crate::fl;
 use crate::profile::Profile;
 
-use comfy_table::modifiers::UTF8_ROUND_CORNERS;
 use comfy_table::presets::UTF8_FULL;
 use comfy_table::{ContentArrangement, Table};
 
@@ -33,8 +32,7 @@ pub fn print_profile_details(profile: &Profile) {
 
     let mut table = Table::new();
     table
-        .load_preset(UTF8_FULL)
-        .apply_modifier(UTF8_ROUND_CORNERS)
+        .load_style(UTF8_FULL.with_rounded_corners())
         .set_content_arrangement(ContentArrangement::Dynamic)
         .add_row(vec![&fl!("name-header"), &profile.name])
         .add_row(vec![&fl!("desc-header"), desc_formatted])
