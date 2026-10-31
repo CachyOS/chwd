@@ -198,7 +198,7 @@ fi
 [fallback]
 desc = 'Fallback profile'
 class_ids = "0300 0380 0302"
-vendor_ids = "1002 8086 10de"
+vendor_ids = "*"
 device_ids = "*"
 priority = 3
 packages = 'mesa lib32-mesa vulkan-swrast xf86-video-vesa lib32-vulkan-swrast'
