@@ -79,24 +79,18 @@ driver_conflict_group = "nvidia"
 packages = 'nvidia-580xx-utils nvidia-580xx-settings opencl-nvidia-580xx lib32-opencl-nvidia-580xx lib32-nvidia-580xx-utils libva-nvidia-driver vulkan-icd-loader lib32-vulkan-icd-loader cachyos-drm-awaiter'
 device_ids = '>/var/lib/chwd/ids/nvidia-580.ids'
 conditional_packages = """
-    packages=""
-    need_dkms=0
+    modules=""
 
     for pkgbase in /usr/lib/modules/*/pkgbase; do
         kernel="$(cat "$pkgbase")"
         if echo "$kernel" | grep -q "^linux-cachyos"; then
-            packages+=" ${kernel}-nvidia-580xx"
-        else
-            packages+=" ${kernel}-headers"
-            need_dkms=1
+            modules+=" ${kernel}-nvidia-580xx"
         fi
     done
 
     # Fallback if there are no kernels with pre-built modules
-    if [ -z "$packages" ] || [ "$need_dkms" -eq 1 ]; then
-        packages+=" nvidia-580xx-dkms"
-    fi
-    echo "$packages"
+    [ -z "$modules" ] && modules="nvidia-580xx-dkms"
+    echo "$modules"
 """
 pre_install = """
     cat <<'EOF' >/etc/mkinitcpio.conf.d/10-chwd-kms.conf
