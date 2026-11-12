@@ -1,5 +1,7 @@
 use std::env;
 
+use crate::fl;
+
 use colored::Colorize;
 use log::{Level, Metadata, Record};
 
@@ -15,8 +17,8 @@ impl log::Log for SimpleLogger {
     fn log(&self, record: &Record) {
         if self.enabled(record.metadata()) {
             let level_str = match record.level() {
-                Level::Error => "Error:".red(),
-                Level::Warn => "Warning:".yellow(),
+                Level::Error => fl!("error-prefix").as_str().red(),
+                Level::Warn => fl!("warning-prefix").as_str().yellow(),
                 Level::Info => ">".red(),
                 Level::Debug => "Debug:".white(),
                 Level::Trace => "Trace:".black(),
