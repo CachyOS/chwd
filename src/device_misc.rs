@@ -31,7 +31,7 @@ pub fn print_available_profiles_in_detail(bus_type: &str, devices: &[Device]) {
             "{} {}: {} ({}:{}:{})",
             bus_type,
             fl!("device"),
-            device.sysfs_id,
+            device.sysfs_busid,
             device.class_id,
             device.vendor_id,
             device.device_id
