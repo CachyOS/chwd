@@ -17,7 +17,7 @@ pass-profile-no-match-install = გადმოცემული პროფ�
 # device
 available = ხელმისაწვდომია
 installed = დაყენებულია
-device = მოწყობილობა
+device = {$bus_type} მოწყობილობა
 no-profile-device = მოწყობილობებისთვის პროფილები აღმოჩენილი არაა!
 
 # console writer

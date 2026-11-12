@@ -28,9 +28,8 @@ pub fn print_available_profiles_in_detail(bus_type: &str, devices: &[Device]) {
         config_found = true;
 
         log::info!(
-            "{} {}: {} ({}:{}:{})",
-            bus_type,
-            fl!("device"),
+            "{}: {} ({}:{}:{})",
+            fl!("device", bus_type = bus_type),
             device.sysfs_id,
             device.class_id,
             device.vendor_id,

@@ -17,7 +17,7 @@ pass-profile-no-match-install = passed profile does not match with installed pro
 # device
 available = AVAILABLE
 installed = INSTALLED
-device = Device
+device = {$bus_type} Device
 no-profile-device = no profiles for devices found!
 
 # console writer
@@ -29,3 +29,7 @@ pci-profiles-not-found = No PCI profiles found!
 usb-profiles-not-found = No USB profiles found!
 no-installed-profiles = No installed profiles!
 no-installed-profile-device = no installed profile for devices found!
+
+# logger
+error-prefix = Error:
+warning-prefix = Warning:

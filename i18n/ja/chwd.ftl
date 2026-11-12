@@ -17,7 +17,7 @@ pass-profile-no-match-install = 入力されたプロファイルはインスト
 # device
 available = 利用可
 installed = インストール済
-device = デバイス
+device = {$bus_type} デバイス
 no-profile-device = デバイスのプロファイルが見つかりません。
 
 # console writer

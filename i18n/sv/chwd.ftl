@@ -17,7 +17,7 @@ pass-profile-no-match-install = angiven profil matchar inte med installerad prof
 # device
 available = TILLGÄNGLIG
 installed = INSTALLERAD
-device = Enhet
+device = {$bus_type} Enhet
 no-profile-device = inga profiler för enheter hittades!
 
 # console writer
