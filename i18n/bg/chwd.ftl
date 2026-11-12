@@ -17,7 +17,7 @@ pass-profile-no-match-install = Подаденият профил не съвп�
 # device
 available = НАЛИЧЕН
 installed = ИНСТАЛИРАН
-device = Устройство
+device = {$bus_type} Устройство
 no-profile-device = Не са намерени Профили за устройства!
 
 # console writer

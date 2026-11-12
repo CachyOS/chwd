@@ -17,7 +17,7 @@ pass-profile-no-match-install = 传入的配置与已安装的配置不匹配。
 # device
 available = 可用
 installed = 已安装
-device = 设备
+device = {$bus_type} 设备
 no-profile-device = 未找到设备对应的配置。
 
 # console writer

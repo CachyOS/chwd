@@ -17,7 +17,7 @@ pass-profile-no-match-install = Das eingegebene Profil stimmt nicht mit dem inst
 # device
 available = VERFÜGBAR
 installed = INSTALLIERT
-device = Gerät
+device = {$bus_type} Gerät
 no-profile-device = Keine Profile für Geräte gefunden!
 
 # console writer

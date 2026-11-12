@@ -17,7 +17,7 @@ pass-profile-no-match-install = passed profile does not match with installed pro
 # device
 available = AVAILABLE
 installed = INSTALLED
-device = Device
+device = {$bus_type} Device
 no-profile-device = no profiles for devices found!
 
 # console writer

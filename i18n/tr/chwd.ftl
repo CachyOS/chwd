@@ -17,7 +17,7 @@ pass-profile-no-match-install = girilen profil, yüklü profille eşleşmiyor!
 # device
 available = MEVCUT
 installed = YÜKLÜ
-device = Cihaz
+device = {$bus_type} Cihaz
 no-profile-device = cihazlar için profil bulunamadı!
 
 # console writer

@@ -17,7 +17,7 @@ pass-profile-no-match-install = uvedený profil se neshoduje s nainstalovaným p
 # Zařízení
 available = DOSTUPNÉ
 installed = NAINSTALOVÁNO
-device = Zařízení
+device = {$bus_type} Zařízení
 no-profile-device = nebyly nalezeny žádné profily pro zařízení!
 
 # Výstup v konzoly

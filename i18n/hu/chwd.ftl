@@ -17,7 +17,7 @@ pass-profile-no-match-install = A megadott profil nem egyezik a telepített prof
 # device
 available = ELÉRHETŐ
 installed = TELEPÍTVE
-device = Eszköz
+device = {$bus_type} Eszköz
 no-profile-device = Nem találhatók eszközökhöz tartozó profilok!
 
 # console writer
