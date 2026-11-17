@@ -17,7 +17,8 @@ pass-profile-no-match-install = girilen profil, yüklü profille eşleşmiyor!
 # device
 available = MEVCUT
 installed = YÜKLÜ
-device = Cihaz
+pci-device = PCI Cihaz
+usb-device = USB Cihaz
 no-profile-device = cihazlar için profil bulunamadı!
 
 # console writer

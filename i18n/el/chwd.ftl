@@ -17,7 +17,8 @@ pass-profile-no-match-install = Το παρεχόμενο προφίλ δεν α
 # device
 available = ΔΙΑΘΕΣΙΜΑ
 installed = ΕΓΚΑΤΕΣΤΗΜΕΝΑ
-device = Συσκευή
+pci-device = PCI Συσκευή
+usb-device = USB Συσκευή
 no-profile-device = Δεν βρέθηκαν προφίλ για συσκευές PCI!
 
 # console writer

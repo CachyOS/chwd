@@ -17,7 +17,8 @@ pass-profile-no-match-install = Das eingegebene Profil stimmt nicht mit dem inst
 # device
 available = VERFÜGBAR
 installed = INSTALLIERT
-device = Gerät
+pci-device = PCI Gerät
+usb-device = USB Gerät
 no-profile-device = Keine Profile für Geräte gefunden!
 
 # console writer

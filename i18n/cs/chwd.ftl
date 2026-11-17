@@ -17,7 +17,8 @@ pass-profile-no-match-install = uvedený profil se neshoduje s nainstalovaným p
 # Zařízení
 available = DOSTUPNÉ
 installed = NAINSTALOVÁNO
-device = Zařízení
+pci-device = PCI Zařízení
+usb-device = USB Zařízení
 no-profile-device = nebyly nalezeny žádné profily pro zařízení!
 
 # Výstup v konzoly
