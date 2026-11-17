@@ -17,7 +17,8 @@ pass-profile-no-match-install = A megadott profil nem egyezik a telepített prof
 # device
 available = ELÉRHETŐ
 installed = TELEPÍTVE
-device = Eszköz
+pci-device = PCI Eszköz
+usb-device = USB Eszköz
 no-profile-device = Nem találhatók eszközökhöz tartozó profilok!
 
 # console writer

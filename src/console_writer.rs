@@ -67,10 +67,16 @@ pub fn handle_arguments_listing(data: &Data, args: &crate::args::Args) {
                 usb_devices.iter().any(|device| !device.get_available_profiles().is_empty());
 
             if pci_has_profiles {
-                crate::device_misc::print_available_profiles_in_detail("PCI", pci_devices);
+                crate::device_misc::print_available_profiles_in_detail(
+                    &fl!("pci-device"),
+                    pci_devices,
+                );
             }
             if usb_has_profiles {
-                crate::device_misc::print_available_profiles_in_detail("USB", usb_devices);
+                crate::device_misc::print_available_profiles_in_detail(
+                    &fl!("usb-device"),
+                    usb_devices,
+                );
             }
             if !pci_has_profiles && !usb_has_profiles {
                 print_warn_msg!("no-profile-device");

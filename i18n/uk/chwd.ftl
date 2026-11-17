@@ -17,7 +17,8 @@ pass-profile-no-match-install = вказаний профіль не відпо�
 # device
 available = ДОСТУПНО
 installed = ВСТАНОВЛЕНО
-device = Пристрій
+pci-device = PCI Пристрій
+usb-device = USB Пристрій
 no-profile-device = профілі для пристроїв не знайдено!
 
 # console writer

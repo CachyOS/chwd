@@ -17,7 +17,8 @@ pass-profile-no-match-install = الملف التعريفي المُمرر لا 
 # device
 available = مُتاح
 installed = مُثبَّت
-device = الجهاز
+pci-device = PCI الجهاز
+usb-device = USB الجهاز
 no-profile-device = لا توجد ملفات تعريفية للأجهزة!
 
 # console writer

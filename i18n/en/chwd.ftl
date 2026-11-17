@@ -17,7 +17,8 @@ pass-profile-no-match-install = passed profile does not match with installed pro
 # device
 available = AVAILABLE
 installed = INSTALLED
-device = Device
+pci-device = PCI Device
+usb-device = USB Device
 no-profile-device = no profiles for devices found!
 
 # console writer
