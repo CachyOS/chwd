@@ -162,19 +162,17 @@ if [ -z "$(lspci -d "10de:*:030x")" ]; then
     echo "opencl-mesa lib32-opencl-mesa"
 fi
 
-device_id="$(lspci -d "8086:*:030x" -n | cut -d" " -f3 | cut -d":" -f2 | head -n1)"
-if grep -q "$device_id" /var/lib/chwd/ids/intel-vaapi.ids 2>/dev/null; then
+device_id="$(lspci -d "8086:*:03xx" -n | cut -d" " -f3 | cut -d":" -f2 | head -n1)"
+if [[ -n "$device_id" ]] && grep -q "$device_id" /var/lib/chwd/ids/intel-vaapi.ids 2>/dev/null; then
     echo "libva-intel-driver-irql"
 else
     echo "intel-media-driver"
 fi
 
-if grep -q "$device_id" /var/lib/chwd/ids/intel-media-sdk.ids 2>/dev/null; then
+if [[ -n "$device_id" ]] && grep -q "$device_id" /var/lib/chwd/ids/intel-media-sdk.ids 2>/dev/null; then
     echo "intel-media-sdk"
-else
-    if ! grep -q "$device_id" /var/lib/chwd/ids/intel-vaapi.ids 2>/dev/null; then
-        echo "vpl-gpu-rt"
-    fi
+elif [[ -n "$device_id" ]] && ! grep -q "$device_id" /var/lib/chwd/ids/intel-vaapi.ids 2>/dev/null; then
+    echo "vpl-gpu-rt"
 fi
 """
 post_install = """
