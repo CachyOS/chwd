@@ -17,7 +17,8 @@ pass-profile-no-match-install = გადმოცემული პროფ�
 # device
 available = ხელმისაწვდომია
 installed = დაყენებულია
-device = მოწყობილობა
+pci-device = PCI მოწყობილობა
+usb-device = USB მოწყობილობა
 no-profile-device = მოწყობილობებისთვის პროფილები აღმოჩენილი არაა!
 
 # console writer
