@@ -1,0 +1,10 @@
+[xpadneo]
+desc = "Xbox Series X/S controller support (xpadneo)"
+# Detected over USB (045e:0b13) while the controller is plugged in. The
+# in-tree xpad driver does not bind Series X/S controllers over Bluetooth,
+# so xpadneo-dkms is installed to take over the BT connection afterwards.
+vendor_ids = "045e"
+device_ids = "0b13"
+class_ids = "*"
+priority = 5
+packages = "xpadneo-dkms"
