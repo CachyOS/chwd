@@ -1,0 +1,18 @@
+# MacBook Pro with T1 (MacBookPro13,2 13,3 14,2 14,3)
+
+[t1-macbook]
+desc = 'Sound for the 2016 and 2017 MacBook Pro with Touch Bar'
+# The T1 (iBridge). The CS8409 codec sits behind the Intel HDA controller
+# and has no ID of its own to match.
+class_ids = "*"
+vendor_ids = "05ac"
+device_ids = "8600"
+priority = 9
+packages = 'snd-hda-macbookpro-resume-dkms'
+
+# The speaker processing is tuned for the 15" 2017 model's speakers only.
+[t1-macbook.mbp143]
+desc = 'Sound for the 15" 2017 MacBook Pro (MacBookPro14,3)'
+hwd_product_name_pattern = '^MacBookPro14,3$'
+priority = 10
+packages = 'snd-hda-macbookpro-resume-dkms mbp143-audio'
