@@ -6,6 +6,7 @@ device_ids = "*"
 cpu_family = "6"
 cpu_models = "151 154 183 186 191 170 172 181 189 204 213"
 cpu_hybrid = true
+chassis_types = "8 9 10 11 14 30 31 32"
 priority = 5
 packages = 'intel-lpmd'
 post_install = """
