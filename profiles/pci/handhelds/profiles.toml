@@ -79,10 +79,18 @@ post_install = """
     mkdir -p /etc/wireplumber/wireplumber.conf.d
     ln -s /usr/share/cachyos-handheld/msi-claw/wireplumber/alsa-card0.conf \
         /etc/wireplumber/wireplumber.conf.d
+    echo "Installing intel-lpmd config..."
+    mkdir -p /etc/intel_lpmd
+    ln -sf /usr/share/cachyos-handheld/msi-claw/intel-lpmd/intel_lpmd_config_F6_M204_T25.xml \
+        /etc/intel_lpmd
+    systemctl try-restart intel_lpmd.service || true
 """
 post_remove = """
     echo "Claw chwd removing..."
     rm -f /usr/lib/modules-load.d/chwd-msi-claw.conf
     echo "Removing audio profile..."
     rm -f /etc/wireplumber/wireplumber.conf.d/alsa-card0.conf
+    echo "Removing intel-lpmd config..."
+    rm -f /etc/intel_lpmd/intel_lpmd_config_F6_M204_T25.xml
+    systemctl try-restart intel_lpmd.service || true
 """
