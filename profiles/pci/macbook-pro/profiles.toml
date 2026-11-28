@@ -1,0 +1,48 @@
+# MacBook Pro, one profile per model, matched by the DMI product name.
+#
+# The 2016 and 2017 models (MacBookPro13,1 to 14,3) have a Cirrus CS8409
+# sound chip behind the Intel HDA controller, with no ID of its own to match,
+# and the kernel's driver for it does not switch on their speaker amplifiers.
+
+[macbookpro13-1]
+desc = 'Sound for the MacBook Pro (13-inch, 2016, Two Thunderbolt 3 ports)'
+class_ids = '0601'
+hwd_product_name_pattern = '^MacBookPro13,1$'
+priority = 5
+packages = 'snd-hda-macbookpro-resume-dkms'
+
+[macbookpro13-2]
+desc = 'Sound for the MacBook Pro (13-inch, 2016, Four Thunderbolt 3 ports)'
+class_ids = '0601'
+hwd_product_name_pattern = '^MacBookPro13,2$'
+priority = 5
+packages = 'snd-hda-macbookpro-resume-dkms'
+
+[macbookpro13-3]
+desc = 'Sound for the MacBook Pro (15-inch, 2016)'
+class_ids = '0601'
+hwd_product_name_pattern = '^MacBookPro13,3$'
+priority = 5
+packages = 'snd-hda-macbookpro-resume-dkms'
+
+[macbookpro14-1]
+desc = 'Sound for the MacBook Pro (13-inch, 2017, Two Thunderbolt 3 ports)'
+class_ids = '0601'
+hwd_product_name_pattern = '^MacBookPro14,1$'
+priority = 5
+packages = 'snd-hda-macbookpro-resume-dkms'
+
+[macbookpro14-2]
+desc = 'Sound for the MacBook Pro (13-inch, 2017, Four Thunderbolt 3 ports)'
+class_ids = '0601'
+hwd_product_name_pattern = '^MacBookPro14,2$'
+priority = 5
+packages = 'snd-hda-macbookpro-resume-dkms'
+
+# mbp143-audio: the speaker and mic processing tuned for this model.
+[macbookpro14-3]
+desc = 'Sound for the MacBook Pro (15-inch, 2017), with its speaker processing'
+class_ids = '0601'
+hwd_product_name_pattern = '^MacBookPro14,3$'
+priority = 5
+packages = 'snd-hda-macbookpro-resume-dkms mbp143-audio'
